@@ -1,0 +1,35 @@
+---
+/** Fond étoilé fixe, deux couches parallax. Styles dans global.css (tuiles SVG inline). */
+---
+
+<div class="ciel" aria-hidden="true">
+  <div class="ciel__couche ciel__couche--loin" data-vitesse="0.04"></div>
+  <div class="ciel__couche ciel__couche--pres" data-vitesse="0.09"></div>
+</div>
+
+<script>
+  const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduit) {
+    const couches = Array.from(
+      document.querySelectorAll<HTMLElement>('.ciel__couche'),
+    ).map((el) => ({ el, v: parseFloat(el.dataset.vitesse ?? '0') }));
+    let demande = false;
+    const rendre = () => {
+      demande = false;
+      const y = window.scrollY;
+      for (const { el, v } of couches) {
+        el.style.transform = `translate3d(0, ${-(y * v)}px, 0)`;
+      }
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!demande) {
+          demande = true;
+          requestAnimationFrame(rendre);
+        }
+      },
+      { passive: true },
+    );
+  }
+</script>

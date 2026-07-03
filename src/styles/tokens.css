@@ -1,0 +1,52 @@
+/*
+ * Tokens AIA — palette échantillonnée depuis le logo officiel
+ * (Logo AIA png Blanc : aubergine #291928 / #221422 / #120A12, crème #F8F7F8 / #E7E3E7 / #CEC9CE)
+ * Les couleurs du drapeau ivoirien sont réservées aux accents : CTA, liens actifs, indicateurs.
+ */
+:root {
+  /* --- Aubergines (du plus profond au plus clair) --- */
+  --abysse: #0b060c;
+  --aubergine-950: #120a12;
+  --aubergine-900: #1a0f1b;
+  --aubergine-800: #221422;
+  --aubergine-700: #291928;
+  --aubergine-600: #352935;
+  --aubergine-500: #3f373f;
+
+  /* --- Crèmes --- */
+  --creme: #f8f7f8;
+  --creme-2: #e7e3e7;
+  --creme-3: #cec9ce;
+  --creme-70: rgba(248, 247, 248, 0.7);
+  --creme-45: rgba(248, 247, 248, 0.45);
+  --creme-25: rgba(248, 247, 248, 0.25);
+  --creme-12: rgba(248, 247, 248, 0.12);
+  --creme-06: rgba(248, 247, 248, 0.06);
+
+  /* --- Accents drapeau ivoirien (parcimonie : CTA, actifs, indicateurs) --- */
+  --ci-orange: #f77f00;
+  --ci-orange-vif: #ff943d;
+  --ci-blanc: #ffffff;
+  --ci-vert: #009e60;
+  --ci-vert-clair: #19b878;
+
+  /* --- Typographie --- */
+  --font-titre: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --font-texte: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-hud: 'SF Mono', ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Menlo, monospace;
+
+  --taille-hero: clamp(2.2rem, 6.5vw, 4.4rem);
+  --taille-h2: clamp(1.6rem, 3.6vw, 2.6rem);
+  --taille-h3: clamp(1.15rem, 2vw, 1.45rem);
+
+  /* --- Rythme --- */
+  --espace-section: clamp(5rem, 14vh, 9rem);
+  --rayon: 14px;
+  --rayon-sm: 8px;
+  --largeur-site: 1120px;
+
+  /* --- Divers --- */
+  --transition: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ombre-carte: 0 10px 40px rgba(11, 6, 12, 0.55);
+  --halo-orange: 0 0 24px rgba(247, 127, 0, 0.35);
+}

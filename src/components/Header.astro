@@ -1,0 +1,322 @@
+---
+import { useT, routes, type Lang, type PageId } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  pageId: PageId;
+  altUrl: string;
+}
+
+const { lang, pageId, altUrl } = Astro.props;
+const t = useT(lang);
+
+const liensPrincipaux: { id: PageId; label: string }[] = [
+  { id: 'about', label: t('nav.about') },
+  { id: 'activities', label: t('nav.activities') },
+  { id: 'events', label: t('nav.events') },
+  { id: 'news', label: t('nav.news') },
+  { id: 'gallery', label: t('nav.gallery') },
+  { id: 'partners', label: t('nav.partners') },
+];
+
+const tousLesLiens: { id: PageId; label: string }[] = [
+  { id: 'home', label: t('nav.home') },
+  ...liensPrincipaux,
+  { id: 'support', label: t('nav.support') },
+  { id: 'contact', label: t('nav.contact') },
+  { id: 'join', label: t('nav.join') },
+];
+---
+
+<header class="entete" id="entete">
+  <div class="container entete__barre">
+    <a class="entete__marque" href={routes.home[lang]} aria-label={t('site.nom')}>
+      <img src="/favicon.png" alt="" width="38" height="38" />
+      <span class="entete__nom">
+        <strong>AIA</strong>
+        <small>{lang === 'fr' ? "Astronomie · Côte d'Ivoire" : 'Astronomy · Côte d’Ivoire'}</small>
+      </span>
+    </a>
+
+    <nav class="entete__nav" aria-label={lang === 'fr' ? 'Navigation principale' : 'Main navigation'}>
+      {
+        liensPrincipaux.map((l) => (
+          <a
+            href={routes[l.id][lang]}
+            aria-current={l.id === pageId ? 'page' : undefined}
+            class:list={['entete__lien', { actif: l.id === pageId }]}
+          >
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="entete__actions">
+      <a class="entete__lang" href={altUrl} aria-label={t('lang.label')}>
+        {lang === 'fr' ? 'EN' : 'FR'}
+      </a>
+      <a class="btn btn-primaire entete__cta" href={routes.join[lang]}>{t('nav.join')}</a>
+
+      <details class="burger">
+        <summary aria-label={t('nav.menu')}>
+          <span class="burger__icone" aria-hidden="true"><i></i><i></i><i></i></span>
+        </summary>
+        <nav class="burger__panneau" aria-label={t('nav.menu')}>
+          {
+            tousLesLiens.map((l) => (
+              <a
+                href={routes[l.id][lang]}
+                aria-current={l.id === pageId ? 'page' : undefined}
+                class:list={['burger__lien', { actif: l.id === pageId, cta: l.id === 'join' }]}
+              >
+                {l.label}
+              </a>
+            ))
+          }
+          <a class="burger__lang" href={altUrl}>{t('lang.switch')}</a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<style>
+  .entete {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: background var(--transition), border-color var(--transition);
+    border-bottom: 1px solid transparent;
+  }
+
+  .entete.scrolle {
+    background: rgba(18, 10, 18, 0.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-color: var(--creme-06);
+  }
+
+  .entete__barre {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding-block: 0.7rem;
+  }
+
+  .entete__marque {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    margin-right: auto;
+  }
+
+  .entete__marque img {
+    border-radius: 50%;
+  }
+
+  .entete__nom {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .entete__nom strong {
+    font-family: var(--font-titre);
+    font-size: 1.15rem;
+    letter-spacing: 0.08em;
+    color: var(--creme);
+  }
+
+  .entete__nom small {
+    font-size: 0.68rem;
+    color: var(--creme-45);
+    letter-spacing: 0.04em;
+  }
+
+  .entete__nav {
+    display: none;
+    gap: 0.2rem;
+  }
+
+  .entete__lien {
+    font-size: 0.92rem;
+    text-decoration: none;
+    color: var(--creme-70);
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+    position: relative;
+  }
+
+  .entete__lien:hover {
+    color: var(--creme);
+    background: var(--creme-06);
+  }
+
+  .entete__lien.actif {
+    color: var(--creme);
+  }
+
+  .entete__lien.actif::after {
+    content: '';
+    position: absolute;
+    left: 0.7rem;
+    right: 0.7rem;
+    bottom: 0.1rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--ci-orange);
+  }
+
+  .entete__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .entete__lang {
+    font-family: var(--font-hud);
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    color: var(--creme-70);
+    border: 1px solid var(--creme-25);
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+  }
+
+  .entete__lang:hover {
+    color: var(--ci-orange-vif);
+    border-color: var(--ci-orange);
+  }
+
+  .entete__cta {
+    display: none;
+    padding: 0.55rem 1.15rem;
+    font-size: 0.9rem;
+  }
+
+  /* --- Burger (details/summary : fonctionne sans JavaScript) --- */
+  .burger summary {
+    list-style: none;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--creme-25);
+    border-radius: 10px;
+  }
+
+  .burger summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .burger__icone {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .burger__icone i {
+    width: 16px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--creme);
+    transition: transform var(--transition), opacity var(--transition);
+  }
+
+  .burger[open] .burger__icone i:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .burger[open] .burger__icone i:nth-child(2) {
+    opacity: 0;
+  }
+
+  .burger[open] .burger__icone i:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .burger__panneau {
+    position: fixed;
+    inset: 60px 0 auto 0;
+    max-height: calc(100dvh - 60px);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 1rem 1.25rem 2rem;
+    background: rgba(11, 6, 12, 0.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--creme-12);
+  }
+
+  .burger__lien {
+    font-family: var(--font-titre);
+    font-size: 1.25rem;
+    text-decoration: none;
+    color: var(--creme-70);
+    padding: 0.55rem 0.4rem;
+    border-radius: 8px;
+  }
+
+  .burger__lien:hover,
+  .burger__lien.actif {
+    color: var(--creme);
+  }
+
+  .burger__lien.actif {
+    padding-left: 1rem;
+    border-left: 3px solid var(--ci-orange);
+  }
+
+  .burger__lien.cta {
+    margin-top: 0.6rem;
+    color: var(--aubergine-950);
+    background: linear-gradient(135deg, var(--ci-orange), var(--ci-orange-vif));
+    border-radius: 999px;
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .burger__lang {
+    margin-top: 0.9rem;
+    font-family: var(--font-hud);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--creme-45);
+    text-decoration: none;
+  }
+
+  .burger__lang:hover {
+    color: var(--ci-orange-vif);
+  }
+
+  @media (min-width: 980px) {
+    .entete__nav {
+      display: flex;
+    }
+    .entete__cta {
+      display: inline-flex;
+    }
+    .burger {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const entete = document.getElementById('entete');
+  const majEtat = () => entete?.classList.toggle('scrolle', window.scrollY > 24);
+  majEtat();
+  window.addEventListener('scroll', majEtat, { passive: true });
+
+  // Referme le menu mobile quand on choisit une destination
+  const burger = document.querySelector<HTMLDetailsElement>('.burger');
+  burger?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('a')) burger.removeAttribute('open');
+  });
+</script>

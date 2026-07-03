@@ -1,0 +1,144 @@
+/* Styles de la navigation système solaire (2D + 3D) */
+
+.solar-wrap {
+  position: relative;
+  width: 100%;
+  height: min(72vh, 640px);
+  min-height: 420px;
+}
+
+.solar-wrap canvas {
+  touch-action: pan-y; /* laisse le scroll vertical passer sur mobile */
+}
+
+.solar-toggle {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 5;
+  font-family: var(--font-hud);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--creme-70);
+  background: rgba(18, 10, 18, 0.7);
+  border: 1px solid var(--creme-25);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.solar-toggle:hover {
+  color: var(--ci-orange-vif);
+  border-color: var(--ci-orange);
+}
+
+/* --- Étiquette flottante (3D, via drei/Html) --- */
+.solar-label-wrap {
+  pointer-events: none;
+}
+
+.solar-label {
+  display: inline-block;
+  white-space: nowrap;
+  font-family: var(--font-hud);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--creme);
+  background: rgba(11, 6, 12, 0.85);
+  border: 1px solid var(--creme-25);
+  border-radius: 8px;
+  padding: 6px 12px;
+  transform: translateY(-6px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.solar-label::before {
+  content: '→ ';
+  color: var(--ci-orange-vif);
+}
+
+.solar-label.ivorien {
+  border-image: linear-gradient(90deg, var(--ci-orange), var(--ci-blanc), var(--ci-vert)) 1;
+  border-radius: 0;
+}
+
+/* --- Fallback 2D --- */
+.fb-solaire {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.fb-corps {
+  cursor: pointer;
+}
+
+.fb-corps circle.fb-astre {
+  transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.fb-corps:hover circle.fb-astre,
+.fb-corps:focus circle.fb-astre {
+  transform: scale(1.55);
+}
+
+.fb-etiquette {
+  font-family: var(--font-hud);
+  font-size: 13.5px;
+  letter-spacing: 0.05em;
+  fill: var(--creme);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(11, 6, 12, 0.9);
+  stroke-width: 4px;
+}
+
+.fb-corps:hover .fb-etiquette,
+.fb-corps:focus .fb-etiquette {
+  opacity: 1;
+}
+
+.fb-fleche {
+  fill: var(--ci-orange-vif);
+}
+
+.fb-orbite {
+  fill: none;
+  stroke: rgba(248, 247, 248, 0.13);
+  stroke-width: 1;
+}
+
+.fb-ceinture {
+  fill: none;
+  stroke: rgba(206, 201, 206, 0.35);
+  stroke-width: 10;
+  stroke-dasharray: 1 7;
+}
+
+@keyframes fb-orbite-anim {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fb-rot {
+  animation: fb-orbite-anim linear infinite;
+}
+
+.fb-rot-inverse {
+  animation: fb-orbite-anim linear infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-rot,
+  .fb-rot-inverse {
+    animation: none !important;
+  }
+}

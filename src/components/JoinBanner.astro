@@ -1,0 +1,64 @@
+---
+import { routes, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const titre =
+  lang === 'fr' ? 'Veux-tu rejoindre l’aventure toi aussi ?' : 'Want to join the adventure too?';
+const texte =
+  lang === 'fr'
+    ? 'Étudiant·e, passionné·e ou simple curieux du ciel : l’AIA t’ouvre ses télescopes. Aucune expérience requise — juste l’envie de lever les yeux.'
+    : 'Student, enthusiast or simply curious about the sky: AIA opens its telescopes to you. No experience required — just the urge to look up.';
+const bouton = lang === 'fr' ? 'Je rejoins l’AIA' : 'I join AIA';
+const secondaire = lang === 'fr' ? 'Nous contacter' : 'Contact us';
+---
+
+<section class="bandeau">
+  <div class="container bandeau__int">
+    <h2>{titre}</h2>
+    <p>{texte}</p>
+    <div class="bandeau__actions">
+      <a class="btn btn-primaire" href={routes.join[lang]}>{bouton} 🚀</a>
+      <a class="btn btn-contour" href={routes.contact[lang]}>{secondaire}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .bandeau {
+    margin-block: var(--espace-section);
+  }
+
+  .bandeau__int {
+    position: relative;
+    text-align: center;
+    border: 1px solid var(--creme-12);
+    border-radius: calc(var(--rayon) * 1.5);
+    padding: clamp(2.2rem, 6vw, 4rem);
+    background:
+      radial-gradient(60% 120% at 50% 0%, rgba(247, 127, 0, 0.14), transparent 65%),
+      rgba(18, 10, 18, 0.5);
+    overflow: hidden;
+  }
+
+  .bandeau__int h2 {
+    font-size: var(--taille-h2);
+  }
+
+  .bandeau__int p {
+    max-width: 36rem;
+    margin-inline: auto;
+    color: var(--creme-70);
+  }
+
+  .bandeau__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    justify-content: center;
+    margin-top: 1.6rem;
+  }
+</style>

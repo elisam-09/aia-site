@@ -1,0 +1,243 @@
+@import './tokens.css';
+
+/* ============ Base ============ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-texte);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--creme-2);
+  background-color: var(--abysse);
+  /* La descente : espace profond → aubergine du logo → lueur d'horizon */
+  background-image: linear-gradient(
+    180deg,
+    #060309 0%,
+    var(--abysse) 12%,
+    var(--aubergine-950) 34%,
+    var(--aubergine-900) 55%,
+    var(--aubergine-800) 74%,
+    var(--aubergine-700) 88%,
+    #33203a 100%
+  );
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-titre);
+  color: var(--creme);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.6em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+a {
+  color: var(--creme);
+  text-decoration-color: var(--creme-25);
+  text-underline-offset: 3px;
+  transition: color var(--transition), text-decoration-color var(--transition);
+}
+
+a:hover {
+  color: var(--ci-orange-vif);
+  text-decoration-color: var(--ci-orange);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+::selection {
+  background: var(--ci-orange);
+  color: var(--aubergine-950);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ci-orange);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============ Utilitaires ============ */
+.container {
+  width: min(var(--largeur-site), 100% - 2.5rem);
+  margin-inline: auto;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  background: var(--aubergine-950);
+  color: var(--creme);
+  padding: 0.7rem 1.2rem;
+  border-radius: 0 0 var(--rayon-sm) 0;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--creme-70);
+  margin-bottom: 1.1rem;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 1.6rem;
+  height: 2px;
+  background: var(--ci-orange);
+  border-radius: 2px;
+}
+
+.section-title {
+  font-size: var(--taille-h2);
+}
+
+.lead {
+  font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+  color: var(--creme-70);
+  max-width: 42rem;
+}
+
+.grid-2 {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+}
+
+.grid-3 {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+}
+
+/* ============ Boutons ============ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-titre);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform var(--transition), box-shadow var(--transition),
+    background var(--transition), border-color var(--transition);
+}
+
+.btn-primaire {
+  background: linear-gradient(135deg, var(--ci-orange), var(--ci-orange-vif));
+  color: var(--aubergine-950);
+  box-shadow: var(--halo-orange);
+}
+
+.btn-primaire:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 34px rgba(247, 127, 0, 0.5);
+  color: var(--aubergine-950);
+}
+
+.btn-contour {
+  border-color: var(--creme-25);
+  color: var(--creme);
+  background: transparent;
+}
+
+.btn-contour:hover {
+  border-color: var(--creme);
+  color: var(--creme);
+  transform: translateY(-2px);
+}
+
+.btn-vert {
+  background: var(--ci-vert);
+  color: var(--ci-blanc);
+}
+
+.btn-vert:hover {
+  background: var(--ci-vert-clair);
+  color: var(--ci-blanc);
+  transform: translateY(-2px);
+}
+
+/* ============ Fond étoilé ============ */
+.ciel {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ciel__couche {
+  position: absolute;
+  inset: -20% 0;
+  background-repeat: repeat;
+  will-change: transform;
+}
+
+/* Tuiles d'étoiles en SVG inline — aucune requête réseau */
+.ciel__couche--loin {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cg fill='%23F8F7F8'%3E%3Ccircle cx='23' cy='41' r='0.7' opacity='.5'/%3E%3Ccircle cx='97' cy='13' r='0.5' opacity='.4'/%3E%3Ccircle cx='151' cy='73' r='0.8' opacity='.6'/%3E%3Ccircle cx='219' cy='37' r='0.5' opacity='.35'/%3E%3Ccircle cx='287' cy='91' r='0.7' opacity='.5'/%3E%3Ccircle cx='341' cy='19' r='0.5' opacity='.4'/%3E%3Ccircle cx='397' cy='67' r='0.8' opacity='.55'/%3E%3Ccircle cx='43' cy='127' r='0.5' opacity='.4'/%3E%3Ccircle cx='113' cy='163' r='0.7' opacity='.5'/%3E%3Ccircle cx='187' cy='139' r='0.5' opacity='.35'/%3E%3Ccircle cx='253' cy='181' r='0.8' opacity='.6'/%3E%3Ccircle cx='317' cy='149' r='0.5' opacity='.4'/%3E%3Ccircle cx='383' cy='187' r='0.7' opacity='.5'/%3E%3Ccircle cx='29' cy='229' r='0.8' opacity='.55'/%3E%3Ccircle cx='101' cy='257' r='0.5' opacity='.4'/%3E%3Ccircle cx='167' cy='223' r='0.7' opacity='.5'/%3E%3Ccircle cx='239' cy='269' r='0.5' opacity='.35'/%3E%3Ccircle cx='311' cy='233' r='0.8' opacity='.6'/%3E%3Ccircle cx='379' cy='277' r='0.5' opacity='.4'/%3E%3Ccircle cx='59' cy='313' r='0.7' opacity='.5'/%3E%3Ccircle cx='131' cy='347' r='0.5' opacity='.4'/%3E%3Ccircle cx='199' cy='319' r='0.8' opacity='.55'/%3E%3Ccircle cx='271' cy='359' r='0.5' opacity='.35'/%3E%3Ccircle cx='337' cy='323' r='0.7' opacity='.5'/%3E%3Ccircle cx='401' cy='367' r='0.5' opacity='.4'/%3E%3Ccircle cx='71' cy='397' r='0.8' opacity='.6'/%3E%3Ccircle cx='161' cy='403' r='0.5' opacity='.4'/%3E%3Ccircle cx='247' cy='411' r='0.7' opacity='.5'/%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.8;
+}
+
+.ciel__couche--pres {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cg fill='%23F8F7F8'%3E%3Ccircle cx='47' cy='83' r='1.3' opacity='.9'/%3E%3Ccircle cx='193' cy='29' r='1' opacity='.7'/%3E%3Ccircle cx='331' cy='113' r='1.4' opacity='.85'/%3E%3Ccircle cx='449' cy='59' r='1' opacity='.65'/%3E%3Ccircle cx='527' cy='151' r='1.2' opacity='.8'/%3E%3Ccircle cx='89' cy='211' r='1' opacity='.7'/%3E%3Ccircle cx='239' cy='257' r='1.4' opacity='.9'/%3E%3Ccircle cx='389' cy='199' r='1' opacity='.6'/%3E%3Ccircle cx='509' cy='283' r='1.3' opacity='.85'/%3E%3Ccircle cx='59' cy='337' r='1.1' opacity='.75'/%3E%3Ccircle cx='181' cy='389' r='1.4' opacity='.9'/%3E%3Ccircle cx='313' cy='347' r='1' opacity='.65'/%3E%3Ccircle cx='443' cy='419' r='1.2' opacity='.8'/%3E%3Ccircle cx='103' cy='479' r='1' opacity='.7'/%3E%3Ccircle cx='251' cy='523' r='1.3' opacity='.85'/%3E%3Ccircle cx='401' cy='487' r='1' opacity='.6'/%3E%3Ccircle cx='523' cy='541' r='1.4' opacity='.9'/%3E%3C/g%3E%3C/svg%3E");
+  animation: scintiller 5.5s ease-in-out infinite alternate;
+}
+
+@keyframes scintiller {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}

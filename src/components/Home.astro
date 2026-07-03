@@ -1,0 +1,745 @@
+---
+/**
+ * Page d'accueil — la « descente » : espace profond → système solaire → ceinture
+ * → orbite → atmosphère → ciel d'Abidjan. Une seule source pour FR et EN.
+ */
+import HudPanel from './HudPanel.astro';
+import Card from './Card.astro';
+import SolarSystem from './solar/SolarSystem';
+import logo from '../assets/logo-aia-blanc.png';
+import { Image } from 'astro:assets';
+import { useT, routes, formatDate, type Lang } from '../i18n/ui';
+import { getUpcomingEvents, getPosts, getPartners } from '../lib/content';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const evenements = await getUpcomingEvents(lang, 3);
+const articles = (await getPosts(lang)).slice(0, 3);
+const partenaires = await getPartners(lang);
+
+const COPY = {
+  fr: {
+    hero: {
+      eyebrow: "Association Ivoirienne d'Astronomie · Abidjan",
+      h1: 'Le ciel commence ici.',
+      lead: "Depuis 2021, nous rapprochons la Côte d'Ivoire des étoiles : observations publiques, clubs dans les écoles, recherche d'astéroïdes avec l'Union Astronomique Internationale et la NASA. Prochaine étape : un observatoire national.",
+      hud: {
+        titre: 'Espace profond',
+        lignes: [
+          { label: 'Signal', valeur: 'Fond diffus cosmologique' },
+          { label: 'Température', valeur: '2,7 K' },
+          { label: 'Âge de l’Univers', valeur: '13,8 Mrd d’années' },
+        ],
+      },
+    },
+    sys: {
+      eyebrow: 'Navigation — système solaire',
+      titre: 'Choisis ta destination',
+      hud: {
+        titre: 'Système solaire',
+        lignes: [
+          { label: 'Étoile', valeur: '1 (le Soleil)' },
+          { label: 'Planètes', valeur: '8' },
+          { label: 'Âge', valeur: '4,6 Mrd d’années' },
+        ],
+      },
+    },
+    ceinture: {
+      eyebrow: 'Ceinture d’astéroïdes — 2,2 à 3,2 UA',
+      titre: 'Six cailloux célestes portent notre signature',
+      p1: "En 2022, une équipe de bénévoles de l'AIA a détecté six astéroïdes encore inconnus, en analysant depuis Abidjan les images du télescope Pan-STARRS — dans le cadre des campagnes de l'International Astronomical Search Collaboration, sous l'égide de l'UAI et de la NASA.",
+      p2: 'La preuve que la science se fait aussi depuis chez nous. Et les campagnes continuent : la prochaine détection portera peut-être ton nom.',
+      cta: 'Découvrir la recherche',
+      hud: {
+        titre: 'Ceinture principale',
+        lignes: [
+          { label: 'Objets connus', valeur: '≈ 1,4 million' },
+          { label: 'Détections AIA', valeur: '6 (2022)' },
+          { label: 'Programme', valeur: 'IASC · Pan-STARRS' },
+        ],
+      },
+    },
+    orbite: {
+      eyebrow: 'Orbite basse — 400 km',
+      titreEvents: 'Prochaines missions',
+      titreNews: 'Journal de bord',
+      hud: {
+        titre: 'Orbite terrestre',
+        lignes: [
+          { label: 'Altitude ISS', valeur: '≈ 400 km' },
+          { label: 'Vitesse', valeur: '27 600 km/h' },
+          { label: 'Levers de Soleil', valeur: '16 par jour' },
+        ],
+      },
+    },
+    atmo: {
+      eyebrow: 'Atmosphère — ligne de Kármán, 100 km',
+      titre: 'Sur le terrain',
+      lead: "L'astronomie ne se vit pas que dans les livres : nous la faisons descendre dans les rues, les écoles et les plages de Côte d'Ivoire.",
+      tuiles: [
+        {
+          titre: 'Observations publiques',
+          texte: "Des télescopes en accès libre, au cœur d'Abidjan et au-delà.",
+          icone: '/placeholders/observation.svg',
+        },
+        {
+          titre: 'Écoles & clubs',
+          texte: "Tournées scolaires et clubs d'astronomie durables dans les lycées.",
+          icone: '/placeholders/ecole.svg',
+        },
+        {
+          titre: 'Astrophotographie',
+          texte: 'Capturer le ciel ivoirien, de la Lune à la Voie lactée.',
+          icone: '/placeholders/astrophoto.svg',
+        },
+        {
+          titre: 'Conférences AstroPause',
+          texte: 'La science racontée à toutes et à tous, sans jargon.',
+          icone: '/placeholders/conference.svg',
+        },
+      ],
+      hud: {
+        titre: 'Atmosphère',
+        lignes: [
+          { label: 'Ligne de Kármán', valeur: '100 km' },
+          { label: 'Météores visibles', valeur: '75 – 100 km' },
+          { label: 'Ciel d’Abidjan', valeur: 'saison sèche = velours' },
+        ],
+      },
+    },
+    abidjan: {
+      titre: 'Veux-tu rejoindre l’aventure toi aussi ?',
+      p: "Étudiant·e, lycéen·ne, passionné·e ou simple curieux : il n'y a aucun prérequis pour regarder le ciel avec nous. Les jeunes femmes sont particulièrement bienvenues — l'espace a besoin de tout le monde.",
+      cta1: 'Je rejoins l’AIA',
+      cta2: 'Nous écrire',
+      partenairesTitre: 'Ils nous font confiance',
+      hud: {
+        titre: 'Ciel d’Abidjan',
+        lignes: [
+          { label: 'Base', valeur: '5°21′ N · 4°01′ O' },
+          { label: 'Altitude', valeur: '18 m' },
+          { label: 'Privilège équatorial', valeur: 'les 2 hémisphères célestes' },
+        ],
+      },
+    },
+  },
+  en: {
+    hero: {
+      eyebrow: 'Ivorian Astronomy Association · Abidjan',
+      h1: 'The sky starts here.',
+      lead: 'Since 2021 we have been bringing Côte d’Ivoire closer to the stars: public stargazing, school clubs, and asteroid search campaigns with the International Astronomical Union and NASA. Next step: a national observatory.',
+      hud: {
+        titre: 'Deep space',
+        lignes: [
+          { label: 'Signal', valeur: 'Cosmic microwave background' },
+          { label: 'Temperature', valeur: '2.7 K' },
+          { label: 'Age of Universe', valeur: '13.8 bn years' },
+        ],
+      },
+    },
+    sys: {
+      eyebrow: 'Navigation — solar system',
+      titre: 'Choose your destination',
+      hud: {
+        titre: 'Solar system',
+        lignes: [
+          { label: 'Star', valeur: '1 (the Sun)' },
+          { label: 'Planets', valeur: '8' },
+          { label: 'Age', valeur: '4.6 bn years' },
+        ],
+      },
+    },
+    ceinture: {
+      eyebrow: 'Asteroid belt — 2.2 to 3.2 AU',
+      titre: 'Six celestial rocks bear our signature',
+      p1: 'In 2022, a team of AIA volunteers detected six previously unknown asteroids by analysing Pan-STARRS telescope images from Abidjan — as part of the International Astronomical Search Collaboration campaigns, under the IAU and NASA umbrella.',
+      p2: 'Proof that science is also made from here. Campaigns continue: the next detection might carry your name.',
+      cta: 'Discover the research',
+      hud: {
+        titre: 'Main belt',
+        lignes: [
+          { label: 'Known objects', valeur: '≈ 1.4 million' },
+          { label: 'AIA detections', valeur: '6 (2022)' },
+          { label: 'Programme', valeur: 'IASC · Pan-STARRS' },
+        ],
+      },
+    },
+    orbite: {
+      eyebrow: 'Low orbit — 400 km',
+      titreEvents: 'Upcoming missions',
+      titreNews: 'Logbook',
+      hud: {
+        titre: 'Earth orbit',
+        lignes: [
+          { label: 'ISS altitude', valeur: '≈ 400 km' },
+          { label: 'Speed', valeur: '27,600 km/h' },
+          { label: 'Sunrises', valeur: '16 per day' },
+        ],
+      },
+    },
+    atmo: {
+      eyebrow: 'Atmosphere — Kármán line, 100 km',
+      titre: 'On the ground',
+      lead: 'Astronomy is not only lived in books: we bring it down to the streets, schools and beaches of Côte d’Ivoire.',
+      tuiles: [
+        {
+          titre: 'Public stargazing',
+          texte: 'Telescopes in free access, in the heart of Abidjan and beyond.',
+          icone: '/placeholders/observation.svg',
+        },
+        {
+          titre: 'Schools & clubs',
+          texte: 'School tours and lasting astronomy clubs in high schools.',
+          icone: '/placeholders/ecole.svg',
+        },
+        {
+          titre: 'Astrophotography',
+          texte: 'Capturing the Ivorian sky, from the Moon to the Milky Way.',
+          icone: '/placeholders/astrophoto.svg',
+        },
+        {
+          titre: 'AstroPause lectures',
+          texte: 'Science told to everyone, without jargon.',
+          icone: '/placeholders/conference.svg',
+        },
+      ],
+      hud: {
+        titre: 'Atmosphere',
+        lignes: [
+          { label: 'Kármán line', valeur: '100 km' },
+          { label: 'Visible meteors', valeur: '75 – 100 km' },
+          { label: 'Abidjan sky', valeur: 'dry season = velvet' },
+        ],
+      },
+    },
+    abidjan: {
+      titre: 'Want to join the adventure too?',
+      p: 'Student, high-schooler, enthusiast or simply curious: there is no prerequisite to watch the sky with us. Young women are especially welcome — space needs everyone.',
+      cta1: 'I join AIA',
+      cta2: 'Write to us',
+      partenairesTitre: 'They trust us',
+      hud: {
+        titre: 'Abidjan sky',
+        lignes: [
+          { label: 'Base', valeur: '5°21′ N · 4°01′ W' },
+          { label: 'Elevation', valeur: '18 m' },
+          { label: 'Equatorial privilege', valeur: 'both celestial hemispheres' },
+        ],
+      },
+    },
+  },
+} as const;
+
+const c = COPY[lang];
+const rechercheUrl =
+  lang === 'fr'
+    ? routes.activities.fr + '#recherche-asteroides'
+    : routes.activities.en + '#asteroid-search';
+---
+
+<!-- ═══════════ Couche 1 · Espace profond ═══════════ -->
+<section class="couche couche--espace" id="espace">
+  <div class="container hero">
+    <Image src={logo} alt="" width="132" height="132" class="hero__logo" loading="eager" />
+    <p class="eyebrow">{c.hero.eyebrow}</p>
+    <h1 class="hero__titre">{c.hero.h1}</h1>
+    <p class="lead hero__lead">{c.hero.lead}</p>
+    <div class="hero__actions">
+      <a class="btn btn-primaire" href="#systeme">{t('action.commencer')} ↓</a>
+      <a class="btn btn-contour" href={routes.join[lang]}>{t('nav.join')}</a>
+    </div>
+  </div>
+  <HudPanel titre={c.hero.hud.titre} lignes={[...c.hero.hud.lignes]} classe="couche__hud" />
+  <div class="hero__indice" aria-hidden="true">⌄</div>
+</section>
+
+<!-- ═══════════ Couche 2 · Système solaire (navigation) ═══════════ -->
+<section class="couche couche--systeme apparait" id="systeme">
+  <div class="container">
+    <p class="eyebrow">{c.sys.eyebrow}</p>
+    <h2 class="section-title">{c.sys.titre}</h2>
+    <p class="lead">{t('solar.hint')}</p>
+  </div>
+  <div class="container systeme__scene">
+    <SolarSystem
+      client:visible
+      lang={lang}
+      labels={{ aria: t('solar.aria'), to3d: t('solar.mode3d'), to2d: t('solar.mode2d') }}
+    />
+  </div>
+  <HudPanel titre={c.sys.hud.titre} lignes={[...c.sys.hud.lignes]} classe="couche__hud" />
+</section>
+
+<!-- ═══════════ Couche 3 · Ceinture d'astéroïdes ═══════════ -->
+<section class="couche couche--ceinture apparait" id="ceinture">
+  <div class="container ceinture__grille">
+    <div>
+      <p class="eyebrow">{c.ceinture.eyebrow}</p>
+      <h2 class="section-title">{c.ceinture.titre}</h2>
+      <p>{c.ceinture.p1}</p>
+      <p>{c.ceinture.p2}</p>
+      <a class="btn btn-primaire" href={rechercheUrl}>{c.ceinture.cta}</a>
+    </div>
+    <div class="ceinture__chiffre" aria-hidden="true">
+      <span>6</span>
+      <svg viewBox="0 0 200 200" width="200" height="200">
+        <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(206,201,206,.3)" stroke-width="2" stroke-dasharray="2 9"></circle>
+        <g fill="#F77F00">
+          <circle cx="100" cy="14" r="5"></circle>
+          <circle cx="174" cy="57" r="5"></circle>
+          <circle cx="174" cy="143" r="5"></circle>
+          <circle cx="100" cy="186" r="5"></circle>
+          <circle cx="26" cy="143" r="5"></circle>
+          <circle cx="26" cy="57" r="5"></circle>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <HudPanel titre={c.ceinture.hud.titre} lignes={[...c.ceinture.hud.lignes]} classe="couche__hud" />
+</section>
+
+<!-- ═══════════ Couche 4 · Orbite terrestre ═══════════ -->
+<section class="couche couche--orbite apparait" id="orbite">
+  <div class="container">
+    <p class="eyebrow">{c.orbite.eyebrow}</p>
+
+    <div class="orbite__entete">
+      <h2 class="section-title">{c.orbite.titreEvents}</h2>
+      <a class="orbite__tout" href={routes.events[lang]}>{t('action.toutVoir')} →</a>
+    </div>
+    {
+      evenements.length > 0 ? (
+        <div class="grid-3">
+          {evenements.map((e) => (
+            <Card
+              href={routes.events[lang]}
+              image={e.image}
+              chip={formatDate(e.date, lang) + (e.heure ? ` · ${e.heure}` : '')}
+              titre={e.titre}
+              texte={e.description}
+              meta={e.lieu}
+            />
+          ))}
+        </div>
+      ) : (
+        <p class="lead">{t('events.aucun')}</p>
+      )
+    }
+
+    <div class="orbite__entete orbite__entete--second">
+      <h2 class="section-title">{c.orbite.titreNews}</h2>
+      <a class="orbite__tout" href={routes.news[lang]}>{t('action.toutVoir')} →</a>
+    </div>
+    <div class="grid-3">
+      {
+        articles.map((a) => (
+          <Card
+            href={lang === 'fr' ? `/actualites/${a.slug}/` : `/en/news/${a.slug}/`}
+            image={a.image}
+            chip={formatDate(a.date, lang)}
+            chipVert
+            titre={a.titre}
+            texte={a.extrait}
+            lienLabel={t('action.lire')}
+          />
+        ))
+      }
+    </div>
+  </div>
+  <HudPanel titre={c.orbite.hud.titre} lignes={[...c.orbite.hud.lignes]} classe="couche__hud" />
+</section>
+
+<!-- ═══════════ Couche 5 · Atmosphère ═══════════ -->
+<section class="couche couche--atmosphere apparait" id="atmosphere">
+  <div class="container">
+    <p class="eyebrow">{c.atmo.eyebrow}</p>
+    <h2 class="section-title">{c.atmo.titre}</h2>
+    <p class="lead">{c.atmo.lead}</p>
+    <div class="grid-2 atmo__tuiles">
+      {
+        c.atmo.tuiles.map((tu) => (
+          <a class="tuile" href={routes.activities[lang]}>
+            <img src={tu.icone} alt="" loading="lazy" width="88" height="50" />
+            <div>
+              <h3>{tu.titre}</h3>
+              <p>{tu.texte}</p>
+            </div>
+            <span class="tuile__fleche" aria-hidden="true">→</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+  <HudPanel titre={c.atmo.hud.titre} lignes={[...c.atmo.hud.lignes]} classe="couche__hud" />
+</section>
+
+<!-- ═══════════ Couche 6 · Ciel d'Abidjan ═══════════ -->
+<section class="couche couche--abidjan apparait" id="abidjan">
+  <div class="container abidjan__int">
+    <h2 class="abidjan__titre">{c.abidjan.titre}</h2>
+    <p class="lead abidjan__p">{c.abidjan.p}</p>
+    <div class="abidjan__actions">
+      <a class="btn btn-primaire" href={routes.join[lang]}>{c.abidjan.cta1} 🚀</a>
+      <a class="btn btn-contour" href={routes.contact[lang]}>{c.abidjan.cta2}</a>
+    </div>
+
+    <p class="abidjan__partenaires-titre">{c.abidjan.partenairesTitre}</p>
+    <div class="abidjan__partenaires">
+      {
+        partenaires.map((pa) => (
+          <a class="partenaire-chip" href={routes.partners[lang]} title={pa.nom}>
+            {pa.sigle ?? pa.nom}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+  <HudPanel titre={c.abidjan.hud.titre} lignes={[...c.abidjan.hud.lignes]} classe="couche__hud" />
+</section>
+
+<style>
+  .couche {
+    position: relative;
+    padding-block: var(--espace-section);
+    scroll-margin-top: 64px;
+  }
+
+  /* HUD : coin haut-droit sur grand écran, sous le contenu sur mobile */
+  :global(.couche__hud) {
+    margin: 1.8rem auto 0;
+    width: min(21rem, calc(100% - 2.5rem));
+  }
+
+  @media (min-width: 1200px) {
+    :global(.couche__hud) {
+      position: absolute;
+      top: clamp(1rem, 4vh, 3rem);
+      right: 1.4rem;
+      margin: 0;
+      width: auto;
+    }
+  }
+
+  /* --- Couche 1 : hero plein écran --- */
+  .couche--espace {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero__logo {
+    border-radius: 50%;
+    margin-bottom: 1.6rem;
+    filter: drop-shadow(0 0 34px rgba(248, 247, 248, 0.18));
+  }
+
+  .hero .eyebrow::after {
+    content: '';
+    width: 1.6rem;
+    height: 2px;
+    background: var(--ci-vert);
+    border-radius: 2px;
+  }
+
+  .hero__titre {
+    font-size: var(--taille-hero);
+    max-width: 16ch;
+    margin-inline: auto;
+  }
+
+  .hero__lead {
+    margin-inline: auto;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    justify-content: center;
+    margin-top: 1.9rem;
+  }
+
+  .hero__indice {
+    position: absolute;
+    bottom: 1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--creme-45);
+    font-size: 1.6rem;
+    animation: flotter 2.2s ease-in-out infinite;
+  }
+
+  @keyframes flotter {
+    0%,
+    100% {
+      transform: translate(-50%, 0);
+    }
+    50% {
+      transform: translate(-50%, 8px);
+    }
+  }
+
+  /* --- Couche 2 : système solaire --- */
+  .couche--systeme {
+    text-align: center;
+  }
+
+  .couche--systeme .eyebrow {
+    justify-content: center;
+  }
+
+  .couche--systeme .lead {
+    margin-inline: auto;
+  }
+
+  .systeme__scene {
+    margin-top: 1.4rem;
+  }
+
+  /* --- Couche 3 : ceinture --- */
+  .ceinture__grille {
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 900px) {
+    .ceinture__grille {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  .ceinture__chiffre {
+    position: relative;
+    justify-self: center;
+    display: grid;
+    place-items: center;
+  }
+
+  .ceinture__chiffre span {
+    position: absolute;
+    font-family: var(--font-titre);
+    font-size: 7rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--ci-orange), var(--creme));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .ceinture__chiffre svg {
+    animation: tourner 60s linear infinite;
+  }
+
+  @keyframes tourner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* --- Couche 4 : orbite --- */
+  .orbite__entete {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .orbite__entete--second {
+    margin-top: 3.4rem;
+  }
+
+  .orbite__entete .section-title {
+    margin-bottom: 0;
+  }
+
+  .orbite__tout {
+    white-space: nowrap;
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--ci-orange-vif);
+  }
+
+  /* --- Couche 5 : atmosphère --- */
+  .atmo__tuiles {
+    margin-top: 2rem;
+  }
+
+  .tuile {
+    display: flex;
+    gap: 1.1rem;
+    align-items: center;
+    padding: 1.15rem 1.3rem;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    background: rgba(248, 247, 248, 0.04);
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--transition), border-color var(--transition);
+  }
+
+  .tuile:hover {
+    transform: translateY(-3px);
+    border-color: var(--creme-25);
+  }
+
+  .tuile img {
+    width: 88px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: var(--rayon-sm);
+    flex-shrink: 0;
+  }
+
+  .tuile h3 {
+    margin: 0 0 0.15rem;
+    font-size: 1.05rem;
+  }
+
+  .tuile p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--creme-70);
+  }
+
+  .tuile__fleche {
+    margin-left: auto;
+    color: var(--ci-orange-vif);
+    font-size: 1.2rem;
+    transition: transform var(--transition);
+  }
+
+  .tuile:hover .tuile__fleche {
+    transform: translateX(4px);
+  }
+
+  /* --- Couche 6 : Abidjan (horizon) --- */
+  .couche--abidjan {
+    text-align: center;
+    padding-bottom: calc(var(--espace-section) * 0.6);
+  }
+
+  .couche--abidjan::before {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 75%;
+    background:
+      radial-gradient(58% 46% at 50% 100%, rgba(247, 127, 0, 0.16), transparent 70%),
+      linear-gradient(to top, rgba(0, 158, 96, 0.05), transparent 45%);
+    pointer-events: none;
+  }
+
+  .abidjan__int {
+    position: relative;
+  }
+
+  .abidjan__titre {
+    font-size: clamp(1.9rem, 5vw, 3.3rem);
+    max-width: 22ch;
+    margin-inline: auto;
+  }
+
+  .abidjan__p {
+    margin-inline: auto;
+  }
+
+  .abidjan__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    justify-content: center;
+    margin-top: 1.8rem;
+  }
+
+  .abidjan__partenaires-titre {
+    margin-top: 4rem;
+    font-family: var(--font-hud);
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--creme-45);
+  }
+
+  .abidjan__partenaires {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .partenaire-chip {
+    font-family: var(--font-titre);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    color: var(--creme-70);
+    text-decoration: none;
+    border: 1px solid var(--creme-12);
+    border-radius: 999px;
+    padding: 0.5rem 1.05rem;
+    transition: color var(--transition), border-color var(--transition),
+      transform var(--transition);
+  }
+
+  .partenaire-chip:hover {
+    color: var(--creme);
+    border-color: var(--ci-orange);
+    transform: translateY(-2px);
+  }
+
+  /* --- Apparition au scroll (uniquement si JS présent) --- */
+  :global(html.js) .apparait {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity 700ms ease, transform 700ms ease;
+  }
+
+  :global(html.js) .apparait.vu {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .apparait {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  const sections = document.querySelectorAll('.apparait');
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver(
+      (entrees) => {
+        for (const e of entrees) {
+          if (e.isIntersecting) {
+            e.target.classList.add('vu');
+            obs.unobserve(e.target);
+          }
+        }
+      },
+      { threshold: 0.12 },
+    );
+    sections.forEach((s) => obs.observe(s));
+  } else {
+    sections.forEach((s) => s.classList.add('vu'));
+  }
+</script>

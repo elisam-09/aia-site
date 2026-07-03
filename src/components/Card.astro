@@ -1,0 +1,123 @@
+---
+/** Carte générique : événement, actualité ou produit. */
+interface Props {
+  href?: string;
+  image?: string;
+  imageAlt?: string;
+  chip?: string;
+  chipVert?: boolean;
+  titre: string;
+  texte?: string;
+  meta?: string;
+  lienLabel?: string;
+}
+
+const { href, image, imageAlt = '', chip, chipVert = false, titre, texte, meta, lienLabel } =
+  Astro.props;
+const Tag = href ? 'a' : 'article';
+---
+
+<Tag class="carte" href={href}>
+  {
+    image && (
+      <div class="carte__visuel">
+        <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
+      </div>
+    )
+  }
+  <div class="carte__corps">
+    {chip && <span class:list={['carte__chip', { vert: chipVert }]}>{chip}</span>}
+    <h3 class="carte__titre">{titre}</h3>
+    {texte && <p class="carte__texte">{texte}</p>}
+    {meta && <p class="carte__meta">{meta}</p>}
+    {href && lienLabel && <span class="carte__lien">{lienLabel} →</span>}
+  </div>
+</Tag>
+
+<style>
+  .carte {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, var(--creme-06), rgba(248, 247, 248, 0.02));
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--transition), border-color var(--transition),
+      box-shadow var(--transition);
+  }
+
+  a.carte:hover {
+    transform: translateY(-4px);
+    border-color: var(--creme-25);
+    box-shadow: var(--ombre-carte);
+  }
+
+  .carte__visuel {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--aubergine-900);
+  }
+
+  .carte__visuel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 600ms ease;
+  }
+
+  a.carte:hover .carte__visuel img {
+    transform: scale(1.045);
+  }
+
+  .carte__corps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.1rem 1.2rem 1.25rem;
+  }
+
+  .carte__chip {
+    align-self: flex-start;
+    font-family: var(--font-hud);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ci-orange-vif);
+    border: 1px solid rgba(247, 127, 0, 0.4);
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+  }
+
+  .carte__chip.vert {
+    color: var(--ci-vert-clair);
+    border-color: rgba(0, 158, 96, 0.45);
+  }
+
+  .carte__titre {
+    font-size: 1.12rem;
+    margin: 0;
+  }
+
+  .carte__texte {
+    color: var(--creme-70);
+    font-size: 0.93rem;
+    margin: 0;
+  }
+
+  .carte__meta {
+    font-family: var(--font-hud);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--creme-45);
+    margin: 0;
+  }
+
+  .carte__lien {
+    margin-top: 0.4rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ci-orange-vif);
+  }
+</style>

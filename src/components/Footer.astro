@@ -1,0 +1,169 @@
+---
+import { useT, routes, type Lang, type PageId } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const annee = new Date().getFullYear();
+
+const colExplorer: PageId[] = ['activities', 'events', 'news', 'gallery', 'support'];
+const colAssociation: PageId[] = ['about', 'partners', 'join', 'contact'];
+
+const labels: Record<PageId, string> = {
+  home: t('nav.home'),
+  about: t('nav.about'),
+  activities: t('nav.activities'),
+  events: t('nav.events'),
+  news: t('nav.news'),
+  gallery: t('nav.gallery'),
+  join: t('nav.join'),
+  support: t('nav.support'),
+  partners: t('nav.partners'),
+  contact: t('nav.contact'),
+};
+---
+
+<footer class="pied">
+  <div class="container pied__grille">
+    <div class="pied__marque">
+      <img src="/favicon.png" alt="" width="46" height="46" />
+      <p class="pied__nom">{t('site.nom')}</p>
+      <p class="pied__baseline">{t('footer.baseline')}</p>
+      <p class="pied__lieu">
+        <span class="pied__drapeau" aria-hidden="true"><i></i><i></i><i></i></span>
+        Abidjan, Côte d'Ivoire
+      </p>
+    </div>
+
+    <nav class="pied__col" aria-label={t('footer.explorer')}>
+      <h3>{t('footer.explorer')}</h3>
+      {colExplorer.map((id) => <a href={routes[id][lang]}>{labels[id]}</a>)}
+    </nav>
+
+    <nav class="pied__col" aria-label={t('footer.association')}>
+      <h3>{t('footer.association')}</h3>
+      {colAssociation.map((id) => <a href={routes[id][lang]}>{labels[id]}</a>)}
+    </nav>
+  </div>
+
+  <div class="container pied__bas">
+    <p>© {annee} {t('site.sigle')} — {t('footer.droits')}</p>
+    <p>{t('footer.legal')}</p>
+  </div>
+</footer>
+
+<style>
+  .pied {
+    margin-top: var(--espace-section);
+    border-top: 1px solid var(--creme-12);
+    background: rgba(11, 6, 12, 0.45);
+    padding-top: 3.5rem;
+  }
+
+  .pied__grille {
+    display: grid;
+    gap: 2.5rem;
+    grid-template-columns: 1fr;
+    padding-bottom: 2.5rem;
+  }
+
+  @media (min-width: 760px) {
+    .pied__grille {
+      grid-template-columns: 1.6fr 1fr 1fr;
+    }
+  }
+
+  .pied__marque img {
+    border-radius: 50%;
+    margin-bottom: 0.9rem;
+  }
+
+  .pied__nom {
+    font-family: var(--font-titre);
+    font-weight: 600;
+    color: var(--creme);
+    margin-bottom: 0.3rem;
+  }
+
+  .pied__baseline {
+    color: var(--creme-45);
+    margin-bottom: 1rem;
+  }
+
+  .pied__lieu {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-hud);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    color: var(--creme-70);
+  }
+
+  /* Micro-signature drapeau — trois points, jamais un fond */
+  .pied__drapeau {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  .pied__drapeau i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .pied__drapeau i:nth-child(1) {
+    background: var(--ci-orange);
+  }
+
+  .pied__drapeau i:nth-child(2) {
+    background: var(--ci-blanc);
+  }
+
+  .pied__drapeau i:nth-child(3) {
+    background: var(--ci-vert);
+  }
+
+  .pied__col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .pied__col h3 {
+    font-size: 0.78rem;
+    font-family: var(--font-hud);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--creme-45);
+    margin-bottom: 0.4rem;
+  }
+
+  .pied__col a {
+    text-decoration: none;
+    color: var(--creme-70);
+    font-size: 0.95rem;
+  }
+
+  .pied__col a:hover {
+    color: var(--ci-orange-vif);
+  }
+
+  .pied__bas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 2rem;
+    justify-content: space-between;
+    border-top: 1px solid var(--creme-06);
+    padding-block: 1.3rem;
+    font-size: 0.82rem;
+    color: var(--creme-45);
+  }
+
+  .pied__bas p {
+    margin: 0;
+  }
+</style>
