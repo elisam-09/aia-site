@@ -2,8 +2,8 @@
  * Scène 3D du système solaire (React Three Fiber).
  * Chargée uniquement en dynamic import par SolarSystem.tsx — jamais dans le bundle initial.
  */
-import { useMemo, useRef, useState, useCallback } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Lang } from '../../i18n/ui';
@@ -276,6 +276,33 @@ function Orbits() {
   );
 }
 
+/** Cadre le système selon le ratio du conteneur : recule et bascule plus en
+ *  plongée sur les écrans étroits pour que les orbites tiennent dans la largeur. */
+function ResponsiveCamera() {
+  const camera = useThree((s) => s.camera);
+  const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
+
+  useEffect(() => {
+    const aspect = width / Math.max(height, 1);
+    const rayon = 22.5; // Neptune (21.4) + marge d'étiquette
+    const vfov = (42 * Math.PI) / 180;
+    const distH = rayon / (Math.tan(vfov / 2) * aspect);
+    const distV = rayon / Math.tan(vfov / 2);
+    const dist = Math.min(72, Math.max(30, distH, distV * 0.7));
+    // Plus l'écran est étroit, plus on regarde de haut (le système lit mieux à plat)
+    const elev = aspect < 1 ? 0.85 : 0.55;
+    camera.position.set(0, Math.sin(elev) * dist, Math.cos(elev) * dist);
+    camera.lookAt(0, 0, 0);
+    if ('fov' in camera) {
+      (camera as { fov: number }).fov = 42;
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, width, height]);
+
+  return null;
+}
+
 export default function SolarScene({ lang, paused, onReady }: SceneProps) {
   const { selected, go, clear } = useTapNav();
 
@@ -288,6 +315,7 @@ export default function SolarScene({ lang, paused, onReady }: SceneProps) {
       onPointerMissed={clear}
       style={{ width: '100%', height: '100%' }}
     >
+      <ResponsiveCamera />
       <ambientLight intensity={0.5} />
       <pointLight position={[0, 0, 0]} intensity={650} distance={0} decay={2} color="#FFE0B0" />
       <Stars radius={70} depth={26} count={1500} factor={3} saturation={0} fade speed={0.5} />

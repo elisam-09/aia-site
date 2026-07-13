@@ -1,0 +1,19 @@
+{
+  "name": "aia-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Back-office (Sanity Studio) de l'Association Ivoirienne d'Astronomie",
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sanity": "^4.10.0",
+    "styled-components": "^6.1.13"
+  }
+}

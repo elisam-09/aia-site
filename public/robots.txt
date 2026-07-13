@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aia-astronomie.vercel.app/sitemap-index.xml

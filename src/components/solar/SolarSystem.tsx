@@ -69,7 +69,11 @@ export default function SolarSystem({ lang, labels }: Props) {
 
     const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const eco = (navigator as { connection?: { saveData?: boolean } }).connection?.saveData;
-    if (reduit || eco) return; // le bouton reste disponible pour forcer la 3D
+    // Sur petit écran / portrait, on garde le 2D par défaut : il tient mieux dans
+    // le cadre et surtout évite de télécharger three.js (~coûteux en data mobile).
+    // Le bouton « Version 3D » reste disponible pour qui veut la scène complète.
+    const petitEcran = window.innerWidth < 760;
+    if (reduit || eco || petitEcran) return;
 
     const idle =
       (window as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback ??

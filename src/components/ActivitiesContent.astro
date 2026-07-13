@@ -1,0 +1,297 @@
+---
+import PageIntro from './PageIntro.astro';
+import JoinBanner from './JoinBanner.astro';
+import { routes, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const ancreRecherche = lang === 'fr' ? 'recherche-asteroides' : 'asteroid-search';
+
+const C = {
+  fr: {
+    eyebrow: 'Nos activités',
+    titre: 'Du trottoir d’Abidjan à la ceinture d’astéroïdes',
+    lead: "Quatre terrains d'action complémentaires : le grand public, les écoles, l'image… et la science qui compte.",
+    sections: [
+      {
+        id: 'observations',
+        image: '/placeholders/observation.svg',
+        titre: 'Observations publiques',
+        ps: [
+          "Régulièrement, nous installons nos télescopes dans l'espace public — esplanades, campus, plages — et nous invitons les passants à regarder. La Lune, Saturne et ses anneaux, Jupiter et ses satellites : la première fois, personne n'y croit.",
+          "Ces soirées sont gratuites et ouvertes à tous. Les dates sont annoncées sur la page Événements et sur nos réseaux.",
+        ],
+      },
+      {
+        id: 'ecoles',
+        image: '/placeholders/ecole.svg',
+        titre: "Tournées scolaires & clubs d'astronomie",
+        ps: [
+          "Nous sillonnons les établissements de Côte d'Ivoire avec un objectif : montrer aux élèves que les sciences mènent quelque part — et que ce quelque part peut être les étoiles. Séances de planétarium, ateliers, observations.",
+          "Chaque tournée vise à laisser derrière elle un club d'astronomie pérenne, animé par les élèves et parrainé par l'association. Nous portons une attention particulière à la place des jeunes filles dans ces clubs.",
+        ],
+      },
+      {
+        id: 'astrophoto',
+        image: '/placeholders/astrophoto.svg',
+        titre: 'Astrophotographie',
+        ps: [
+          "Photographier le ciel depuis la Côte d'Ivoire, c'est possible — et c'est spectaculaire. Nos séances d'initiation couvrent le matériel, la prise de vue et le traitement.",
+          'Les plus belles images rejoignent la Galerie et nos expositions lors des événements.',
+        ],
+      },
+      {
+        id: 'conferences',
+        image: '/placeholders/conference.svg',
+        titre: 'Conférences & AstroPause',
+        ps: [
+          "L'AstroPause, c'est notre rendez-vous : un sujet d'astronomie ou d'espace, un intervenant, un amphi ouvert à tous et des questions sans limite. Trous noirs, missions lunaires, vie ailleurs — aucun sujet ne fait peur.",
+        ],
+      },
+    ],
+    rechercheTitre: "Recherche d'astéroïdes",
+    rechercheBadge: '6 découvertes en 2022',
+    recherchePs: [
+      "C'est notre fierté : l'AIA fait de la vraie science. Dans le cadre des campagnes de l'International Astronomical Search Collaboration (IASC), menées sous l'égide de l'Union Astronomique Internationale et de la NASA, nos équipes analysent des images du télescope Pan-STARRS à la recherche d'objets encore inconnus.",
+      "En 2022, ce travail minutieux a payé : six astéroïdes détectés depuis Abidjan, aujourd'hui dans le processus de confirmation du Minor Planet Center. À terme, l'équipe pourra proposer leurs noms — et inscrire la Côte d'Ivoire sur la carte du système solaire.",
+      "Ces campagnes reviennent chaque année et sont ouvertes à tous les membres formés — il suffit d'un ordinateur, d'une méthode, et de patience.",
+    ],
+    rechercheCta: 'Participer à la prochaine campagne',
+    hudRecherche: [
+      { label: 'Programme', valeur: 'IASC · UAI · NASA' },
+      { label: 'Données', valeur: 'Télescope Pan-STARRS (Hawaï)' },
+      { label: 'Bilan AIA', valeur: '6 astéroïdes (2022)' },
+    ],
+  },
+  en: {
+    eyebrow: 'Our activities',
+    titre: 'From the Abidjan sidewalk to the asteroid belt',
+    lead: 'Four complementary fields of action: the public, schools, images… and science that counts.',
+    sections: [
+      {
+        id: 'observations',
+        image: '/placeholders/observation.svg',
+        titre: 'Public stargazing',
+        ps: [
+          'Regularly, we set up our telescopes in public spaces — esplanades, campuses, beaches — and invite passers-by to look. The Moon, Saturn and its rings, Jupiter and its satellites: the first time, nobody believes it.',
+          'These evenings are free and open to all. Dates are announced on the Events page and on our social media.',
+        ],
+      },
+      {
+        id: 'schools',
+        image: '/placeholders/ecole.svg',
+        titre: 'School tours & astronomy clubs',
+        ps: [
+          'We travel across Côte d’Ivoire’s schools with one goal: show students that science leads somewhere — and that somewhere can be the stars. Planetarium sessions, workshops, observations.',
+          'Each tour aims to leave behind a lasting astronomy club, run by students and sponsored by the association. We pay particular attention to the place of girls in these clubs.',
+        ],
+      },
+      {
+        id: 'astrophoto',
+        image: '/placeholders/astrophoto.svg',
+        titre: 'Astrophotography',
+        ps: [
+          'Photographing the sky from Côte d’Ivoire is possible — and spectacular. Our introductory sessions cover equipment, shooting and processing.',
+          'The best images join the Gallery and our exhibitions during events.',
+        ],
+      },
+      {
+        id: 'lectures',
+        image: '/placeholders/conference.svg',
+        titre: 'Lectures & AstroPause',
+        ps: [
+          'AstroPause is our regular meet-up: one astronomy or space topic, one speaker, a lecture hall open to all and unlimited questions. Black holes, lunar missions, life elsewhere — no topic is off limits.',
+        ],
+      },
+    ],
+    rechercheTitre: 'Asteroid search',
+    rechercheBadge: '6 discoveries in 2022',
+    recherchePs: [
+      'This is our pride: AIA does real science. As part of the International Astronomical Search Collaboration (IASC) campaigns, run under the aegis of the International Astronomical Union and NASA, our teams analyse Pan-STARRS telescope images hunting for unknown objects.',
+      'In 2022 this meticulous work paid off: six asteroids detected from Abidjan, now going through the Minor Planet Center confirmation process. Eventually the team will be able to propose their names — and put Côte d’Ivoire on the map of the solar system.',
+      'These campaigns come back every year and are open to all trained members — all it takes is a computer, a method, and patience.',
+    ],
+    rechercheCta: 'Join the next campaign',
+    hudRecherche: [
+      { label: 'Programme', valeur: 'IASC · IAU · NASA' },
+      { label: 'Data', valeur: 'Pan-STARRS telescope (Hawaii)' },
+      { label: 'AIA record', valeur: '6 asteroids (2022)' },
+    ],
+  },
+}[lang];
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<div class="container">
+  {
+    C.sections.map((s, i) => (
+      <section class="activite" id={s.id}>
+        <img src={s.image} alt="" loading="lazy" class:list={[{ inverse: i % 2 === 1 }]} />
+        <div>
+          <h2>{s.titre}</h2>
+          {s.ps.map((p) => (
+            <p>{p}</p>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="recherche" id={ancreRecherche}>
+    <div class="recherche__tete">
+      <h2>{C.rechercheTitre}</h2>
+      <span class="recherche__badge">☄ {C.rechercheBadge}</span>
+    </div>
+    <div class="recherche__grille">
+      <div>
+        {C.recherchePs.map((p) => <p>{p}</p>)}
+        <a class="btn btn-primaire" href={routes.join[lang]}>{C.rechercheCta}</a>
+      </div>
+      <aside class="recherche__hud">
+        <dl>
+          {
+            C.hudRecherche.map((l) => (
+              <div>
+                <dt>{l.label}</dt>
+                <dd>{l.valeur}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <img src="/placeholders/recherche.svg" alt="" loading="lazy" />
+      </aside>
+    </div>
+  </section>
+</div>
+
+<JoinBanner lang={lang} />
+
+<style>
+  .activite {
+    display: grid;
+    gap: 1.8rem;
+    align-items: center;
+    padding-block: clamp(1.8rem, 5vh, 3rem);
+    border-bottom: 1px solid var(--creme-06);
+    scroll-margin-top: 80px;
+  }
+
+  @media (min-width: 860px) {
+    .activite {
+      grid-template-columns: 380px 1fr;
+    }
+
+    .activite img.inverse {
+      order: 2;
+    }
+  }
+
+  .activite img {
+    border-radius: var(--rayon);
+    border: 1px solid var(--creme-12);
+    width: 100%;
+  }
+
+  .activite h2 {
+    font-size: var(--taille-h3);
+  }
+
+  .activite p {
+    color: var(--creme-70);
+  }
+
+  .recherche {
+    margin-top: clamp(2.5rem, 7vh, 4rem);
+    border: 1px solid rgba(247, 127, 0, 0.35);
+    border-radius: calc(var(--rayon) * 1.4);
+    padding: clamp(1.6rem, 4vw, 2.8rem);
+    background:
+      radial-gradient(70% 120% at 100% 0%, rgba(247, 127, 0, 0.09), transparent 60%),
+      rgba(18, 10, 18, 0.5);
+    scroll-margin-top: 80px;
+  }
+
+  .recherche__tete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .recherche__tete h2 {
+    margin: 0;
+    font-size: var(--taille-h2);
+  }
+
+  .recherche__badge {
+    font-family: var(--font-hud);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ci-orange-vif);
+    border: 1px solid rgba(247, 127, 0, 0.5);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+  }
+
+  .recherche__grille {
+    display: grid;
+    gap: 2rem;
+  }
+
+  @media (min-width: 900px) {
+    .recherche__grille {
+      grid-template-columns: 1.5fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .recherche__grille p {
+    color: var(--creme-2);
+  }
+
+  .recherche .btn {
+    margin-top: 0.6rem;
+  }
+
+  .recherche__hud {
+    font-family: var(--font-hud);
+    font-size: 0.78rem;
+    border: 1px solid var(--creme-12);
+    padding: 1rem;
+    background: rgba(11, 6, 12, 0.5);
+  }
+
+  .recherche__hud dl {
+    margin: 0 0 1rem;
+  }
+
+  .recherche__hud dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.3rem;
+    border-bottom: 1px dashed var(--creme-06);
+  }
+
+  .recherche__hud dt {
+    color: var(--creme-45);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .recherche__hud dd {
+    margin: 0;
+    text-align: right;
+    color: var(--creme-2);
+  }
+
+  .recherche__hud img {
+    border-radius: var(--rayon-sm);
+  }
+</style>

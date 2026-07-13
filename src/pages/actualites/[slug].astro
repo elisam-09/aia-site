@@ -1,0 +1,77 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getPosts } from '../../lib/content';
+import { renderBlocks } from '../../lib/blocks';
+import { formatDate, routes, useT } from '../../i18n/ui';
+import type { Post } from '../../lib/types';
+
+export async function getStaticPaths() {
+  const posts = await getPosts('fr');
+  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const t = useT('fr');
+---
+
+<Base lang="fr" pageId="news" title={post.titre} description={post.extrait}>
+  <article class="container article">
+    <p class="eyebrow">
+      {t('news.publie')}
+      {formatDate(post.date, 'fr')} · {t('news.par')}
+      {post.auteur}
+    </p>
+    <h1>{post.titre}</h1>
+    <p class="lead">{post.extrait}</p>
+    {post.image && <img class="article__visuel" src={post.image} alt="" />}
+    <div class="article__corps" set:html={renderBlocks(post.corps)} />
+    <a class="article__retour" href={routes.news.fr}>← {t('nav.news')}</a>
+  </article>
+</Base>
+
+<style>
+  .article {
+    max-width: 46rem;
+    padding-block: clamp(3rem, 8vh, 5rem) 2rem;
+  }
+
+  .article h1 {
+    font-size: clamp(1.8rem, 4.5vw, 2.9rem);
+  }
+
+  .article__visuel {
+    border-radius: var(--rayon);
+    border: 1px solid var(--creme-12);
+    margin-block: 1.6rem;
+  }
+
+  .article__corps :global(h2) {
+    margin-top: 2.2rem;
+    font-size: 1.4rem;
+  }
+
+  .article__corps :global(p) {
+    color: var(--creme-2);
+  }
+
+  .article__corps :global(blockquote) {
+    margin: 1.8rem 0;
+    padding: 0.4rem 0 0.4rem 1.3rem;
+    border-left: 3px solid var(--ci-orange);
+    font-family: var(--font-titre);
+    font-size: 1.15rem;
+    color: var(--creme);
+  }
+
+  .article__retour {
+    display: inline-block;
+    margin-top: 2.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ci-orange-vif);
+  }
+</style>

@@ -1,0 +1,175 @@
+---
+import PageIntro from './PageIntro.astro';
+import FormBlock from './FormBlock.astro';
+import { useT, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const C = {
+  fr: {
+    eyebrow: "Rejoindre l'AIA",
+    titre: 'Veux-tu rejoindre l’aventure toi aussi ?',
+    lead: "Pas besoin de télescope, pas besoin de diplôme d'astrophysique. Juste l'envie de comprendre ce qui brille au-dessus de nos têtes.",
+    avantagesTitre: 'Ce qui t’attend',
+    avantages: [
+      { icone: '🔭', t: 'Les télescopes de l’association', p: 'Formation au matériel et accès aux soirées d’observation membres.' },
+      { icone: '☄️', t: 'Les campagnes de recherche', p: 'Participe aux campagnes IASC (UAI/NASA) et pars à la chasse aux astéroïdes.' },
+      { icone: '📚', t: 'Formations & conférences', p: 'Ateliers d’initiation, astrophotographie, accès privilégié aux AstroPause.' },
+      { icone: '🤝', t: 'Une communauté', p: 'Une quarantaine de passionnés, étudiants, enseignants, curieux — et bientôt toi.' },
+    ],
+    etapesTitre: 'Comment ça se passe',
+    etapes: [
+      'Tu remplis le formulaire ci-dessous (2 minutes, promis).',
+      'Le bureau te recontacte et t’invite à une prochaine activité pour faire connaissance.',
+      'Tu deviens membre et l’univers devient un peu plus le tien.',
+    ],
+    formSujet: "Candidature — Rejoindre l'AIA",
+    formTitre: 'Ta candidature',
+    femmes: 'Jeunes femmes : les filières scientifiques ont besoin de vous, et l’AIA vous fait une place particulière. Osez.',
+  },
+  en: {
+    eyebrow: 'Join AIA',
+    titre: 'Want to join the adventure too?',
+    lead: 'No telescope needed, no astrophysics degree required. Just the urge to understand what shines above our heads.',
+    avantagesTitre: 'What awaits you',
+    avantages: [
+      { icone: '🔭', t: 'The association’s telescopes', p: 'Equipment training and access to members’ observation nights.' },
+      { icone: '☄️', t: 'Research campaigns', p: 'Take part in IASC campaigns (IAU/NASA) and hunt for asteroids.' },
+      { icone: '📚', t: 'Training & lectures', p: 'Introductory workshops, astrophotography, priority access to AstroPause.' },
+      { icone: '🤝', t: 'A community', p: 'Some forty enthusiasts — students, teachers, curious minds — and soon, you.' },
+    ],
+    etapesTitre: 'How it works',
+    etapes: [
+      'Fill in the form below (2 minutes, promise).',
+      'The board gets back to you and invites you to an upcoming activity.',
+      'You become a member and the universe becomes a little more yours.',
+    ],
+    formSujet: 'Application — Join AIA',
+    formTitre: 'Your application',
+    femmes: 'Young women: science needs you, and AIA makes a special place for you. Dare.',
+  },
+}[lang];
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<section class="container">
+  <h2 class="section-title">{C.avantagesTitre}</h2>
+  <div class="grid-2">
+    {
+      C.avantages.map((a) => (
+        <article class="avantage">
+          <span class="avantage__icone" aria-hidden="true">{a.icone}</span>
+          <div>
+            <h3>{a.t}</h3>
+            <p>{a.p}</p>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+
+  <p class="encart-femmes">✨ {C.femmes}</p>
+</section>
+
+<section class="container bloc-etapes">
+  <h2 class="section-title">{C.etapesTitre}</h2>
+  <ol class="etapes">
+    {C.etapes.map((e) => <li>{e}</li>)}
+  </ol>
+</section>
+
+<section class="container bloc-form" id="formulaire">
+  <h2 class="section-title">{C.formTitre}</h2>
+  <FormBlock
+    lang={lang}
+    id="adhesion"
+    sujet={C.formSujet}
+    bouton={t('form.envoyer')}
+    champs={[
+      { name: 'nom', label: t('form.nom'), requis: true },
+      { name: 'email', label: t('form.email'), type: 'email', requis: true },
+      { name: 'telephone', label: t('form.tel'), type: 'tel' },
+      { name: 'ville', label: t('form.ville') },
+      { name: 'motivation', label: t('form.motivation'), type: 'textarea', requis: true },
+    ]}
+  />
+</section>
+
+<style>
+  .avantage {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    padding: 1.3rem;
+    background: rgba(248, 247, 248, 0.03);
+  }
+
+  .avantage__icone {
+    font-size: 1.7rem;
+    line-height: 1;
+  }
+
+  .avantage h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .avantage p {
+    color: var(--creme-70);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+
+  .encart-femmes {
+    margin-top: 1.6rem;
+    border-left: 3px solid var(--ci-vert);
+    padding: 0.8rem 1.2rem;
+    background: rgba(0, 158, 96, 0.07);
+    border-radius: 0 var(--rayon-sm) var(--rayon-sm) 0;
+    color: var(--creme-2);
+    max-width: 46rem;
+  }
+
+  .bloc-etapes,
+  .bloc-form {
+    margin-top: clamp(2.5rem, 7vh, 4rem);
+  }
+
+  .etapes {
+    counter-reset: etape;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    max-width: 46rem;
+  }
+
+  .etapes li {
+    counter-increment: etape;
+    position: relative;
+    padding-left: 3.4rem;
+    color: var(--creme-2);
+  }
+
+  .etapes li::before {
+    content: counter(etape, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.05rem;
+    font-family: var(--font-hud);
+    font-size: 0.85rem;
+    color: var(--ci-orange-vif);
+    border: 1px solid rgba(247, 127, 0, 0.45);
+    border-radius: 999px;
+    padding: 0.3rem 0.55rem;
+  }
+</style>

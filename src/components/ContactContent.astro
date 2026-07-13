@@ -1,0 +1,120 @@
+---
+import PageIntro from './PageIntro.astro';
+import FormBlock from './FormBlock.astro';
+import { useT, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const email = (import.meta.env.PUBLIC_CONTACT_EMAIL as string | undefined) ?? 'contact@aia-ci.org';
+
+const C = {
+  fr: {
+    eyebrow: 'Contact',
+    titre: 'Établir la liaison',
+    lead: 'Une question, une école à visiter, un partenariat, une commande ? Le canal est ouvert.',
+    coordsTitre: 'Coordonnées',
+    adresse: "UFR Sciences des Structures de la Matière et Technologies, Université Félix Houphouët-Boigny — Cocody, Abidjan, Côte d'Ivoire",
+    emailLabel: 'E-mail',
+    reseauxNote: 'Retrouve-nous aussi sur les réseaux sociaux (liens à venir sur cette page).',
+    formSujet: 'Contact — site AIA',
+  },
+  en: {
+    eyebrow: 'Contact',
+    titre: 'Establish the link',
+    lead: 'A question, a school to visit, a partnership, an order? The channel is open.',
+    coordsTitre: 'Details',
+    adresse: 'UFR SSMT, Félix Houphouët-Boigny University — Cocody, Abidjan, Côte d’Ivoire',
+    emailLabel: 'Email',
+    reseauxNote: 'You can also find us on social media (links coming to this page).',
+    formSujet: 'Contact — AIA website',
+  },
+}[lang];
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<section class="container contact">
+  <div>
+    <FormBlock
+      lang={lang}
+      id="contact"
+      sujet={C.formSujet}
+      bouton={t('form.envoyer')}
+      champs={[
+        { name: 'nom', label: t('form.nom'), requis: true },
+        { name: 'email', label: t('form.email'), type: 'email', requis: true },
+        { name: 'sujet', label: t('form.sujet'), requis: true },
+        { name: 'message', label: t('form.message'), type: 'textarea', requis: true },
+      ]}
+    />
+  </div>
+
+  <aside class="coords">
+    <h2>{C.coordsTitre}</h2>
+    <p class="coords__ligne">📍 {C.adresse}</p>
+    <p class="coords__ligne">
+      ✉️ {C.emailLabel} : <a href={`mailto:${email}`}>{email}</a>
+    </p>
+    <p class="coords__note">{C.reseauxNote}</p>
+    <div class="coords__hud" aria-hidden="true">
+      <span>LAT 5°21′ N</span>
+      <span>LON 4°01′ O</span>
+      <span>UTC ±0</span>
+    </div>
+  </aside>
+</section>
+
+<style>
+  .contact {
+    display: grid;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  @media (min-width: 900px) {
+    .contact {
+      grid-template-columns: 1.3fr 1fr;
+    }
+  }
+
+  .coords {
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    padding: 1.6rem;
+    background: rgba(248, 247, 248, 0.03);
+  }
+
+  .coords h2 {
+    font-size: 1.2rem;
+  }
+
+  .coords__ligne {
+    color: var(--creme-2);
+    font-size: 0.95rem;
+  }
+
+  .coords__note {
+    color: var(--creme-45);
+    font-size: 0.85rem;
+  }
+
+  .coords__hud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.2rem;
+  }
+
+  .coords__hud span {
+    font-family: var(--font-hud);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--creme-70);
+    border: 1px solid var(--creme-12);
+    padding: 0.3rem 0.6rem;
+  }
+</style>

@@ -1,0 +1,224 @@
+---
+import PageIntro from './PageIntro.astro';
+import JoinBanner from './JoinBanner.astro';
+import { getTeam } from '../lib/content';
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const equipe = await getTeam(lang);
+
+const C = {
+  fr: {
+    eyebrow: 'Qui sommes-nous',
+    titre: 'Une association née sous le ciel d’Abidjan',
+    lead: "Fondée en 2021 à l'UFR Sciences des Structures de la Matière et Technologies de l'Université Félix Houphouët-Boigny, l'AIA rassemble une quarantaine de passionnés décidés à faire de l'astronomie une affaire ivoirienne.",
+    missionTitre: 'Notre mission',
+    missions: [
+      {
+        t: 'Partager le ciel',
+        p: "Observations publiques gratuites, séances d'astrophotographie et conférences ouvertes à tous : le ciel appartient à tout le monde.",
+      },
+      {
+        t: 'Former la relève',
+        p: "Tournées dans les écoles, création de clubs d'astronomie, accompagnement vers les filières scientifiques — avec une attention particulière portée aux jeunes femmes.",
+      },
+      {
+        t: 'Faire de la science',
+        p: "Campagnes de recherche d'astéroïdes avec l'UAI et la NASA, et à terme un observatoire national produisant des données utiles à la communauté internationale.",
+      },
+    ],
+    parcoursTitre: 'Notre trajectoire',
+    parcours: [
+      { annee: '2021', texte: "Naissance de l'AIA à l'UFR SSMT de l'Université Félix Houphouët-Boigny." },
+      { annee: '2022', texte: 'Six astéroïdes détectés lors des campagnes IASC menées avec l’UAI et la NASA.' },
+      { annee: '2023', texte: 'Lancement des conférences AstroPause et multiplication des clubs scolaires.' },
+      { annee: 'Demain', texte: "Un observatoire astronomique national — première pierre d'une agence spatiale ivoirienne." },
+    ],
+    bureauTitre: 'Le bureau',
+    bureauNote:
+      'Les portraits des membres du bureau arrivent bientôt — cette section est alimentée directement par l’équipe via le back-office.',
+  },
+  en: {
+    eyebrow: 'About us',
+    titre: 'An association born under the Abidjan sky',
+    lead: 'Founded in 2021 at the UFR SSMT of Félix Houphouët-Boigny University, AIA gathers some forty enthusiasts determined to make astronomy an Ivorian affair.',
+    missionTitre: 'Our mission',
+    missions: [
+      {
+        t: 'Share the sky',
+        p: 'Free public stargazing, astrophotography sessions and lectures open to all: the sky belongs to everyone.',
+      },
+      {
+        t: 'Train the next generation',
+        p: 'School tours, astronomy clubs, guidance towards scientific careers — with particular attention to young women.',
+      },
+      {
+        t: 'Do science',
+        p: 'Asteroid search campaigns with the IAU and NASA, and eventually a national observatory producing data useful to the international community.',
+      },
+    ],
+    parcoursTitre: 'Our trajectory',
+    parcours: [
+      { annee: '2021', texte: 'Birth of AIA at the UFR SSMT of Félix Houphouët-Boigny University.' },
+      { annee: '2022', texte: 'Six asteroids detected during IASC campaigns run with the IAU and NASA.' },
+      { annee: '2023', texte: 'Launch of the AstroPause lectures and growth of school clubs.' },
+      { annee: 'Tomorrow', texte: 'A national astronomical observatory — first stone of an Ivorian space agency.' },
+    ],
+    bureauTitre: 'The board',
+    bureauNote:
+      'Board member portraits are coming soon — this section is fed directly by the team through the back office.',
+  },
+}[lang];
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<section class="container bloc">
+  <h2 class="section-title">{C.missionTitre}</h2>
+  <div class="grid-3">
+    {
+      C.missions.map((m, i) => (
+        <article class="mission">
+          <span class="mission__num">0{i + 1}</span>
+          <h3>{m.t}</h3>
+          <p>{m.p}</p>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<section class="container bloc">
+  <h2 class="section-title">{C.parcoursTitre}</h2>
+  <ol class="frise">
+    {
+      C.parcours.map((e) => (
+        <li>
+          <span class="frise__annee">{e.annee}</span>
+          <p>{e.texte}</p>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<section class="container bloc">
+  <h2 class="section-title">{C.bureauTitre}</h2>
+  <p class="lead">{C.bureauNote}</p>
+  <div class="grid-3">
+    {
+      equipe.map((m) => (
+        <article class="membre">
+          <img src={m.photo} alt="" width="72" height="72" loading="lazy" />
+          <div>
+            <h3>{m.role}</h3>
+            <p>{m.bio}</p>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<JoinBanner lang={lang} />
+
+<style>
+  .bloc {
+    margin-top: clamp(2.5rem, 7vh, 4.5rem);
+  }
+
+  .mission {
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    padding: 1.5rem 1.4rem;
+    background: rgba(248, 247, 248, 0.03);
+  }
+
+  .mission__num {
+    font-family: var(--font-hud);
+    color: var(--ci-orange-vif);
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+  }
+
+  .mission h3 {
+    margin-top: 0.5rem;
+  }
+
+  .mission p {
+    color: var(--creme-70);
+    margin: 0;
+  }
+
+  .frise {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--creme-12);
+  }
+
+  .frise li {
+    position: relative;
+    padding: 0 0 1.8rem 1.8rem;
+  }
+
+  .frise li::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 0.45rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ci-orange);
+    box-shadow: 0 0 12px rgba(247, 127, 0, 0.6);
+  }
+
+  .frise li:last-child::before {
+    background: var(--ci-vert);
+    box-shadow: 0 0 12px rgba(0, 158, 96, 0.6);
+  }
+
+  .frise__annee {
+    font-family: var(--font-titre);
+    font-weight: 700;
+    color: var(--creme);
+    letter-spacing: 0.06em;
+  }
+
+  .frise p {
+    margin: 0.2rem 0 0;
+    color: var(--creme-70);
+    max-width: 52rem;
+  }
+
+  .membre {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    padding: 1.2rem;
+    background: rgba(248, 247, 248, 0.03);
+  }
+
+  .membre img {
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .membre h3 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .membre p {
+    font-size: 0.88rem;
+    color: var(--creme-70);
+    margin: 0;
+  }
+</style>

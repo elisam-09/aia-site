@@ -1,0 +1,48 @@
+---
+import PageIntro from './PageIntro.astro';
+import Card from './Card.astro';
+import { getPosts } from '../lib/content';
+import { useT, formatDate, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const articles = await getPosts(lang);
+
+const C = {
+  fr: {
+    eyebrow: 'Actualités',
+    titre: 'Le journal de bord de l’AIA',
+    lead: 'Découvertes, tournées, coulisses et plaidoyers — écrits par les membres du bureau.',
+  },
+  en: {
+    eyebrow: 'News',
+    titre: 'The AIA logbook',
+    lead: 'Discoveries, tours, behind the scenes and advocacy — written by the board members.',
+  },
+}[lang];
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<section class="container">
+  <div class="grid-3">
+    {
+      articles.map((a) => (
+        <Card
+          href={lang === 'fr' ? `/actualites/${a.slug}/` : `/en/news/${a.slug}/`}
+          image={a.image}
+          chip={formatDate(a.date, lang)}
+          chipVert
+          titre={a.titre}
+          texte={a.extrait}
+          meta={`${t('news.par')} ${a.auteur}`}
+          lienLabel={t('action.lire')}
+        />
+      ))
+    }
+  </div>
+</section>

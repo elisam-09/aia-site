@@ -1,0 +1,118 @@
+---
+import PageIntro from './PageIntro.astro';
+import Card from './Card.astro';
+import { getUpcomingEvents, getPastEvents } from '../lib/content';
+import { useT, formatDate, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const aVenir = await getUpcomingEvents(lang, 24);
+const passes = await getPastEvents(lang);
+
+const C = {
+  fr: {
+    eyebrow: 'Événements',
+    titre: 'Prochaines missions au sol',
+    lead: 'Observations publiques, conférences AstroPause, tournées scolaires : viens comme tu es, repars avec des étoiles.',
+  },
+  en: {
+    eyebrow: 'Events',
+    titre: 'Upcoming ground missions',
+    lead: 'Public stargazing, AstroPause lectures, school tours: come as you are, leave with stars.',
+  },
+}[lang];
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<section class="container">
+  <h2 class="section-title">{t('events.aVenir')}</h2>
+  {
+    aVenir.length > 0 ? (
+      <div class="grid-3">
+        {aVenir.map((e) => (
+          <Card
+            image={e.image}
+            chip={formatDate(e.date, lang) + (e.heure ? ` · ${e.heure}` : '')}
+            titre={e.titre}
+            texte={e.description}
+            meta={`📍 ${e.lieu}`}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="lead">{t('events.aucun')}</p>
+    )
+  }
+</section>
+
+<section class="container archives">
+  <h2 class="section-title">{t('events.passes')}</h2>
+  <ul class="archives__liste">
+    {
+      passes.map((e) => (
+        <li>
+          <span class="archives__date">{formatDate(e.date, lang)}</span>
+          <div>
+            <h3>{e.titre}</h3>
+            <p>{e.description}</p>
+            <p class="archives__lieu">📍 {e.lieu}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .archives {
+    margin-top: clamp(3rem, 8vh, 5rem);
+  }
+
+  .archives__liste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .archives__liste li {
+    display: grid;
+    gap: 0.4rem 2rem;
+    padding-block: 1.4rem;
+    border-top: 1px solid var(--creme-06);
+  }
+
+  @media (min-width: 760px) {
+    .archives__liste li {
+      grid-template-columns: 180px 1fr;
+    }
+  }
+
+  .archives__date {
+    font-family: var(--font-hud);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--ci-orange-vif);
+  }
+
+  .archives__liste h3 {
+    font-size: 1.08rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .archives__liste p {
+    color: var(--creme-70);
+    font-size: 0.93rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .archives__lieu {
+    font-family: var(--font-hud);
+    font-size: 0.75rem;
+    color: var(--creme-45);
+  }
+</style>

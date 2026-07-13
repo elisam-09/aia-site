@@ -1,0 +1,15 @@
+{
+  "name": "Association Ivoirienne d'Astronomie",
+  "short_name": "AIA",
+  "description": "L'astronomie en Côte d'Ivoire : observations, écoles, recherche d'astéroïdes.",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b060c",
+  "theme_color": "#120A12",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "64x64", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/logo-aia-blanc.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -1,0 +1,29 @@
+---
+/** En-tête standard des pages intérieures. */
+interface Props {
+  eyebrow: string;
+  titre: string;
+  lead?: string;
+}
+
+const { eyebrow, titre, lead } = Astro.props;
+---
+
+<header class="intro">
+  <div class="container">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1>{titre}</h1>
+    {lead && <p class="lead">{lead}</p>}
+  </div>
+</header>
+
+<style>
+  .intro {
+    padding-block: clamp(3rem, 9vh, 5.5rem) clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    max-width: 20ch;
+  }
+</style>

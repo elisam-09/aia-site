@@ -1,0 +1,123 @@
+---
+import PageIntro from './PageIntro.astro';
+import { getPartners } from '../lib/content';
+import { routes, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const partenaires = await getPartners(lang);
+
+const C = {
+  fr: {
+    eyebrow: 'Partenaires',
+    titre: 'On ne regarde pas le ciel tout seul',
+    lead: "De l'Université Félix Houphouët-Boigny à la NASA, ces institutions rendent nos activités possibles — et crédibles.",
+    devenir: 'Devenir partenaire',
+    devenirP: "Organisation scientifique, institution, entreprise : si notre mission résonne avec la vôtre, construisons quelque chose ensemble.",
+    site: 'Site officiel',
+  },
+  en: {
+    eyebrow: 'Partners',
+    titre: 'Nobody watches the sky alone',
+    lead: 'From Félix Houphouët-Boigny University to NASA, these institutions make our activities possible — and credible.',
+    devenir: 'Become a partner',
+    devenirP: 'Scientific organisation, institution, company: if our mission resonates with yours, let’s build something together.',
+    site: 'Official website',
+  },
+}[lang];
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<section class="container">
+  <div class="grid-2">
+    {
+      partenaires.map((pa) => (
+        <article class="partenaire">
+          <span class="partenaire__mono" aria-hidden="true">
+            {(pa.sigle ?? pa.nom).slice(0, 4)}
+          </span>
+          <div>
+            <h3>{pa.nom}</h3>
+            <p>{pa.description}</p>
+            {pa.site && (
+              <a href={pa.site} rel="noopener" target="_blank">
+                {C.site} ↗
+              </a>
+            )}
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<section class="container devenir">
+  <h2 class="section-title">{C.devenir}</h2>
+  <p>{C.devenirP}</p>
+  <a class="btn btn-primaire" href={routes.contact[lang]}>{C.devenir} →</a>
+</section>
+
+<style>
+  .partenaire {
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    padding: 1.4rem;
+    background: rgba(248, 247, 248, 0.03);
+  }
+
+  .partenaire__mono {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    border: 1px solid var(--creme-25);
+    font-family: var(--font-titre);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    color: var(--creme);
+    background: radial-gradient(circle at 30% 25%, var(--aubergine-600), var(--aubergine-900));
+  }
+
+  .partenaire h3 {
+    font-size: 1.08rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .partenaire p {
+    color: var(--creme-70);
+    font-size: 0.92rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .partenaire a {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ci-orange-vif);
+    text-decoration: none;
+  }
+
+  .devenir {
+    margin-top: clamp(3rem, 8vh, 5rem);
+    text-align: center;
+  }
+
+  .devenir p {
+    max-width: 40rem;
+    margin-inline: auto;
+    color: var(--creme-70);
+  }
+
+  .devenir .btn {
+    margin-top: 0.6rem;
+  }
+</style>

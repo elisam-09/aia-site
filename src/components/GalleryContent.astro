@@ -1,0 +1,160 @@
+---
+import PageIntro from './PageIntro.astro';
+import { getGallery } from '../lib/content';
+import { formatDate, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const photos = await getGallery(lang);
+
+const C = {
+  fr: {
+    eyebrow: 'Galerie',
+    titre: 'Ce que nos yeux ont vu',
+    lead: 'Astrophotographies, soirées d’observation, ateliers : la mémoire visuelle de l’association.',
+    filtres: {
+      tout: 'Tout',
+      astrophoto: 'Astrophoto',
+      observation: 'Observations',
+      evenement: 'Événements',
+      ecole: 'Écoles',
+    },
+  },
+  en: {
+    eyebrow: 'Gallery',
+    titre: 'What our eyes have seen',
+    lead: 'Astrophotography, stargazing nights, workshops: the visual memory of the association.',
+    filtres: {
+      tout: 'All',
+      astrophoto: 'Astrophoto',
+      observation: 'Stargazing',
+      evenement: 'Events',
+      ecole: 'Schools',
+    },
+  },
+}[lang];
+
+const cats = ['tout', 'astrophoto', 'observation', 'evenement', 'ecole'] as const;
+---
+
+<PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
+
+<section class="container">
+  <div class="filtres" role="group" aria-label={C.eyebrow}>
+    {
+      cats.map((cat) => (
+        <button
+          class:list={['filtre', { actif: cat === 'tout' }]}
+          type="button"
+          data-cat={cat}
+        >
+          {C.filtres[cat]}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="galerie">
+    {
+      photos.map((ph) => (
+        <figure class="photo" data-cat={ph.categorie}>
+          <img src={ph.image} alt={ph.titre} loading="lazy" decoding="async" />
+          <figcaption>
+            <span>{ph.titre}</span>
+            {ph.date && <small>{formatDate(ph.date, lang)}</small>}
+          </figcaption>
+        </figure>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .filtres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .filtre {
+    font-family: var(--font-hud);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--creme-70);
+    background: transparent;
+    border: 1px solid var(--creme-25);
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .filtre:hover {
+    color: var(--creme);
+    border-color: var(--creme);
+  }
+
+  .filtre.actif {
+    color: var(--aubergine-950);
+    background: var(--ci-orange);
+    border-color: var(--ci-orange);
+  }
+
+  .galerie {
+    columns: 3 260px;
+    gap: 1.1rem;
+  }
+
+  .photo {
+    break-inside: avoid;
+    margin: 0 0 1.1rem;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    overflow: hidden;
+    background: var(--aubergine-900);
+  }
+
+  .photo.cache {
+    display: none;
+  }
+
+  .photo img {
+    width: 100%;
+  }
+
+  .photo figcaption {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    align-items: baseline;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.85rem;
+    color: var(--creme-2);
+  }
+
+  .photo figcaption small {
+    font-family: var(--font-hud);
+    font-size: 0.68rem;
+    color: var(--creme-45);
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  const boutons = document.querySelectorAll<HTMLButtonElement>('.filtre');
+  const photos = document.querySelectorAll<HTMLElement>('.photo');
+  boutons.forEach((b) => {
+    b.addEventListener('click', () => {
+      boutons.forEach((x) => x.classList.toggle('actif', x === b));
+      const cat = b.dataset.cat;
+      photos.forEach((ph) => {
+        ph.classList.toggle('cache', cat !== 'tout' && ph.dataset.cat !== cat);
+      });
+    });
+  });
+</script>

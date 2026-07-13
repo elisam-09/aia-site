@@ -1,0 +1,186 @@
+---
+/**
+ * Formulaire statique :
+ * - si PUBLIC_FORM_ENDPOINT est défini (Formspree, Web3Forms…), envoi en fetch ;
+ * - sinon, repli mailto: vers PUBLIC_CONTACT_EMAIL (message pré-rempli).
+ */
+import { useT, type Lang } from '../i18n/ui';
+
+interface Champ {
+  name: string;
+  label: string;
+  type?: 'text' | 'email' | 'tel' | 'textarea';
+  requis?: boolean;
+}
+
+interface Props {
+  lang: Lang;
+  id: string;
+  sujet: string;
+  champs: Champ[];
+  bouton: string;
+}
+
+const { lang, id, sujet, champs, bouton } = Astro.props;
+const t = useT(lang);
+const endpoint = (import.meta.env.PUBLIC_FORM_ENDPOINT as string | undefined) ?? '';
+const email = (import.meta.env.PUBLIC_CONTACT_EMAIL as string | undefined) ?? 'contact@aia-ci.org';
+---
+
+<form
+  class="formulaire"
+  id={id}
+  data-endpoint={endpoint}
+  data-email={email}
+  data-sujet={sujet}
+  novalidate
+>
+  {
+    champs.map((ch) => (
+      <label class="formulaire__champ">
+        <span>
+          {ch.label}
+          {ch.requis && <em aria-hidden="true"> *</em>}
+        </span>
+        {ch.type === 'textarea' ? (
+          <textarea name={ch.name} rows="5" required={ch.requis} />
+        ) : (
+          <input type={ch.type ?? 'text'} name={ch.name} required={ch.requis} />
+        )}
+      </label>
+    ))
+  }
+  <input type="hidden" name="formulaire" value={id} />
+  <input type="text" name="_gotcha" class="pot-de-miel" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+  {!endpoint && <p class="formulaire__note">{t('form.mailto')}</p>}
+
+  <button class="btn btn-primaire" type="submit">
+    <span class="formulaire__label">{bouton}</span>
+  </button>
+
+  <p class="formulaire__etat ok" hidden>✅ {t('form.merci')}</p>
+  <p class="formulaire__etat err" hidden>⚠️ {t('form.erreur')} — <a href={`mailto:${email}`}>{email}</a></p>
+</form>
+
+<style>
+  .formulaire {
+    display: grid;
+    gap: 1.1rem;
+    max-width: 560px;
+  }
+
+  .formulaire__champ {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .formulaire__champ span {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--creme-2);
+  }
+
+  .formulaire__champ em {
+    color: var(--ci-orange-vif);
+    font-style: normal;
+  }
+
+  input,
+  textarea {
+    font: inherit;
+    color: var(--creme);
+    background: rgba(248, 247, 248, 0.05);
+    border: 1px solid var(--creme-25);
+    border-radius: var(--rayon-sm);
+    padding: 0.75rem 0.9rem;
+    transition: border-color var(--transition), background var(--transition);
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--ci-orange);
+    background: rgba(248, 247, 248, 0.08);
+  }
+
+  .pot-de-miel {
+    position: absolute;
+    left: -9999px;
+    height: 0;
+    width: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .formulaire__note {
+    font-size: 0.82rem;
+    color: var(--creme-45);
+    margin: 0;
+  }
+
+  .formulaire button {
+    justify-self: start;
+  }
+
+  .formulaire__etat {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .formulaire__etat.ok {
+    color: var(--ci-vert-clair);
+  }
+
+  .formulaire__etat.err {
+    color: var(--ci-orange-vif);
+  }
+</style>
+
+<script>
+  for (const form of document.querySelectorAll<HTMLFormElement>('.formulaire')) {
+    const ok = form.querySelector<HTMLElement>('.formulaire__etat.ok')!;
+    const err = form.querySelector<HTMLElement>('.formulaire__etat.err')!;
+    const bouton = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      ok.hidden = true;
+      err.hidden = true;
+
+      if (!form.reportValidity()) return;
+      const data = new FormData(form);
+      if ((data.get('_gotcha') as string)?.length) return; // robot
+
+      const endpoint = form.dataset.endpoint;
+      if (!endpoint) {
+        // Repli : ouvre le client e-mail avec le message pré-rempli
+        const corps = [...data.entries()]
+          .filter(([k]) => !k.startsWith('_'))
+          .map(([k, v]) => `${k}: ${v}`)
+          .join('\n');
+        const url = `mailto:${form.dataset.email}?subject=${encodeURIComponent(
+          form.dataset.sujet ?? '',
+        )}&body=${encodeURIComponent(corps)}`;
+        window.location.href = url;
+        return;
+      }
+
+      bouton.disabled = true;
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          body: data,
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        ok.hidden = false;
+        form.reset();
+      } catch {
+        err.hidden = false;
+      } finally {
+        bouton.disabled = false;
+      }
+    });
+  }
+</script>
