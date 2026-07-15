@@ -12,7 +12,7 @@ interface SeedEvent {
   image?: string;
 }
 
-const EVENTS: SeedEvent[] = [
+export const EVENTS: SeedEvent[] = [
   {
     id: 'obs-lune-juillet',
     titre: {

@@ -1,0 +1,26 @@
+---
+/** Champ simple (une seule valeur, non bilingue). */
+interface Props {
+  label: string;
+  name: string;
+  value?: string | null;
+  type?: string;
+  required?: boolean;
+  help?: string;
+  placeholder?: string;
+}
+const { label, name, value = '', type = 'text', required = false, help, placeholder } = Astro.props;
+---
+
+<div class="champ">
+  <label class="champ__label" for={name}>{label} {required && <em>*</em>}</label>
+  <input
+    id={name}
+    type={type}
+    name={name}
+    value={value ?? ''}
+    required={required}
+    placeholder={placeholder}
+  />
+  {help && <p class="champ__help">{help}</p>}
+</div>

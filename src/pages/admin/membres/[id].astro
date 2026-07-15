@@ -1,0 +1,86 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import BiField from '../../../components/admin/BiField.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import ImageField from '../../../components/admin/ImageField.astro';
+import FormActions from '../../../components/admin/FormActions.astro';
+import * as repo from '../../../server/db/repo';
+import { str, int } from '../../../server/formutil';
+import { imageFromForm } from '../../../server/media';
+
+const idParam = Astro.params.id!;
+const creation = idParam === 'nouveau';
+const id = creation ? 0 : Number(idParam);
+const row = creation ? undefined : repo.getMembre(id);
+if (!creation && !row) return Astro.redirect('/admin/membres');
+
+let erreur = '';
+let v = {
+  nom: row?.nom ?? '',
+  role_fr: row?.role_fr ?? '',
+  role_en: row?.role_en ?? '',
+  bio_fr: row?.bio_fr ?? '',
+  bio_en: row?.bio_en ?? '',
+  photo: row?.photo ?? '',
+  ordre: row?.ordre ?? 10,
+};
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  if (fd.get('_action') === 'supprimer' && !creation) {
+    repo.deleteMembre(id);
+    return Astro.redirect('/admin/membres');
+  }
+  const photo = await imageFromForm(fd, 600);
+  v = {
+    nom: str(fd, 'nom'),
+    role_fr: str(fd, 'role_fr'),
+    role_en: str(fd, 'role_en'),
+    bio_fr: str(fd, 'bio_fr'),
+    bio_en: str(fd, 'bio_en'),
+    photo: photo ?? '',
+    ordre: int(fd, 'ordre', 10),
+  };
+  if (!v.nom) erreur = 'Le nom est obligatoire.';
+  else {
+    const data = {
+      nom: v.nom,
+      role_fr: v.role_fr || null,
+      role_en: v.role_en || null,
+      bio_fr: v.bio_fr || null,
+      bio_en: v.bio_en || null,
+      photo: v.photo || null,
+      ordre: v.ordre,
+    };
+    if (creation) repo.createMembre(data);
+    else repo.updateMembre(id, data);
+    return Astro.redirect('/admin/membres');
+  }
+}
+
+const titre = creation ? 'Nouveau membre' : 'Modifier le membre';
+---
+
+<AdminLayout title={titre}>
+  {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
+  <form class="formulaire panneau" method="POST" enctype="multipart/form-data">
+    <ImageField value={v.photo} label="Photo (optionnel)" />
+    <div class="ligne-champs">
+      <AdminField label="Nom et prénom" name="nom" value={v.nom} required />
+      <AdminField label="Ordre d'affichage" name="ordre" type="number" value={String(v.ordre)} help="Petit = affiché en premier." />
+    </div>
+    <BiField label="Fonction" name="role" fr={v.role_fr} en={v.role_en} help="Ex. Présidente, Responsable observations…" />
+    <BiField label="Courte biographie (optionnel)" name="bio" type="textarea" fr={v.bio_fr} en={v.bio_en} />
+    <FormActions editing={!creation} retour="/admin/membres" />
+  </form>
+
+  {
+    !creation && (
+      <form method="POST" onsubmit="return confirm('Supprimer ce membre définitivement ?')" style="margin-top:1.4rem">
+        <input type="hidden" name="_action" value="supprimer" />
+        <button class="bouton bouton--danger" type="submit">Supprimer ce membre</button>
+      </form>
+    )
+  }
+</AdminLayout>

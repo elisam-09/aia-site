@@ -1,0 +1,15 @@
+---
+/** Boutons Enregistrer / Annuler en bas d'un formulaire. */
+interface Props {
+  editing?: boolean;
+  retour: string;
+}
+const { editing = false, retour } = Astro.props;
+---
+
+<div class="form-actions">
+  <button class="bouton bouton--primaire" type="submit">
+    {editing ? 'Enregistrer les modifications' : 'Créer'}
+  </button>
+  <a class="bouton bouton--contour" href={retour}>Annuler</a>
+</div>

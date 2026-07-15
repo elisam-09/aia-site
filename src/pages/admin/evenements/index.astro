@@ -1,0 +1,57 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+
+const evenements = repo.listEvenements();
+const today = new Date().toISOString().slice(0, 10);
+---
+
+<AdminLayout title="Événements">
+  <div class="panneau">
+    <div class="liste-entete">
+      <p style="margin:0;color:var(--adm-muet)">{evenements.length} événement(s)</p>
+      <a class="bouton bouton--primaire" href="/admin/evenements/nouveau">+ Nouvel événement</a>
+    </div>
+
+    {
+      evenements.length === 0 ? (
+        <p style="color:var(--adm-muet)">Aucun événement pour l'instant.</p>
+      ) : (
+        <div class="table-wrap">
+          <table class="liste">
+            <thead>
+              <tr><th>Image</th><th>Date</th><th>Titre</th><th>Lieu</th><th>Statut</th><th /></tr>
+            </thead>
+            <tbody>
+              {evenements.map((e) => (
+                <tr>
+                  <td>
+                    <img class="liste__vignette" src={e.image || '/placeholders/observation.svg'} alt="" />
+                  </td>
+                  <td>
+                    {new Date(e.date).toLocaleDateString('fr-FR')}
+                    {e.date < today && <span style="color:var(--adm-muet)"> · passé</span>}
+                  </td>
+                  <td>{e.titre_fr}</td>
+                  <td style="color:var(--adm-muet)">{e.lieu}</td>
+                  <td>
+                    {e.publie ? (
+                      <span class="pastille oui">Publié</span>
+                    ) : (
+                      <span class="pastille non">Masqué</span>
+                    )}
+                  </td>
+                  <td class="liste__actions">
+                    <a class="bouton bouton--contour bouton--sm" href={`/admin/evenements/${e.id}`}>
+                      Modifier
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</AdminLayout>

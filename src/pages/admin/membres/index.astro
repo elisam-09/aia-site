@@ -1,0 +1,43 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+
+const membres = repo.listMembres();
+---
+
+<AdminLayout title="Membres du bureau">
+  <div class="panneau">
+    <div class="liste-entete">
+      <p style="margin:0;color:var(--adm-muet)">{membres.length} membre(s)</p>
+      <a class="bouton bouton--primaire" href="/admin/membres/nouveau">+ Nouveau membre</a>
+    </div>
+
+    {
+      membres.length === 0 ? (
+        <p style="color:var(--adm-muet)">Aucun membre pour l'instant.</p>
+      ) : (
+        <div class="table-wrap">
+          <table class="liste">
+            <thead>
+              <tr><th>Photo</th><th>Nom</th><th>Fonction</th><th /></tr>
+            </thead>
+            <tbody>
+              {membres.map((m) => (
+                <tr>
+                  <td>
+                    <img class="liste__vignette" style="border-radius:50%;width:40px" src={m.photo || '/placeholders/avatar.svg'} alt="" />
+                  </td>
+                  <td>{m.nom}</td>
+                  <td style="color:var(--adm-muet)">{m.role_fr ?? '—'}</td>
+                  <td class="liste__actions">
+                    <a class="bouton bouton--contour bouton--sm" href={`/admin/membres/${m.id}`}>Modifier</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</AdminLayout>

@@ -1,0 +1,74 @@
+---
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/inter';
+import '../../styles/admin.css';
+import { login } from '../../server/auth';
+import { tropDeTentatives, noterEchec, reinitialiser } from '../../server/ratelimit';
+
+let erreur = '';
+
+// Destination après connexion (limitée au portail pour éviter les redirections ouvertes)
+const suiteBrut = Astro.url.searchParams.get('suite') ?? '/admin';
+const suite = suiteBrut.startsWith('/admin') ? suiteBrut : '/admin';
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  const email = (fd.get('email') ?? '').toString().trim();
+  const motdepasse = (fd.get('motdepasse') ?? '').toString();
+  const cle = `${email}|${Astro.clientAddress ?? 'local'}`;
+
+  if (tropDeTentatives(cle)) {
+    erreur = 'Trop de tentatives. Réessaie dans une quinzaine de minutes.';
+  } else if (!email || !motdepasse) {
+    erreur = 'Renseigne ton email et ton mot de passe.';
+  } else {
+    const admin = await login(Astro.cookies, email, motdepasse);
+    if (admin) {
+      reinitialiser(cle);
+      return Astro.redirect(suite);
+    }
+    noterEchec(cle);
+    erreur = 'Email ou mot de passe incorrect.';
+  }
+}
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Connexion · Administration AIA</title>
+    <link rel="icon" href="/favicon.png" type="image/png" />
+  </head>
+  <body>
+    <div class="adm-nuages" aria-hidden="true">
+      <div class="adm-nuage adm-nuage--1"></div>
+      <div class="adm-nuage adm-nuage--2"></div>
+      <div class="adm-nuage adm-nuage--3"></div>
+    </div>
+
+    <div class="connexion">
+      <div class="connexion__carte">
+        <img class="connexion__logo" src="/favicon.png" alt="AIA" />
+        <h1>Espace d'administration</h1>
+        <p class="sous">Association Ivoirienne d'Astronomie</p>
+
+        {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
+        <form method="POST">
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" autocomplete="username" required autofocus />
+          </label>
+          <label>
+            <span>Mot de passe</span>
+            <input type="password" name="motdepasse" autocomplete="current-password" required />
+          </label>
+          <button class="bouton bouton--primaire" type="submit">Se connecter</button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

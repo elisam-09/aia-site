@@ -10,7 +10,7 @@ interface SeedPhoto {
   date?: string;
 }
 
-const PHOTOS: SeedPhoto[] = [
+export const PHOTOS: SeedPhoto[] = [
   {
     id: 'lune-t200',
     titre: { fr: 'Lune gibbeuse au T200', en: 'Gibbous Moon through the T200' },

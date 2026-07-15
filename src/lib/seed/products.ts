@@ -11,7 +11,7 @@ interface SeedProduct {
   dispo: boolean;
 }
 
-const PRODUCTS: SeedProduct[] = [
+export const PRODUCTS: SeedProduct[] = [
   {
     id: 'tshirt-regarde-plus-haut',
     nom: { fr: 'T-shirt « Regarde plus haut »', en: '“Look higher” T-shirt' },

@@ -1,0 +1,48 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+
+const partenaires = repo.listPartenaires();
+---
+
+<AdminLayout title="Partenaires">
+  <div class="panneau">
+    <div class="liste-entete">
+      <p style="margin:0;color:var(--adm-muet)">{partenaires.length} partenaire(s)</p>
+      <a class="bouton bouton--primaire" href="/admin/partenaires/nouveau">+ Nouveau partenaire</a>
+    </div>
+
+    {
+      partenaires.length === 0 ? (
+        <p style="color:var(--adm-muet)">Aucun partenaire pour l'instant.</p>
+      ) : (
+        <div class="table-wrap">
+          <table class="liste">
+            <thead>
+              <tr><th>Logo</th><th>Nom</th><th>Sigle</th><th>Site</th><th /></tr>
+            </thead>
+            <tbody>
+              {partenaires.map((p) => (
+                <tr>
+                  <td>
+                    {p.logo ? (
+                      <img class="liste__vignette" src={p.logo} alt="" />
+                    ) : (
+                      <span style="color:var(--adm-muet)">—</span>
+                    )}
+                  </td>
+                  <td>{p.nom}</td>
+                  <td style="color:var(--adm-muet)">{p.sigle ?? '—'}</td>
+                  <td style="color:var(--adm-muet)">{p.site ? '↗' : '—'}</td>
+                  <td class="liste__actions">
+                    <a class="bouton bouton--contour bouton--sm" href={`/admin/partenaires/${p.id}`}>Modifier</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</AdminLayout>

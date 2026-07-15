@@ -1,0 +1,50 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+
+const produits = repo.listProduits();
+---
+
+<AdminLayout title="Produits (Support)">
+  <div class="panneau">
+    <div class="liste-entete">
+      <p style="margin:0;color:var(--adm-muet)">{produits.length} produit(s) · vitrine, sans vente en ligne</p>
+      <a class="bouton bouton--primaire" href="/admin/produits/nouveau">+ Nouveau produit</a>
+    </div>
+
+    {
+      produits.length === 0 ? (
+        <p style="color:var(--adm-muet)">Aucun produit pour l'instant.</p>
+      ) : (
+        <div class="table-wrap">
+          <table class="liste">
+            <thead>
+              <tr><th>Image</th><th>Nom</th><th>Prix</th><th>Disponible</th><th /></tr>
+            </thead>
+            <tbody>
+              {produits.map((p) => (
+                <tr>
+                  <td>
+                    <img class="liste__vignette" src={p.image || '/placeholders/tshirt.svg'} alt="" />
+                  </td>
+                  <td>{p.nom_fr}</td>
+                  <td style="color:var(--adm-muet)">{p.prix ?? '—'}</td>
+                  <td>
+                    {p.disponible ? (
+                      <span class="pastille oui">Oui</span>
+                    ) : (
+                      <span class="pastille non">Non</span>
+                    )}
+                  </td>
+                  <td class="liste__actions">
+                    <a class="bouton bouton--contour bouton--sm" href={`/admin/produits/${p.id}`}>Modifier</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</AdminLayout>

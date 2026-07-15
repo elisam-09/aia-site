@@ -12,7 +12,7 @@ interface SeedMember {
   bio: Localized;
 }
 
-const TEAM: SeedMember[] = [
+export const TEAM: SeedMember[] = [
   {
     id: 'presidence',
     role: { fr: 'Présidence', en: 'Presidency' },

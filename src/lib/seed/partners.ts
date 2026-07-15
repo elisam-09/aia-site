@@ -10,7 +10,7 @@ interface SeedPartner {
   site?: string;
 }
 
-const PARTNERS: SeedPartner[] = [
+export const PARTNERS: SeedPartner[] = [
   {
     id: 'uai',
     nom: 'Union Astronomique Internationale',

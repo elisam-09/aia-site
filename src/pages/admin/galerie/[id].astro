@@ -1,0 +1,92 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import BiField from '../../../components/admin/BiField.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import ImageField from '../../../components/admin/ImageField.astro';
+import FormActions from '../../../components/admin/FormActions.astro';
+import * as repo from '../../../server/db/repo';
+import { str, strOrNull } from '../../../server/formutil';
+import { imageFromForm } from '../../../server/media';
+
+const idParam = Astro.params.id!;
+const creation = idParam === 'nouveau';
+const id = creation ? 0 : Number(idParam);
+const row = creation ? undefined : repo.getGalerieItem(id);
+if (!creation && !row) return Astro.redirect('/admin/galerie');
+
+const CATS = [
+  { v: 'astrophoto', l: 'Astrophotographie' },
+  { v: 'observation', l: 'Observation publique' },
+  { v: 'evenement', l: 'Événement' },
+  { v: 'ecole', l: 'École / club' },
+];
+
+let erreur = '';
+let v = {
+  titre_fr: row?.titre_fr ?? '',
+  titre_en: row?.titre_en ?? '',
+  image: row?.image ?? '',
+  categorie: row?.categorie ?? 'observation',
+  date: row?.date ?? '',
+};
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  if (fd.get('_action') === 'supprimer' && !creation) {
+    repo.deleteGalerie(id);
+    return Astro.redirect('/admin/galerie');
+  }
+  const image = await imageFromForm(fd);
+  v = {
+    titre_fr: str(fd, 'titre_fr'),
+    titre_en: str(fd, 'titre_en'),
+    image: image ?? '',
+    categorie: str(fd, 'categorie') || 'observation',
+    date: str(fd, 'date'),
+  };
+  if (!v.titre_fr) erreur = 'La légende (français) est obligatoire.';
+  else if (!v.image) erreur = 'Ajoute une photo.';
+  else {
+    const data = {
+      titre_fr: v.titre_fr,
+      titre_en: v.titre_en || null,
+      image: v.image,
+      categorie: v.categorie,
+      date: strOrNull(fd, 'date'),
+    };
+    if (creation) repo.createGalerie(data);
+    else repo.updateGalerie(id, data);
+    return Astro.redirect('/admin/galerie');
+  }
+}
+
+const titre = creation ? 'Ajouter une photo' : 'Modifier la photo';
+---
+
+<AdminLayout title={titre}>
+  {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
+  <form class="formulaire panneau" method="POST" enctype="multipart/form-data">
+    <ImageField value={v.image} label="Photo" />
+    <BiField label="Légende" name="titre" fr={v.titre_fr} en={v.titre_en} required />
+    <div class="ligne-champs">
+      <div class="champ">
+        <label class="champ__label" for="categorie">Catégorie</label>
+        <select id="categorie" name="categorie">
+          {CATS.map((c) => <option value={c.v} selected={c.v === v.categorie}>{c.l}</option>)}
+        </select>
+      </div>
+      <AdminField label="Date (optionnel)" name="date" type="date" value={v.date} />
+    </div>
+    <FormActions editing={!creation} retour="/admin/galerie" />
+  </form>
+
+  {
+    !creation && (
+      <form method="POST" onsubmit="return confirm('Supprimer cette photo définitivement ?')" style="margin-top:1.4rem">
+        <input type="hidden" name="_action" value="supprimer" />
+        <button class="bouton bouton--danger" type="submit">Supprimer cette photo</button>
+      </form>
+    )
+  }
+</AdminLayout>

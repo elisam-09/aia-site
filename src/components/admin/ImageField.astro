@@ -1,0 +1,47 @@
+---
+/** Champ image : aperçu + envoi de fichier + option de retrait. Requiert enctype="multipart/form-data". */
+interface Props {
+  value?: string | null;
+  label?: string;
+}
+const { value = '', label = 'Image' } = Astro.props;
+---
+
+<div class="champ">
+  <span class="champ__label">{label}</span>
+  <div class="image-champ">
+    <img
+      class="image-apercu"
+      src={value || ''}
+      alt=""
+      data-apercu
+      style={value ? '' : 'display:none'}
+    />
+    <div style="flex:1;min-width:200px">
+      <input type="file" name="image" accept="image/*" />
+      <input type="hidden" name="image_actuelle" value={value ?? ''} />
+      {
+        value && (
+          <label class="case" style="margin-top:.5rem">
+            <input type="checkbox" name="image_supprimer" value="1" /> Retirer l'image actuelle
+          </label>
+        )
+      }
+      <p class="champ__help">JPG, PNG ou WebP — redimensionnée automatiquement (max 12 Mo).</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLInputElement>('input[type=file][name=image]').forEach((inp) => {
+    inp.addEventListener('change', () => {
+      const f = inp.files?.[0];
+      if (!f) return;
+      const img = inp.closest('.image-champ')?.querySelector<HTMLImageElement>('[data-apercu]');
+      if (img) {
+        img.src = URL.createObjectURL(f);
+        img.style.display = '';
+      }
+    });
+  });
+</script>

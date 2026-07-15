@@ -1,0 +1,107 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import BiField from '../../../components/admin/BiField.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import ImageField from '../../../components/admin/ImageField.astro';
+import FormActions from '../../../components/admin/FormActions.astro';
+import * as repo from '../../../server/db/repo';
+import { str, bool } from '../../../server/formutil';
+import { imageFromForm } from '../../../server/media';
+
+const idParam = Astro.params.id!;
+const creation = idParam === 'nouveau';
+const id = creation ? 0 : Number(idParam);
+const row = creation ? undefined : repo.getEvenement(id);
+if (!creation && !row) return Astro.redirect('/admin/evenements');
+
+let erreur = '';
+let v = {
+  titre_fr: row?.titre_fr ?? '',
+  titre_en: row?.titre_en ?? '',
+  date: row?.date ?? '',
+  heure: row?.heure ?? '',
+  lieu: row?.lieu ?? '',
+  description_fr: row?.description_fr ?? '',
+  description_en: row?.description_en ?? '',
+  image: row?.image ?? '',
+  lien: row?.lien ?? '',
+  publie: row ? row.publie : 1,
+};
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  if (fd.get('_action') === 'supprimer' && !creation) {
+    repo.deleteEvenement(id);
+    return Astro.redirect('/admin/evenements');
+  }
+  const image = await imageFromForm(fd);
+  v = {
+    titre_fr: str(fd, 'titre_fr'),
+    titre_en: str(fd, 'titre_en'),
+    date: str(fd, 'date'),
+    heure: str(fd, 'heure'),
+    lieu: str(fd, 'lieu'),
+    description_fr: str(fd, 'description_fr'),
+    description_en: str(fd, 'description_en'),
+    image: image ?? '',
+    lien: str(fd, 'lien'),
+    publie: bool(fd, 'publie'),
+  };
+  if (!v.titre_fr || !v.date || !v.lieu) {
+    erreur = 'Le titre (français), la date et le lieu sont obligatoires.';
+  } else {
+    const data = {
+      titre_fr: v.titre_fr,
+      titre_en: v.titre_en || null,
+      date: v.date,
+      heure: v.heure || null,
+      lieu: v.lieu,
+      description_fr: v.description_fr || null,
+      description_en: v.description_en || null,
+      image: v.image || null,
+      lien: v.lien || null,
+      publie: v.publie,
+    };
+    if (creation) repo.createEvenement(data);
+    else repo.updateEvenement(id, data);
+    return Astro.redirect('/admin/evenements');
+  }
+}
+
+const titre = creation ? 'Nouvel événement' : "Modifier l'événement";
+---
+
+<AdminLayout title={titre}>
+  {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
+  <form class="formulaire panneau" method="POST" enctype="multipart/form-data">
+    <BiField label="Titre" name="titre" fr={v.titre_fr} en={v.titre_en} required />
+    <div class="ligne-champs">
+      <AdminField label="Date" name="date" type="date" value={v.date} required />
+      <AdminField label="Heure (optionnel)" name="heure" type="time" value={v.heure} />
+    </div>
+    <AdminField
+      label="Lieu"
+      name="lieu"
+      value={v.lieu}
+      required
+      placeholder="Ex. Esplanade du Plateau, Abidjan"
+    />
+    <BiField label="Description" name="description" type="textarea" fr={v.description_fr} en={v.description_en} />
+    <ImageField value={v.image} />
+    <AdminField label="Lien d'inscription (optionnel)" name="lien" type="url" value={v.lien} placeholder="https://…" />
+    <label class="case">
+      <input type="checkbox" name="publie" value="1" checked={Boolean(v.publie)} /> Publié (visible sur le site)
+    </label>
+    <FormActions editing={!creation} retour="/admin/evenements" />
+  </form>
+
+  {
+    !creation && (
+      <form method="POST" onsubmit="return confirm('Supprimer cet événement définitivement ?')" style="margin-top:1.4rem">
+        <input type="hidden" name="_action" value="supprimer" />
+        <button class="bouton bouton--danger" type="submit">Supprimer cet événement</button>
+      </form>
+    )
+  }
+</AdminLayout>

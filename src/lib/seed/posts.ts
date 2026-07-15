@@ -1,7 +1,6 @@
 import type { Lang } from '../../i18n/ui';
-import type { Block, Localized, Post } from '../types';
+import type { Block, Localized } from '../types';
 import { h2, p, quote } from '../blocks';
-import { pick } from '../types';
 
 interface SeedPost {
   slug: string;
@@ -13,7 +12,7 @@ interface SeedPost {
   corps: Record<Lang, Block[]>;
 }
 
-const POSTS: SeedPost[] = [
+export const POSTS: SeedPost[] = [
   {
     slug: 'six-asteroides-decouverts-depuis-abidjan',
     titre: {
@@ -157,15 +156,3 @@ const POSTS: SeedPost[] = [
     },
   },
 ];
-
-export function seedPosts(lang: Lang): Post[] {
-  return POSTS.map((a) => ({
-    slug: a.slug,
-    titre: pick(a.titre, lang),
-    date: a.date,
-    extrait: pick(a.extrait, lang),
-    corps: a.corps[lang] ?? a.corps.fr,
-    image: a.image,
-    auteur: a.auteur,
-  }));
-}

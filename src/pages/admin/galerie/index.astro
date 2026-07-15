@@ -1,0 +1,50 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+
+const photos = repo.listGalerie();
+const libelle: Record<string, string> = {
+  astrophoto: 'Astrophoto',
+  observation: 'Observation',
+  evenement: 'Événement',
+  ecole: 'École',
+};
+---
+
+<AdminLayout title="Galerie">
+  <div class="panneau">
+    <div class="liste-entete">
+      <p style="margin:0;color:var(--adm-muet)">{photos.length} photo(s)</p>
+      <a class="bouton bouton--primaire" href="/admin/galerie/nouveau">+ Ajouter une photo</a>
+    </div>
+
+    {
+      photos.length === 0 ? (
+        <p style="color:var(--adm-muet)">Aucune photo pour l'instant.</p>
+      ) : (
+        <div class="table-wrap">
+          <table class="liste">
+            <thead>
+              <tr><th>Photo</th><th>Légende</th><th>Catégorie</th><th>Date</th><th /></tr>
+            </thead>
+            <tbody>
+              {photos.map((p) => (
+                <tr>
+                  <td><img class="liste__vignette" src={p.image} alt="" /></td>
+                  <td>{p.titre_fr}</td>
+                  <td style="color:var(--adm-muet)">{libelle[p.categorie] ?? p.categorie}</td>
+                  <td style="color:var(--adm-muet)">
+                    {p.date ? new Date(p.date).toLocaleDateString('fr-FR') : '—'}
+                  </td>
+                  <td class="liste__actions">
+                    <a class="bouton bouton--contour bouton--sm" href={`/admin/galerie/${p.id}`}>Modifier</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</AdminLayout>

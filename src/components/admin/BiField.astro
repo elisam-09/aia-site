@@ -1,0 +1,42 @@
+---
+/** Champ bilingue : une case Français (souvent obligatoire) + une case English (optionnelle). */
+interface Props {
+  label: string;
+  name: string;
+  fr?: string | null;
+  en?: string | null;
+  type?: 'text' | 'textarea';
+  required?: boolean;
+  help?: string;
+  rows?: number;
+}
+const { label, name, fr = '', en = '', type = 'text', required = false, help, rows = 4 } =
+  Astro.props;
+---
+
+<div class="champ">
+  <span class="champ__label">{label} {required && <em>*</em>}</span>
+  <div class="champ__bi">
+    <div>
+      <label class="mini" for={`${name}_fr`}>Français</label>
+      {
+        type === 'textarea' ? (
+          <textarea id={`${name}_fr`} name={`${name}_fr`} rows={rows} required={required}>{fr ?? ''}</textarea>
+        ) : (
+          <input id={`${name}_fr`} type="text" name={`${name}_fr`} value={fr ?? ''} required={required} />
+        )
+      }
+    </div>
+    <div>
+      <label class="mini" for={`${name}_en`}>English</label>
+      {
+        type === 'textarea' ? (
+          <textarea id={`${name}_en`} name={`${name}_en`} rows={rows}>{en ?? ''}</textarea>
+        ) : (
+          <input id={`${name}_en`} type="text" name={`${name}_en`} value={en ?? ''} />
+        )
+      }
+    </div>
+  </div>
+  {help && <p class="champ__help">{help}</p>}
+</div>

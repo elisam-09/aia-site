@@ -1,6 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
 import { routes } from '../i18n/ui';
+
+// En mode serveur, on renvoie bien le vrai code HTTP 404
+Astro.response.status = 404;
 ---
 
 <Base lang="fr" pageId="home" title="Page introuvable — 404">

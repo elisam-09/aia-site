@@ -1,0 +1,57 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+
+// Réservé aux administrateurs
+if (Astro.locals.admin?.role !== 'admin') return Astro.redirect('/admin');
+
+const admins = repo.listAdmins();
+const moi = Astro.locals.admin!.id;
+---
+
+<AdminLayout title="Comptes administrateurs">
+  <div class="panneau">
+    <div class="liste-entete">
+      <p style="margin:0;color:var(--adm-muet)">{admins.length} compte(s)</p>
+      <a class="bouton bouton--primaire" href="/admin/comptes/nouveau">+ Nouveau compte</a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="liste">
+        <thead>
+          <tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th><th /></tr>
+        </thead>
+        <tbody>
+          {
+            admins.map((a) => (
+              <tr>
+                <td>{a.nom} {a.id === moi && <span style="color:var(--adm-muet)">(vous)</span>}</td>
+                <td style="color:var(--adm-muet)">{a.email}</td>
+                <td>
+                  <span class:list={['pastille', a.role === 'admin' ? 'oui' : 'non']}>
+                    {a.role === 'admin' ? 'Admin' : 'Éditeur'}
+                  </span>
+                </td>
+                <td>
+                  {a.actif ? (
+                    <span class="pastille oui">Actif</span>
+                  ) : (
+                    <span class="pastille non">Désactivé</span>
+                  )}
+                </td>
+                <td style="color:var(--adm-muet)">
+                  {a.derniere_connexion
+                    ? new Date(a.derniere_connexion).toLocaleDateString('fr-FR')
+                    : 'Jamais'}
+                </td>
+                <td class="liste__actions">
+                  <a class="bouton bouton--contour bouton--sm" href={`/admin/comptes/${a.id}`}>Modifier</a>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</AdminLayout>

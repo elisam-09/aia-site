@@ -1,0 +1,88 @@
+---
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/inter';
+import '../styles/admin.css';
+
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+const admin = Astro.locals.admin!; // le middleware garantit sa présence sur /admin
+const path = Astro.url.pathname;
+
+const liens = [
+  { href: '/admin', label: 'Tableau de bord', ic: '📊' },
+  { href: '/admin/evenements', label: 'Événements', ic: '📅' },
+  { href: '/admin/actualites', label: 'Actualités', ic: '📰' },
+  { href: '/admin/galerie', label: 'Galerie', ic: '🖼️' },
+  { href: '/admin/produits', label: 'Produits', ic: '🛍️' },
+  { href: '/admin/partenaires', label: 'Partenaires', ic: '🤝' },
+  { href: '/admin/membres', label: 'Membres', ic: '👤' },
+];
+if (admin.role === 'admin') liens.push({ href: '/admin/comptes', label: 'Comptes', ic: '🔑' });
+
+const actif = (href: string) =>
+  href === '/admin' ? path === '/admin' || path === '/admin/' : path.startsWith(href);
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} · Administration AIA</title>
+    <link rel="icon" href="/favicon.png" type="image/png" />
+  </head>
+  <body>
+    <div class="adm-nuages" aria-hidden="true">
+      <div class="adm-nuage adm-nuage--1"></div>
+      <div class="adm-nuage adm-nuage--2"></div>
+      <div class="adm-nuage adm-nuage--3"></div>
+    </div>
+
+    <div class="adm">
+      <aside class="adm__aside">
+        <a class="adm__marque" href="/admin">
+          <img src="/favicon.png" alt="" />
+          <span>
+            <strong>AIA</strong>
+            <small>Administration</small>
+          </span>
+        </a>
+
+        <nav class="adm__nav">
+          {
+            liens.map((l) => (
+              <a href={l.href} class:list={['adm__lien', { actif: actif(l.href) }]}>
+                <span class="adm__ic" aria-hidden="true">{l.ic}</span>
+                {l.label}
+              </a>
+            ))
+          }
+        </nav>
+
+        <div class="adm__aside-bas">
+          <a class="adm__voir" href="/" target="_blank" rel="noopener">↗ Voir le site</a>
+        </div>
+      </aside>
+
+      <main class="adm__main">
+        <header class="adm__entete">
+          <h1>{title}</h1>
+          <div class="adm__user">
+            <span>{admin.nom}</span>
+            <span class:list={['adm__badge', { admin: admin.role === 'admin' }]}>
+              {admin.role === 'admin' ? 'Admin' : 'Éditeur'}
+            </span>
+            <form method="POST" action="/admin/logout">
+              <button class="bouton bouton--contour bouton--sm" type="submit">Déconnexion</button>
+            </form>
+          </div>
+        </header>
+
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

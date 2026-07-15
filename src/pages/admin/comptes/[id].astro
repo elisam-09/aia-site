@@ -1,0 +1,116 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import FormActions from '../../../components/admin/FormActions.astro';
+import * as repo from '../../../server/db/repo';
+import { str, bool } from '../../../server/formutil';
+import { hashPassword } from '../../../server/auth';
+import type { Role } from '../../../server/db/types';
+
+// Réservé aux administrateurs
+if (Astro.locals.admin?.role !== 'admin') return Astro.redirect('/admin');
+const moi = Astro.locals.admin!.id;
+
+const idParam = Astro.params.id!;
+const creation = idParam === 'nouveau';
+const id = creation ? 0 : Number(idParam);
+const row = creation ? undefined : repo.getAdminById(id);
+if (!creation && !row) return Astro.redirect('/admin/comptes');
+const estMoi = !creation && id === moi;
+
+let erreur = '';
+let v = {
+  email: row?.email ?? '',
+  nom: row?.nom ?? '',
+  role: (row?.role ?? 'editeur') as Role,
+  actif: row ? row.actif : 1,
+};
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+
+  if (fd.get('_action') === 'supprimer' && !creation) {
+    if (estMoi) {
+      erreur = 'Vous ne pouvez pas supprimer votre propre compte.';
+    } else {
+      repo.deleteAdmin(id);
+      return Astro.redirect('/admin/comptes');
+    }
+  } else {
+    const email = str(fd, 'email').toLowerCase();
+    const nom = str(fd, 'nom');
+    const motdepasse = str(fd, 'motdepasse');
+    // On ne se retire jamais ses propres droits (évite de se verrouiller dehors)
+    const role: Role = estMoi ? 'admin' : str(fd, 'role') === 'admin' ? 'admin' : 'editeur';
+    const actif = estMoi ? 1 : bool(fd, 'actif');
+    v = { email, nom, role, actif };
+
+    const doublon = repo.getAdminByEmail(email);
+    if (!email.includes('@')) erreur = 'Email invalide.';
+    else if (!nom) erreur = 'Le nom est obligatoire.';
+    else if (doublon && doublon.id !== id) erreur = 'Cet email est déjà utilisé par un autre compte.';
+    else if (creation && motdepasse.length < 8) erreur = 'Mot de passe obligatoire (8 caractères minimum).';
+    else if (!creation && motdepasse && motdepasse.length < 8)
+      erreur = 'Le nouveau mot de passe doit faire au moins 8 caractères.';
+    else {
+      if (creation) {
+        const newId = repo.createAdmin({ email, password_hash: await hashPassword(motdepasse), nom, role });
+        if (!actif) repo.setAdminActif(newId, false);
+      } else {
+        repo.updateAdmin(id, { email, nom, role, actif });
+        if (motdepasse) repo.setAdminPassword(id, await hashPassword(motdepasse));
+      }
+      return Astro.redirect('/admin/comptes');
+    }
+  }
+}
+
+const titre = creation ? 'Nouveau compte' : 'Modifier le compte';
+---
+
+<AdminLayout title={titre}>
+  {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
+  <form class="formulaire panneau" method="POST">
+    <div class="ligne-champs">
+      <AdminField label="Nom affiché" name="nom" value={v.nom} required />
+      <AdminField label="Email" name="email" type="email" value={v.email} required />
+    </div>
+
+    <div class="champ">
+      <label class="champ__label" for="role">Rôle</label>
+      <select id="role" name="role" disabled={estMoi}>
+        <option value="editeur" selected={v.role === 'editeur'}>Éditeur — gère le contenu</option>
+        <option value="admin" selected={v.role === 'admin'}>Administrateur — gère aussi les comptes</option>
+      </select>
+      {estMoi && <p class="champ__help">Vous ne pouvez pas modifier votre propre rôle.</p>}
+    </div>
+
+    <AdminField
+      label={creation ? 'Mot de passe' : 'Nouveau mot de passe (laisser vide pour ne pas changer)'}
+      name="motdepasse"
+      type="password"
+      required={creation}
+      help="8 caractères minimum."
+    />
+
+    {
+      !estMoi && (
+        <label class="case">
+          <input type="checkbox" name="actif" value="1" checked={Boolean(v.actif)} /> Compte actif (peut se connecter)
+        </label>
+      )
+    }
+
+    <FormActions editing={!creation} retour="/admin/comptes" />
+  </form>
+
+  {
+    !creation && !estMoi && (
+      <form method="POST" onsubmit="return confirm('Supprimer ce compte définitivement ?')" style="margin-top:1.4rem">
+        <input type="hidden" name="_action" value="supprimer" />
+        <button class="bouton bouton--danger" type="submit">Supprimer ce compte</button>
+      </form>
+    )
+  }
+</AdminLayout>

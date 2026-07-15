@@ -1,13 +1,14 @@
 # Site web — Association Ivoirienne d'Astronomie (AIA)
 
-Site vitrine bilingue (FR/EN) de l'AIA : navigation « système solaire » interactive,
-descente narrative de l'espace profond au ciel d'Abidjan, et back-office simple pour
-le bureau de l'association.
+Site bilingue (FR/EN) de l'AIA avec **portail d'administration intégré** : navigation
+« système solaire » interactive, descente narrative de l'espace à l'atmosphère, et un
+back-office maison (connexion + tableau de bord) pour que le bureau publie le contenu
+sans toucher au code.
 
-> **En bref** — Astro (site statique, ultra-léger) + une scène 3D React Three Fiber
-> chargée à la demande, avec repli 2D. Contenu géré par le bureau via **Sanity**
-> (interface en français). Le site fonctionne **sans compte Sanity** grâce à un
-> contenu de démonstration intégré : idéal pour développer et tester.
+> **Architecture en un coup d'œil** — Application **Astro en mode serveur** (Node) +
+> base **SQLite** (un seul fichier) + authentification maison. Le site public et le
+> portail `/admin` vivent dans **le même projet**, sur ton infrastructure — aucun
+> service de contenu tiers.
 
 ---
 
@@ -16,114 +17,103 @@ le bureau de l'association.
 Prérequis : **Node 20+** (idéalement 22).
 
 ```bash
-npm install          # dépendances du site
-npm run dev          # http://localhost:4321
+npm install                 # dépendances
+npm run admin:creer         # crée ton premier compte administrateur (interactif)
+npm run dev                 # site : http://localhost:4321  ·  admin : /admin/login
 ```
+
+Au premier lancement, la base `data/aia.db` est créée et **remplie avec un contenu de
+démonstration** (événements, actualités, galerie…). Tu peux tout modifier depuis le
+portail, ou repartir de zéro en supprimant `data/aia.db`.
 
 Autres commandes :
 
 ```bash
-npm run build        # build de production (dossier dist/)
-npm run preview      # prévisualise le build de production
+npm run build               # build de production
+npm run preview             # lance le serveur de production en local
 ```
-
-Au premier lancement, **aucune configuration n'est nécessaire** : le site affiche le
-contenu de démonstration (événements, actualités, galerie, produits, partenaires)
-défini dans `src/lib/seed/`.
 
 ---
 
-## 2. Structure du projet
+## 2. Le portail d'administration
+
+- **Adresse** : `/admin/login`. Chaque personne qui doit publier a un **compte**
+  (email + mot de passe) enregistré dans la table `admins`.
+- **Deux rôles** : `admin` (gère aussi les comptes) et `editeur` (gère le contenu).
+- **On y gère** : Événements, Actualités (avec éditeur de texte enrichi), Galerie
+  (upload de photos), Produits, Partenaires, Membres du bureau — le tout **bilingue**
+  (Français obligatoire, English optionnel, repli automatique sur le FR).
+- **Thème « atmosphère »** : l'admin a volontairement un habillage clair (ciel de jour)
+  distinct de l'espace profond du site vitrine.
+- Voir **[ADMIN.md](./ADMIN.md)** pour le guide d'utilisation destiné au bureau.
+
+Créer / réinitialiser un compte :
+
+```bash
+npm run admin:creer
+# ou en non-interactif :
+ADMIN_EMAIL=x@aia.ci ADMIN_MOT_DE_PASSE=... ADMIN_NOM="Nom" ADMIN_ROLE=admin npm run admin:creer
+```
+
+---
+
+## 3. Structure du projet
 
 ```
 aia-site/
 ├── src/
-│   ├── pages/                 # Pages FR (racine) et EN (/en/…) — routage par fichier
-│   │   ├── index.astro        # Accueil FR   ·   en/index.astro = Accueil EN
-│   │   ├── actualites/[slug]  # Articles générés depuis le contenu
-│   │   └── …
+│   ├── pages/
+│   │   ├── (site public)          # index, activites, evenements, actualites/[slug]…
+│   │   ├── en/                     # versions anglaises
+│   │   ├── admin/                  # portail : login, index (tableau de bord),
+│   │   │   ├── evenements/         #   chaque rubrique = index.astro (liste)
+│   │   │   ├── actualites/         #   + [id].astro (créer / modifier / supprimer)
+│   │   │   ├── galerie/ produits/ partenaires/ membres/ comptes/
+│   │   │   └── logout.ts
+│   │   └── media/[...file].ts      # sert les photos uploadées (dossier uploads/)
+│   ├── middleware.ts               # ★ protège /admin + attache l'admin connecté
+│   ├── server/                     # ★ code serveur uniquement
+│   │   ├── db/                     #   connexion SQLite, schéma, requêtes (repo), seed
+│   │   ├── auth.ts                 #   hachage (scrypt) + sessions par cookie
+│   │   ├── media.ts                #   enregistrement/redimensionnement des images
+│   │   ├── sanitize.ts formutil.ts ratelimit.ts
 │   ├── components/
-│   │   ├── Home.astro         # Les 6 couches de l'accueil (espace → Abidjan)
-│   │   ├── solar/             # Navigation système solaire
-│   │   │   ├── config.ts      # ★ Table astre → rubrique (à éditer pour re-mapper)
-│   │   │   ├── SolarSystem.tsx # Aiguillage 2D/3D + garde-fous perf
-│   │   │   ├── SolarScene.tsx  # Scène 3D (three.js) — chargée à la demande
-│   │   │   └── SolarFallback.tsx # Repli 2D (SVG, sans JS/WebGL)
-│   │   └── …Content.astro     # Contenu de chaque page intérieure (bilingue)
-│   ├── i18n/ui.ts             # ★ Traductions d'interface + table des routes
-│   ├── lib/
-│   │   ├── content.ts         # Façade : Sanity si configuré, sinon seed local
-│   │   ├── sanity.ts          # Lecture Sanity (GROQ en HTTP, zéro dépendance)
-│   │   └── seed/              # Contenu de démonstration bilingue
-│   └── styles/                # tokens.css (palette du logo) + global.css
-├── studio/                    # Back-office Sanity (voir studio/README.md)
-├── public/                    # Logo, favicons, images de démonstration (SVG)
-├── .env.example               # Variables à copier dans .env
-└── DEPLOIEMENT.md             # ★ Mise en ligne pas à pas + domaine à réserver
+│   │   ├── admin/                  # champs de formulaire réutilisables du portail
+│   │   ├── solar/                  # navigation système solaire (3D R3F + repli 2D)
+│   │   └── …                       # composants du site vitrine
+│   ├── lib/content.ts              # ★ lecture du contenu (base) pour les pages publiques
+│   ├── i18n/ui.ts                  # traductions d'interface + table des routes
+│   └── styles/                     # tokens (palette du logo), global (vitrine), admin (jour)
+├── scripts/creer-admin.mjs         # création du premier admin
+├── data/                           # base SQLite (ignorée par git)
+├── uploads/                        # photos envoyées (ignorées par git)
+└── DEPLOIEMENT.md                  # ★ mise en ligne + sauvegardes + domaine
 ```
 
-Les fichiers marqués ★ sont ceux qu'on édite le plus souvent.
+---
+
+## 4. Fonctionnement du contenu
+
+- Les pages publiques **lisent la base** via `src/lib/content.ts` : dès qu'un admin
+  publie, le site est à jour.
+- Les photos uploadées sont stockées dans `uploads/`, converties en WebP et servies
+  par `/media/…`.
+- La base est un fichier : **sauvegarder = copier `data/aia.db`** (voir DEPLOIEMENT.md).
 
 ---
 
-## 3. Palette & identité
+## 5. Sécurité (déjà en place)
 
-Les couleurs sont **échantillonnées directement depuis le logo officiel**
-(`src/assets/logo-aia-blanc.png`) et centralisées dans `src/styles/tokens.css` :
-
-- Aubergine profond `#291928` / `#221422` / `#120A12` (fonds)
-- Crème `#F8F7F8` (texte)
-- Accents **drapeau ivoirien** (`--ci-orange`, `--ci-vert`) réservés aux boutons,
-  liens actifs et indicateurs — jamais en fond, conformément à la charte.
-
-Typographie : **Space Grotesk** (titres) + **Inter** (texte), auto-hébergées
-(`@fontsource-variable`, aucune requête vers Google Fonts).
+- Mots de passe **hachés** (scrypt) — jamais stockés en clair.
+- Sessions par cookie `httpOnly` / `SameSite=Lax` ; vérification d'origine (CSRF) sur
+  les envois du portail ; **limitation des tentatives** de connexion.
+- Tout `/admin` est derrière un garde d'authentification ; la gestion des comptes est
+  réservée au rôle `admin`. Le contenu des articles est nettoyé (anti-XSS).
 
 ---
 
-## 4. Navigation « système solaire »
+## 6. Déploiement
 
-- **Mapping astre → rubrique** dans `src/components/solar/config.ts`
-  (Soleil = Accueil, Mercure = Qui sommes-nous, Vénus = Actualités, Terre = Rejoindre,
-  Lune = Contact, Mars = Activités, ceinture = Recherche d'astéroïdes, Jupiter =
-  Événements, Saturne = Galerie, Uranus = Support, Neptune = Partenaires).
-- **Perf & accessibilité** : le repli 2D (SVG) est rendu côté serveur et s'affiche
-  immédiatement. La scène 3D ne se charge que sur grand écran, si WebGL est
-  disponible, hors mode « économie de données » et hors `prefers-reduced-motion`.
-  Sur mobile, le 2D reste la valeur par défaut (le bouton « Version 3D » permet de
-  forcer la 3D). Three.js (~875 Ko) n'est donc jamais téléchargé inutilement.
-
----
-
-## 5. Contenu dynamique
-
-Deux modes, choisis automatiquement selon les variables d'environnement :
-
-| Variable `PUBLIC_SANITY_PROJECT_ID` | Comportement                               |
-| ----------------------------------- | ------------------------------------------ |
-| **vide** (défaut)                   | Contenu de démonstration (`src/lib/seed/`) |
-| **renseignée**                      | Contenu saisi par le bureau dans Sanity    |
-
-En cas d'erreur réseau avec Sanity au moment du build, le site retombe
-automatiquement sur le contenu de démonstration : **le build ne casse jamais**.
-
-Pour activer Sanity et former le bureau : voir **[DEPLOIEMENT.md](./DEPLOIEMENT.md)**
-et **[studio/README.md](./studio/README.md)**.
-
----
-
-## 6. Formulaires (Rejoindre / Contact)
-
-Sans backend. Deux modes selon `.env` :
-
-- `PUBLIC_FORM_ENDPOINT` renseigné (Web3Forms, Formspree…) → envoi direct.
-- vide → ouverture de l'application e-mail avec un message pré-rempli vers
-  `PUBLIC_CONTACT_EMAIL`.
-
----
-
-## 7. Déploiement
-
-Résumé : pousser sur GitHub → connecter à **Vercel** (build `npm run build`, sortie
-`dist/`). Détails, création des comptes et réservation du domaine dans
-**[DEPLOIEMENT.md](./DEPLOIEMENT.md)**.
+Cette application a besoin d'un **serveur qui tourne en permanence** + un **disque
+persistant** (pour `data/` et `uploads/`). Étapes détaillées, options d'hébergement
+(Fly.io, VPS…), sauvegardes et domaine dans **[DEPLOIEMENT.md](./DEPLOIEMENT.md)**.

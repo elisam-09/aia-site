@@ -24,3 +24,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# données d’exécution (base SQLite + photos uploadées)
+data/
+uploads/

@@ -1,0 +1,121 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import BiField from '../../../components/admin/BiField.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import ImageField from '../../../components/admin/ImageField.astro';
+import RichField from '../../../components/admin/RichField.astro';
+import FormActions from '../../../components/admin/FormActions.astro';
+import * as repo from '../../../server/db/repo';
+import { str, bool, slugify } from '../../../server/formutil';
+import { imageFromForm } from '../../../server/media';
+import { sanitizeHtml } from '../../../server/sanitize';
+
+const idParam = Astro.params.id!;
+const creation = idParam === 'nouveau';
+const id = creation ? 0 : Number(idParam);
+const row = creation ? undefined : repo.getActualite(id);
+if (!creation && !row) return Astro.redirect('/admin/actualites');
+
+let erreur = '';
+let v = {
+  titre_fr: row?.titre_fr ?? '',
+  titre_en: row?.titre_en ?? '',
+  slug: row?.slug ?? '',
+  date: row?.date ?? new Date().toISOString().slice(0, 10),
+  auteur: row?.auteur ?? "Le bureau de l'AIA",
+  extrait_fr: row?.extrait_fr ?? '',
+  extrait_en: row?.extrait_en ?? '',
+  corps_fr: row?.corps_fr ?? '',
+  corps_en: row?.corps_en ?? '',
+  image: row?.image ?? '',
+  publie: row ? row.publie : 1,
+};
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  if (fd.get('_action') === 'supprimer' && !creation) {
+    repo.deleteActualite(id);
+    return Astro.redirect('/admin/actualites');
+  }
+  const image = await imageFromForm(fd);
+  v = {
+    titre_fr: str(fd, 'titre_fr'),
+    titre_en: str(fd, 'titre_en'),
+    slug: str(fd, 'slug'),
+    date: str(fd, 'date'),
+    auteur: str(fd, 'auteur') || "Le bureau de l'AIA",
+    extrait_fr: str(fd, 'extrait_fr'),
+    extrait_en: str(fd, 'extrait_en'),
+    corps_fr: sanitizeHtml(str(fd, 'corps_fr')),
+    corps_en: sanitizeHtml(str(fd, 'corps_en')),
+    image: image ?? '',
+    publie: bool(fd, 'publie'),
+  };
+
+  if (!v.titre_fr || !v.date) {
+    erreur = 'Le titre (français) et la date sont obligatoires.';
+  } else {
+    // Slug : fourni ou dérivé du titre, rendu unique
+    let slug = v.slug ? slugify(v.slug) : slugify(v.titre_fr);
+    if (!slug) slug = 'article';
+    const base = slug;
+    let n = 2;
+    while (repo.slugExists(slug, creation ? undefined : id)) slug = `${base}-${n++}`;
+    v.slug = slug;
+
+    const data = {
+      slug,
+      titre_fr: v.titre_fr,
+      titre_en: v.titre_en || null,
+      date: v.date,
+      auteur: v.auteur,
+      extrait_fr: v.extrait_fr || null,
+      extrait_en: v.extrait_en || null,
+      corps_fr: v.corps_fr || null,
+      corps_en: v.corps_en || null,
+      image: v.image || null,
+      publie: v.publie,
+    };
+    if (creation) repo.createActualite(data);
+    else repo.updateActualite(id, data);
+    return Astro.redirect('/admin/actualites');
+  }
+}
+
+const titre = creation ? 'Nouvelle actualité' : "Modifier l'article";
+---
+
+<AdminLayout title={titre}>
+  {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
+  <form class="formulaire panneau" method="POST" enctype="multipart/form-data">
+    <BiField label="Titre" name="titre" fr={v.titre_fr} en={v.titre_en} required />
+    <div class="ligne-champs">
+      <AdminField label="Date de publication" name="date" type="date" value={v.date} required />
+      <AdminField label="Auteur" name="auteur" value={v.auteur} />
+    </div>
+    <AdminField
+      label="Adresse (slug) — laisser vide pour générer automatiquement"
+      name="slug"
+      value={v.slug}
+      placeholder="ex. six-asteroides-decouverts"
+      help="Évite de la changer après publication (les liens existants pointeraient dans le vide)."
+    />
+    <BiField label="Chapeau / résumé" name="extrait" type="textarea" rows={3} fr={v.extrait_fr} en={v.extrait_en} />
+    <ImageField value={v.image} label="Image de couverture" />
+    <RichField fr={v.corps_fr} en={v.corps_en} />
+    <label class="case">
+      <input type="checkbox" name="publie" value="1" checked={Boolean(v.publie)} /> Publié (visible sur le site)
+    </label>
+    <FormActions editing={!creation} retour="/admin/actualites" />
+  </form>
+
+  {
+    !creation && (
+      <form method="POST" onsubmit="return confirm('Supprimer cet article définitivement ?')" style="margin-top:1.4rem">
+        <input type="hidden" name="_action" value="supprimer" />
+        <button class="bouton bouton--danger" type="submit">Supprimer cet article</button>
+      </form>
+    )
+  }
+</AdminLayout>

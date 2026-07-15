@@ -1,0 +1,122 @@
+---
+/**
+ * Éditeur de texte enrichi bilingue pour le corps des articles.
+ * Deux zones éditables (FR / EN) avec une barre d'outils simple (gras, italique,
+ * sous-titre, liste, lien). Le HTML est synchronisé dans des champs cachés corps_fr/corps_en.
+ */
+interface Props {
+  fr?: string | null;
+  en?: string | null;
+}
+const { fr = '', en = '' } = Astro.props;
+
+const langs = [
+  { code: 'fr', label: 'Français', name: 'corps_fr', html: fr ?? '' },
+  { code: 'en', label: 'English', name: 'corps_en', html: en ?? '' },
+];
+---
+
+<div class="champ">
+  <span class="champ__label">Contenu de l'article</span>
+  <div class="champ__bi">
+    {
+      langs.map((l) => (
+        <div>
+          <label class="mini">{l.label}</label>
+          <div class="rich">
+            <div class="rich__barre">
+              <button type="button" data-cmd="bold" title="Gras"><b>G</b></button>
+              <button type="button" data-cmd="italic" title="Italique"><i>I</i></button>
+              <button type="button" data-cmd="h2" title="Sous-titre">H2</button>
+              <button type="button" data-cmd="ul" title="Liste à puces">• Liste</button>
+              <button type="button" data-cmd="link" title="Lien">🔗</button>
+            </div>
+            <div class="rich__zone" contenteditable="true" set:html={l.html} />
+          </div>
+          <textarea class="rich__val" name={l.name} hidden>{l.html}</textarea>
+        </div>
+      ))
+    }
+  </div>
+  <p class="champ__help">
+    Sélectionne du texte puis clique sur un bouton. L'anglais est facultatif.
+  </p>
+</div>
+
+<style>
+  .rich {
+    border: 1px solid var(--adm-bord-fort);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .rich__barre {
+    display: flex;
+    gap: 0.2rem;
+    padding: 0.35rem;
+    background: var(--adm-champ);
+    border-bottom: 1px solid var(--adm-bord);
+    flex-wrap: wrap;
+  }
+  .rich__barre button {
+    font: inherit;
+    font-size: 0.82rem;
+    padding: 0.25rem 0.55rem;
+    border: 1px solid var(--adm-bord-fort);
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--adm-encre);
+  }
+  .rich__barre button:hover {
+    border-color: var(--ci-orange);
+  }
+  .rich__zone {
+    min-height: 180px;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    outline: none;
+  }
+  .rich__zone:focus {
+    box-shadow: inset 0 0 0 2px rgba(247, 127, 0, 0.15);
+  }
+  .rich__zone h2 {
+    font-size: 1.2rem;
+    margin: 0.6rem 0 0.3rem;
+  }
+  .rich__zone p {
+    margin: 0 0 0.6rem;
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.rich').forEach((rich) => {
+    const zone = rich.querySelector<HTMLElement>('.rich__zone')!;
+    const holder = rich.parentElement!.querySelector<HTMLTextAreaElement>('.rich__val')!;
+    const sync = () => (holder.value = zone.innerHTML);
+
+    zone.addEventListener('input', sync);
+    zone.addEventListener('blur', sync);
+
+    rich.querySelectorAll<HTMLButtonElement>('.rich__barre button').forEach((btn) => {
+      btn.addEventListener('mousedown', (e) => e.preventDefault()); // garde la sélection
+      btn.addEventListener('click', () => {
+        const cmd = btn.dataset.cmd;
+        zone.focus();
+        if (cmd === 'bold') document.execCommand('bold');
+        else if (cmd === 'italic') document.execCommand('italic');
+        else if (cmd === 'h2') document.execCommand('formatBlock', false, 'h2');
+        else if (cmd === 'ul') document.execCommand('insertUnorderedList');
+        else if (cmd === 'link') {
+          const url = prompt('Adresse du lien (https://…) :');
+          if (url) document.execCommand('createLink', false, url);
+        }
+        sync();
+      });
+    });
+
+    // Sécurité : synchronise à la soumission du formulaire
+    rich.closest('form')?.addEventListener('submit', sync);
+  });
+</script>

@@ -1,0 +1,81 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import * as repo from '../../server/db/repo';
+
+const today = new Date().toISOString().slice(0, 10);
+const evenements = repo.listEvenements();
+const aVenir = evenements.filter((e) => e.date >= today).length;
+const actus = repo.listActualites();
+const galerie = repo.listGalerie();
+const produits = repo.listProduits();
+const partenaires = repo.listPartenaires();
+const membres = repo.listMembres();
+
+const stats = [
+  { n: aVenir, l: 'événements à venir', href: '/admin/evenements', ic: '📅' },
+  { n: actus.length, l: 'actualités', href: '/admin/actualites', ic: '📰' },
+  { n: galerie.length, l: 'photos', href: '/admin/galerie', ic: '🖼️' },
+  { n: produits.length, l: 'produits', href: '/admin/produits', ic: '🛍️' },
+  { n: partenaires.length, l: 'partenaires', href: '/admin/partenaires', ic: '🤝' },
+  { n: membres.length, l: 'membres du bureau', href: '/admin/membres', ic: '👤' },
+];
+
+const prochains = evenements
+  .filter((e) => e.date >= today)
+  .sort((a, b) => a.date.localeCompare(b.date))
+  .slice(0, 5);
+---
+
+<AdminLayout title="Tableau de bord">
+  <div class="grille-stats">
+    {
+      stats.map((s) => (
+        <a class="stat" href={s.href}>
+          <div class="stat__n">{s.n}</div>
+          <div class="stat__l">{s.ic} {s.l}</div>
+        </a>
+      ))
+    }
+  </div>
+
+  <div class="panneau" style="margin-top:1.4rem">
+    <div class="liste-entete">
+      <h2 style="margin:0;font-size:1.15rem">Prochains événements</h2>
+      <a class="bouton bouton--primaire bouton--sm" href="/admin/evenements/nouveau">+ Nouvel événement</a>
+    </div>
+    {
+      prochains.length === 0 ? (
+        <p style="color:var(--adm-muet)">Aucun événement à venir. Ajoute-en un pour le voir apparaître sur le site.</p>
+      ) : (
+        <div class="table-wrap">
+          <table class="liste">
+            <thead>
+              <tr><th>Date</th><th>Titre</th><th>Lieu</th><th></th></tr>
+            </thead>
+            <tbody>
+              {prochains.map((e) => (
+                <tr>
+                  <td>{new Date(e.date).toLocaleDateString('fr-FR')}</td>
+                  <td>{e.titre_fr}</td>
+                  <td style="color:var(--adm-muet)">{e.lieu}</td>
+                  <td class="liste__actions">
+                    <a class="bouton bouton--contour bouton--sm" href={`/admin/evenements/${e.id}`}>Modifier</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+
+  <div class="panneau">
+    <h2 style="margin:0 0 .6rem;font-size:1.15rem">Raccourcis</h2>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+      <a class="bouton bouton--contour" href="/admin/actualites/nouveau">+ Écrire une actualité</a>
+      <a class="bouton bouton--contour" href="/admin/galerie/nouveau">+ Ajouter une photo</a>
+      <a class="bouton bouton--contour" href="/admin/evenements/nouveau">+ Nouvel événement</a>
+    </div>
+  </div>
+</AdminLayout>

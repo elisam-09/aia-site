@@ -1,182 +1,136 @@
 # Mettre le site en ligne — guide pas à pas
 
-Ce guide s'adresse au bureau de l'AIA. Il ne demande **aucune compétence technique**.
-Compte un après-midi la première fois. Tout ce qui est proposé ici est **gratuit** au
-départ ; seul le nom de domaine est payant (quelques milliers de FCFA par an).
+Le site est une **application dynamique** (serveur Node + base SQLite + portail admin).
+Elle a besoin d'un **serveur allumé en permanence** et d'un **disque persistant** (pour
+conserver la base `data/aia.db` et les photos `uploads/`). Ce n'est donc pas de
+l'hébergement statique gratuit — compte quelques euros par mois.
 
-Ordre conseillé : **1) GitHub → 2) Vercel (mise en ligne) → 3) Sanity (back-office) →
-4) Formulaires → 5) Nom de domaine.**
-
----
-
-## 0. Vue d'ensemble (qui fait quoi)
-
-| Outil       | Rôle                                        | Coût            |
-| ----------- | ------------------------------------------- | --------------- |
-| **GitHub**  | Range le code du site                       | Gratuit         |
-| **Vercel**  | Publie le site et le met à jour tout seul   | Gratuit         |
-| **Sanity**  | Back-office : le bureau écrit le contenu    | Gratuit         |
-| **Web3Forms** | Reçoit les formulaires par e-mail         | Gratuit         |
-| **Domaine** | L'adresse du site (ex. `aia-ci.org`)        | ~6 000–12 000 FCFA/an |
-
-> Le site fonctionne **dès l'étape 2**, avec le contenu de démonstration. Les étapes
-> 3 à 5 l'améliorent (contenu réel, formulaires, adresse personnalisée).
+> **En local, tout est gratuit et fonctionne déjà** : `npm install`, `npm run admin:creer`,
+> `npm run dev`. Ce guide concerne uniquement la **mise en ligne** pour que le bureau
+> publie à distance.
 
 ---
 
-## 1. Ranger le code sur GitHub
+## 0. Ce qu'il te faut
 
-1. Crée un compte sur [github.com](https://github.com) (gratuit).
-2. Crée un dépôt (**New repository**) nommé `aia-site`, en **Private**.
-3. Envoie le code (depuis un ordinateur qui a le projet) :
+1. Le code sur **GitHub** (déjà fait : `github.com/elisam-09/aia-site`).
+2. Un **hébergeur** capable de faire tourner Node **avec un disque persistant**.
+3. Un **nom de domaine** (optionnel au début).
+
+Prix indicatifs (à revérifier) : hébergement **~3–7 €/mois**, domaine **~6–12 000 FCFA/an**.
+
+---
+
+## 1. Choisir l'hébergeur
+
+| Option | Coût/mois | Entretien | Pour qui |
+| --- | --- | --- | --- |
+| **Fly.io** (recommandé) | ~3–5 € | faible | Simplicité + disque persistant facile |
+| **Railway** | ~5 € | faible | Très simple, interface claire |
+| **VPS** (Hetzner, OVH…) | ~4–6 € | à ta charge | Contrôle total, si quelqu'un est à l'aise |
+
+> ⚠️ Évite Vercel/Netlify **pour cette app** : leur mode gratuit est « sans serveur
+> permanent » et **sans disque** → la base SQLite ne survivrait pas. (Le site *statique*
+> aurait pu y aller, mais on a choisi le portail admin intégré, qui exige un serveur.)
+
+---
+
+## 2. Déployer sur Fly.io (recommandé)
+
+1. Crée un compte sur [fly.io](https://fly.io) et installe l'outil `flyctl`
+   (`brew install flyctl` sur Mac), puis `fly auth login`.
+2. Dans le dossier du projet :
    ```bash
-   git remote add origin https://github.com/VOTRE-COMPTE/aia-site.git
-   git push -u origin main
+   fly launch --no-deploy      # détecte Node ; choisis une région (ex. Paris CDG)
    ```
-   > Si tu ne fais pas cette partie toi-même, demande à la personne qui a développé le
-   > site de pousser le code sur le dépôt.
+3. **Crée un disque persistant** et monte-le sur `/data` :
+   ```bash
+   fly volumes create aia_data --size 1        # 1 Go, largement suffisant au début
+   ```
+   Puis, dans le fichier `fly.toml` généré, ajoute le montage et les variables :
+   ```toml
+   [mounts]
+     source = "aia_data"
+     destination = "/data"
+
+   [env]
+     DATABASE_PATH = "/data/aia.db"
+     UPLOADS_PATH  = "/data/uploads"
+     HOST = "0.0.0.0"
+     PORT = "8080"
+   ```
+   (Le serveur Node de l'adaptateur écoute `HOST`/`PORT`.)
+4. Déploie :
+   ```bash
+   fly deploy
+   ```
+5. **Crée le premier administrateur** sur le serveur :
+   ```bash
+   fly ssh console -C "npm run admin:creer"
+   ```
+   (ou en une ligne avec les variables `ADMIN_EMAIL`, `ADMIN_MOT_DE_PASSE`, `ADMIN_NOM`, `ADMIN_ROLE`.)
+
+Le site est en ligne à `https://<ton-app>.fly.dev`. Le portail est sur `/admin`.
+
+> Mises à jour du code ensuite : `git push` puis `fly deploy` (ou un déploiement
+> automatique via GitHub Actions, à configurer plus tard).
+
+### Variante VPS (résumé)
+
+Sur un petit serveur Ubuntu : installer Node 22, cloner le dépôt, `npm ci && npm run build`,
+lancer `node ./dist/server/entry.mjs` derrière un service **systemd** (redémarrage auto)
+et un reverse-proxy **Caddy** (HTTPS automatique). Placer `data/` et `uploads/` sur le
+disque et les inclure dans les sauvegardes. Plus souverain, mais tout l'entretien
+(sécurité, HTTPS, sauvegardes) est à ta charge.
 
 ---
 
-## 2. Publier le site sur Vercel
+## 3. Sauvegardes (important)
 
-1. Va sur [vercel.com](https://vercel.com) → **Sign up** → **Continue with GitHub**.
-2. **Add New… → Project** → choisis le dépôt `aia-site`.
-3. Vercel détecte Astro tout seul. Laisse les réglages par défaut :
-   - Build Command : `npm run build`
-   - Output Directory : `dist`
-4. Clique **Deploy**. Après ~1 minute, le site est en ligne à une adresse du type
-   `https://aia-site-xxxx.vercel.app`.
+Toutes les données (contenu + comptes + photos) sont dans **`data/` et `uploads/`**.
 
-**C'est fait : le site est public.** Désormais, chaque fois que le code est mis à jour
-sur GitHub, Vercel republie automatiquement.
-
----
-
-## 3. Activer le back-office (Sanity)
-
-Cette étape permet au bureau d'ajouter événements, actualités et photos **sans code**.
-
-### 3.1 Créer le projet Sanity
-
-1. Va sur [sanity.io](https://www.sanity.io) → **Get started** → connexion avec Google
-   ou GitHub.
-2. Crée un projet nommé « AIA ». Note le **Project ID** (une suite de lettres/chiffres,
-   ex. `a1b2c3d4`). Le dataset s'appelle `production`.
-
-### 3.2 Mettre le back-office en ligne
-
-Sur l'ordinateur qui a le projet, dans le dossier `studio/` :
-
-```bash
-cd studio
-npm install
-npx sanity login          # ouvre le navigateur pour se connecter
-# Renseigne l'identifiant du projet créé à l'étape 3.1 :
-SANITY_STUDIO_PROJECT_ID=VOTRE_ID npx sanity deploy
-```
-
-Sanity demande un nom (ex. `aia`). Le back-office est alors accessible en ligne à
-`https://aia.sanity.studio` — **c'est l'adresse que le bureau utilisera** pour écrire.
-Chaque membre à qui tu donnes accès (bouton **Invite** dans sanity.io) peut publier.
-
-### 3.3 Brancher le site sur Sanity
-
-Dans Vercel : **Project → Settings → Environment Variables**, ajoute :
-
-| Nom                        | Valeur         |
-| -------------------------- | -------------- |
-| `PUBLIC_SANITY_PROJECT_ID` | votre Project ID |
-| `PUBLIC_SANITY_DATASET`    | `production`   |
-
-Puis **Deployments → … → Redeploy**. Le site affiche maintenant le contenu saisi dans
-Sanity au lieu de la démo.
-
-> **Mise à jour automatique à chaque publication** (optionnel mais recommandé) :
-> dans Vercel, **Settings → Git → Deploy Hooks**, crée un hook « sanity » ; copie
-> l'URL obtenue et colle-la dans sanity.io sous **API → Webhooks**. Ainsi, quand un
-> membre publie un article, le site se met à jour en ~1 minute, tout seul.
-
-Prise en main du back-office : voir **[studio/README.md](./studio/README.md)**.
+- **Base** = un fichier `aia.db`. Le copier régulièrement suffit.
+  ```bash
+  # Sur Fly.io :
+  fly ssh console -C "sqlite3 /data/aia.db '.backup /data/sauvegarde.db'"
+  # puis récupère le fichier :
+  fly ssh sftp get /data/sauvegarde.db ./sauvegarde-$(date +%F).db
+  ```
+- Programme une sauvegarde **hebdomadaire** et garde-en plusieurs. Une association qui
+  perd 40 fiches de contenu, c'est récupérable ; perdre la base sans sauvegarde, non.
 
 ---
 
-## 4. Recevoir les formulaires (Rejoindre / Contact)
+## 4. Nom de domaine
 
-1. Va sur [web3forms.com](https://web3forms.com) → saisis l'e-mail de l'association →
-   tu reçois une **Access Key** gratuite.
-2. Dans Vercel (**Settings → Environment Variables**), ajoute :
-
-   | Nom                    | Valeur                                        |
-   | ---------------------- | --------------------------------------------- |
-   | `PUBLIC_FORM_ENDPOINT` | `https://api.web3forms.com/submit`            |
-   | `PUBLIC_CONTACT_EMAIL` | l'e-mail public de l'association              |
-
-   > Web3Forms attend la clé dans un champ `access_key`. Ajoute-la simplement comme
-   > champ caché : ouvre `src/components/FormBlock.astro` et insère, à côté du champ
-   > `formulaire`, une ligne
-   > `<input type="hidden" name="access_key" value="VOTRE_CLÉ" />`.
-
-3. **Redeploy**. Sans cette configuration, les formulaires ouvrent simplement
-   l'application e-mail du visiteur (rien n'est cassé, c'est le mode de secours).
+1. Réserve un domaine (**`.org` recommandé** au début : `aia-ci.org`, ~6–10 000 FCFA/an
+   chez Namecheap/Porkbun/OVH. Le **`.ci`** est plus symbolique mais plus lourd à
+   obtenir — à viser ensuite).
+2. Rattache-le à l'hébergeur :
+   ```bash
+   fly certs add aia-ci.org          # Fly génère le HTTPS automatiquement
+   ```
+   Puis copie chez le registraire les enregistrements DNS que Fly indique.
+3. Mets à jour l'URL du site dans `astro.config.mjs` (champ `site`) et
+   `public/robots.txt`, puis redéploie.
 
 ---
 
-## 5. Réserver le nom de domaine
+## 5. Formulaires publics (Rejoindre / Contact)
 
-Le `.vercel.app` fonctionne, mais une vraie adresse fait plus sérieux vis-à-vis des
-institutions (ONU, AfAS…).
-
-### Quel nom ?
-
-- **`.org`** (recommandé) — la convention pour une association. Ex. `aia-ci.org`,
-  `astronomie-ci.org`. ~6 000–10 000 FCFA/an. Disponible partout.
-- **`.ci`** (le domaine ivoirien) — très fort symboliquement, mais réservation via un
-  registraire agréé en Côte d'Ivoire et souvent un peu plus cher/plus lourd
-  administrativement. Ex. `aia.ci`. À viser en second temps si le budget suit.
-
-> Conseil : prends **d'abord le `.org`** (rapide, pas cher, international), et garde
-> le `.ci` comme objectif quand l'association aura un budget dédié. Vérifie que le nom
-> est libre **et** que le compte correspondant existe sur Instagram/Facebook.
-
-### Où réserver ?
-
-Registraires fiables et peu chers : **Namecheap**, **Porkbun**, **OVH** (interface FR,
-présence en Afrique de l'Ouest), ou **Cloudflare** (prix coûtant). Évite les options
-« payantes » superflues qu'on te propose au paiement (protection WHOIS gratuite chez
-la plupart, ça suffit).
-
-### Le brancher à Vercel
-
-1. Dans Vercel : **Project → Settings → Domains → Add** → saisis ton domaine.
-2. Vercel affiche 1 ou 2 lignes à copier chez le registraire (des enregistrements
-   **A** / **CNAME**). Colle-les dans la zone DNS du domaine.
-3. Sous ~30 min à quelques heures, le domaine est actif et le **HTTPS** (cadenas) est
-   automatique et gratuit.
-
-Enfin, mets à jour l'URL du site dans deux fichiers puis republie :
-`astro.config.mjs` (champ `site`) et `public/robots.txt` (ligne `Sitemap:`).
+Indépendants du portail admin. Pour recevoir les messages par e-mail, crée une clé
+gratuite sur [web3forms.com](https://web3forms.com) et renseigne, côté serveur, les
+variables `PUBLIC_FORM_ENDPOINT` et `PUBLIC_CONTACT_EMAIL` (voir `.env.example`). Sans
+configuration, les formulaires ouvrent simplement l'application e-mail du visiteur.
 
 ---
 
-## Récapitulatif des variables d'environnement (Vercel)
+## Récapitulatif des variables (production)
 
-| Nom                        | Obligatoire ? | À quoi ça sert                        |
-| -------------------------- | ------------- | ------------------------------------- |
-| `PUBLIC_SANITY_PROJECT_ID` | non           | Active le back-office Sanity          |
-| `PUBLIC_SANITY_DATASET`    | non           | `production` (défaut)                 |
-| `PUBLIC_FORM_ENDPOINT`     | non           | Réception des formulaires             |
-| `PUBLIC_CONTACT_EMAIL`     | recommandé    | E-mail affiché et de secours          |
-
-Toutes optionnelles : sans elles, le site tourne avec la démo et les formulaires en
-mode e-mail. On peut donc mettre en ligne **aujourd'hui** et enrichir ensuite.
-
----
-
-## Aide-mémoire « qui republie quoi »
-
-- **Le bureau écrit un article / ajoute une photo** → dans Sanity → le site se met à
-  jour tout seul (si le webhook de l'étape 3 est en place).
-- **On modifie le design ou les textes fixes** → changement dans le code → `git push`
-  → Vercel republie tout seul.
-- **Rien à faire manuellement sur le serveur** : il n'y en a pas. Le site est statique.
+| Variable | Rôle |
+| --- | --- |
+| `DATABASE_PATH` | Chemin de la base (ex. `/data/aia.db` sur disque persistant) |
+| `UPLOADS_PATH` | Dossier des photos (ex. `/data/uploads`) |
+| `HOST` / `PORT` | Écoute du serveur (souvent `0.0.0.0` / `8080`) |
+| `PUBLIC_FORM_ENDPOINT` | (optionnel) réception des formulaires publics |
+| `PUBLIC_CONTACT_EMAIL` | (recommandé) e-mail affiché et de repli |

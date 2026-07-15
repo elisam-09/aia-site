@@ -27,7 +27,8 @@ export interface Post {
   titre: string;
   date: string; // ISO
   extrait: string;
-  corps: Block[];
+  /** Corps de l'article déjà en HTML (rendu depuis la base ou l'éditeur admin) */
+  corpsHtml: string;
   image?: string;
   auteur: string;
 }

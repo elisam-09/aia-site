@@ -1,20 +1,11 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import { getPosts } from '../../../lib/content';
-import { renderBlocks } from '../../../lib/blocks';
+import { getPost } from '../../../lib/content';
 import { formatDate, routes, useT } from '../../../i18n/ui';
-import type { Post } from '../../../lib/types';
 
-export async function getStaticPaths() {
-  const posts = await getPosts('en');
-  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
-}
-
-interface Props {
-  post: Post;
-}
-
-const { post } = Astro.props;
+const { slug } = Astro.params;
+const post = slug ? getPost('en', slug) : undefined;
+if (!post) return Astro.rewrite('/404');
 const t = useT('en');
 ---
 
@@ -28,7 +19,7 @@ const t = useT('en');
     <h1>{post.titre}</h1>
     <p class="lead">{post.extrait}</p>
     {post.image && <img class="article__visuel" src={post.image} alt="" />}
-    <div class="article__corps" set:html={renderBlocks(post.corps)} />
+    <div class="article__corps" set:html={post.corpsHtml} />
     <a class="article__retour" href={routes.news.en}>← {t('nav.news')}</a>
   </article>
 </Base>
