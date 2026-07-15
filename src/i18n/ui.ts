@@ -94,6 +94,7 @@ export const ui = {
     'footer.explorer': 'Explorer',
     'footer.association': "L'association",
     'footer.legal': 'Fondée en 2021 · UFR SSMT, Université Félix Houphouët-Boigny, Abidjan',
+    'footer.admin': 'Espace bureau',
 
     'hud.altitude': 'Altitude',
     'hud.temperature': 'Température',
@@ -160,6 +161,7 @@ export const ui = {
     'footer.explorer': 'Explore',
     'footer.association': 'The association',
     'footer.legal': 'Founded in 2021 · UFR SSMT, Félix Houphouët-Boigny University, Abidjan',
+    'footer.admin': 'Board area',
 
     'hud.altitude': 'Altitude',
     'hud.temperature': 'Temperature',

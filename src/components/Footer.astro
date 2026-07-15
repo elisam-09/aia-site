@@ -52,6 +52,7 @@ const labels: Record<PageId, string> = {
   <div class="container pied__bas">
     <p>© {annee} {t('site.sigle')} — {t('footer.droits')}</p>
     <p>{t('footer.legal')}</p>
+    <a class="pied__admin" href="/admin">🔒 {t('footer.admin')}</a>
   </div>
 </footer>
 
@@ -165,5 +166,18 @@ const labels: Record<PageId, string> = {
 
   .pied__bas p {
     margin: 0;
+  }
+
+  .pied__admin {
+    font-family: var(--font-hud);
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    color: var(--creme-45);
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .pied__admin:hover {
+    color: var(--ci-orange-vif);
   }
 </style>
