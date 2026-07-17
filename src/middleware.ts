@@ -2,13 +2,16 @@
  * Middleware : s'exécute à chaque requête.
  * - attache l'admin connecté à `locals.admin` (ou null)
  * - protège tout `/admin` (redirige vers la connexion si non authentifié)
- * - vérifie l'origine des requêtes POST du portail (défense CSRF, en complément du cookie SameSite=Lax)
+ *
+ * Défense CSRF : assurée par le cookie de session en SameSite=Lax (non transmis lors
+ * d'un POST venant d'un autre site). On ne compare pas Origin/Host ici car un
+ * proxy/tunnel (Cloudflare, reverse-proxy Hostinger…) réécrit le Host.
  */
 import { defineMiddleware } from 'astro:middleware';
 import { currentAdmin } from './server/auth';
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const { url, cookies, locals, redirect, request } = context;
+  const { url, cookies, locals, redirect } = context;
   const path = url.pathname;
 
   locals.admin = currentAdmin(cookies);
@@ -22,21 +25,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
     if (locals.admin && estConnexion) {
       return redirect('/admin');
-    }
-
-    // Défense CSRF : une requête POST doit venir de notre propre origine
-    if (request.method === 'POST') {
-      const origin = request.headers.get('origin');
-      const host = request.headers.get('host');
-      if (origin && host) {
-        try {
-          if (new URL(origin).host !== host) {
-            return new Response('Origine non autorisée', { status: 403 });
-          }
-        } catch {
-          return new Response('Origine invalide', { status: 403 });
-        }
-      }
     }
   }
 

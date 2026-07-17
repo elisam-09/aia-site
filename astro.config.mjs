@@ -12,6 +12,10 @@ export default defineConfig({
   // Les pages publiques restent rendues à la volée depuis la base (mise à jour instantanée).
   output: 'server',
   adapter: node({ mode: 'standalone' }),
+  // La vérification d'origine intégrée d'Astro compare Origin au Host — ce qui casse
+  // dès qu'on est derrière un proxy/tunnel qui réécrit le Host (Cloudflare, Hostinger…).
+  // La défense CSRF reste assurée par le cookie de session en SameSite=Lax.
+  security: { checkOrigin: false },
   integrations: [
     react(),
     sitemap({
