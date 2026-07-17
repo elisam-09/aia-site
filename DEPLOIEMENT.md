@@ -1,5 +1,9 @@
 # Mettre le site en ligne — guide pas à pas
 
+> 👉 **Tu déploies sur Hostinger ?** Suis le guide dédié, pas à pas :
+> **[DEPLOIEMENT-HOSTINGER.md](./DEPLOIEMENT-HOSTINGER.md)** (VPS Ubuntu). Ce document-ci
+> présente les principes généraux et les autres hébergeurs possibles.
+
 Le site est une **application dynamique** (serveur Node + base SQLite + portail admin).
 Elle a besoin d'un **serveur allumé en permanence** et d'un **disque persistant** (pour
 conserver la base `data/aia.db` et les photos `uploads/`). Ce n'est donc pas de

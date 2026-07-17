@@ -1,0 +1,27 @@
+# Service systemd — fait tourner le site AIA en permanence et le redémarre en cas de crash/redémarrage serveur.
+# À copier dans /etc/systemd/system/aia.service (voir DEPLOIEMENT-HOSTINGER.md)
+
+[Unit]
+Description=Site AIA (Astro + Node + SQLite)
+After=network.target
+
+[Service]
+Type=simple
+User=aia
+WorkingDirectory=/home/aia/aia-site
+Environment=NODE_ENV=production
+# Le serveur écoute en local ; Caddy (le reverse-proxy) l'expose en HTTPS.
+Environment=HOST=127.0.0.1
+Environment=PORT=4321
+# Données persistantes (base + photos) rassemblées dans data/ pour une sauvegarde simple.
+Environment=DATABASE_PATH=/home/aia/aia-site/data/aia.db
+Environment=UPLOADS_PATH=/home/aia/aia-site/data/uploads
+# Facultatif : réception des formulaires publics (voir .env.example)
+# Environment=PUBLIC_FORM_ENDPOINT=https://api.web3forms.com/submit
+# Environment=PUBLIC_CONTACT_EMAIL=contact@aia-ci.org
+ExecStart=/usr/bin/node ./dist/server/entry.mjs
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
