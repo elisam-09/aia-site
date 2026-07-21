@@ -37,11 +37,17 @@ export interface SessionAdmin {
   role: Role;
 }
 
-/** Vérifie les identifiants et, si OK, ouvre une session (pose le cookie). */
+/**
+ * Vérifie les identifiants et, si OK, ouvre une session (pose le cookie).
+ * `secure` doit refléter le protocole réellement vu par le navigateur : en HTTP
+ * (accès par IP avant le domaine), un cookie « Secure » serait ignoré par le
+ * navigateur et la connexion boucherait sur la page de login.
+ */
 export async function login(
   cookies: AstroCookies,
   email: string,
   password: string,
+  secure = false,
 ): Promise<SessionAdmin | null> {
   const a = repo.getAdminByEmail(email);
   // On hache toujours (même compte inexistant) pour ne pas révéler l'existence par le temps de réponse
@@ -58,7 +64,7 @@ export async function login(
   cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: import.meta.env.PROD,
+    secure,
     path: '/',
     maxAge: SESSION_JOURS * 86_400,
   });

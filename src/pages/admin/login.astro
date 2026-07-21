@@ -22,7 +22,10 @@ if (Astro.request.method === 'POST') {
   } else if (!email || !motdepasse) {
     erreur = 'Renseigne ton email et ton mot de passe.';
   } else {
-    const admin = await login(Astro.cookies, email, motdepasse);
+    // Protocole réellement vu par le navigateur (Caddy renseigne x-forwarded-proto)
+    const proto =
+      Astro.request.headers.get('x-forwarded-proto') ?? Astro.url.protocol.replace(':', '');
+    const admin = await login(Astro.cookies, email, motdepasse, proto === 'https');
     if (admin) {
       reinitialiser(cle);
       return Astro.redirect(suite);
