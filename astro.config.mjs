@@ -6,8 +6,8 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  // URL provisoire — à remplacer par le domaine définitif une fois réservé (voir DEPLOIEMENT.md)
-  site: 'https://aia-astronomie.vercel.app',
+  // Domaine officiel du site (utilisé pour les liens canoniques, l'Open Graph et le sitemap)
+  site: 'https://aia-ci.cloud',
   // Mode serveur : nécessaire pour la connexion, le portail admin et la base de données.
   // Les pages publiques restent rendues à la volée depuis la base (mise à jour instantanée).
   output: 'server',

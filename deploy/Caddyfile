@@ -1,13 +1,12 @@
 # Reverse-proxy Caddy — HTTPS automatique (Let's Encrypt) + envoi vers le serveur Node local.
-# À copier dans /etc/caddy/Caddyfile (voir DEPLOIEMENT-HOSTINGER.md), puis `sudo systemctl reload caddy`.
+# À copier dans /etc/caddy/Caddyfile, puis `sudo systemctl reload caddy`.
 
-# --- Une fois le domaine réservé et pointé sur l'IP du VPS : remplace par ton domaine ---
-aia-ci.org, www.aia-ci.org {
+aia-ci.cloud, www.aia-ci.cloud {
 	encode gzip zstd
 	reverse_proxy 127.0.0.1:4321
 }
 
-# --- En attendant le domaine, pour tester via l'adresse IP en HTTP :
+# --- Avant que le domaine ne pointe sur le serveur, pour tester via l'adresse IP en HTTP :
 # (décommente ce bloc et commente celui du dessus)
 # :80 {
 # 	encode gzip zstd
