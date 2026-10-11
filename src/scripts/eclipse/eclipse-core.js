@@ -221,5 +221,8 @@
 
   var api = { CATALOG: CATALOG, solarLocal: solarLocal, lunarLocal: lunarLocal, at: at, centralPoint: centralPoint, shadowFootprint: shadowFootprint,
               title: title, TYPES: TYPES, toDate: toDate, obscuration: obscuration, moonAlt: moonAlt, sunEq: sunEq, nextEclipse: nextEclipse, nextVisible: nextVisible, upcoming: upcoming, summary: summary, endTime: endTime, poly: poly };
-  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.ECL = api;
+  // Toujours exposé sur window : une fois empaqueté (Vite/Rollup), le fichier est enveloppé
+  // comme un module CommonJS et « module.exports » existe aussi dans le navigateur.
+  if (root) root.ECL = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : this);

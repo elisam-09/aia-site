@@ -29,6 +29,17 @@ export function seedIfEmpty(db: DB): void {
   if (isEmpty(db, 'partenaires')) insererPartenaires(db);
   if (isEmpty(db, 'membres')) insererMembres(db);
   remplacerDemo(db);
+  corrections(db);
+}
+
+/** Corrections ponctuelles et sans risque (ne visent que des valeurs exactes devenues fausses). */
+function corrections(db: DB): void {
+  // uranoscope.org n'existe plus : page officielle sur le site de l'AFA
+  db.prepare(
+    `UPDATE partenaires SET site = 'https://www.afastronomie.fr/uranoscope-de-l-ile-de-france',
+       nom = CASE WHEN nom = 'Uranoscope de France' THEN 'Uranoscope de l''Île-de-France' ELSE nom END
+     WHERE site IN ('https://uranoscope.org', 'https://uranoscope.org/')`,
+  ).run();
 }
 
 function insererEvenements(db: DB): void {
