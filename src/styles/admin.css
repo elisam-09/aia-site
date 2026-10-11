@@ -117,7 +117,7 @@ h1, h2, h3, h4 {
   letter-spacing: -0.01em;
 }
 a {
-  color: var(--ci-orange-vif);
+  color: var(--ci-vert-clair);
 }
 :focus-visible {
   outline: 2px solid var(--ci-orange);
@@ -173,7 +173,7 @@ a {
 }
 .adm__lien svg { width: 18px; height: 18px; flex: none; opacity: 0.8; }
 .adm__lien:hover { background: rgba(248, 247, 248, 0.06); color: var(--adm-encre); }
-.adm__lien.actif { background: rgba(247, 127, 0, 0.14); color: var(--ci-orange-vif); }
+.adm__lien.actif { background: rgba(0, 158, 96, 0.16); color: var(--ci-vert-clair); }
 .adm__lien.actif svg { opacity: 1; }
 .adm__compteur {
   margin-left: auto;
@@ -263,8 +263,9 @@ a {
   color: inherit;
   transition: border-color 0.3s, transform 0.3s var(--adm-ease);
 }
-.stat:hover { border-color: var(--ci-orange); transform: translateY(-3px); }
-.stat__n { display: block; font: 700 2.3rem/1 var(--font-titre); color: var(--ci-orange); }
+.stat:hover { border-color: var(--ci-vert); transform: translateY(-3px); }
+.stat__n { display: block; font: 700 2.3rem/1 var(--font-titre); color: var(--ci-vert-clair); }
+.stat--alerte .stat__n { color: var(--ci-orange); }
 .stat__l { font-size: 0.82rem; color: var(--adm-encre-doux); }
 .stat--alerte { border-color: rgba(247, 127, 0, 0.55); background: linear-gradient(135deg, rgba(247, 127, 0, 0.14), var(--adm-panneau)); }
 .grille-2 { display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); align-items: start; }
@@ -299,13 +300,13 @@ a {
   display: grid;
   place-items: center;
   font: 700 1rem var(--font-titre);
-  color: var(--ci-orange);
+  color: var(--ci-vert-clair);
   object-fit: cover;
 }
 .vignette--rond { width: 48px; height: 48px; border-radius: 50%; justify-self: center; }
 .ligne h3 { font-size: 1rem; margin: 0; line-height: 1.3; }
 .ligne h3 a { color: inherit; text-decoration: none; }
-.ligne h3 a:hover { color: var(--ci-orange-vif); }
+.ligne h3 a:hover { color: var(--ci-vert-clair); }
 .ligne .meta {
   display: flex;
   flex-wrap: wrap;
@@ -349,7 +350,7 @@ a {
   font: 600 0.8rem var(--font-titre);
 }
 .filtres a:hover { border-color: var(--adm-bord-fort); color: var(--adm-encre); }
-.filtres a.actif { background: rgba(247, 127, 0, 0.14); border-color: rgba(247, 127, 0, 0.55); color: var(--ci-orange-vif); }
+.filtres a.actif { background: rgba(0, 158, 96, 0.16); border-color: rgba(0, 158, 96, 0.6); color: var(--ci-vert-clair); }
 .filtres a span { opacity: 0.7; margin-left: 0.3rem; }
 
 /* ============ Boutons ============ */
@@ -391,7 +392,7 @@ a {
   font: 600 10.5px var(--font-hud);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ci-orange-vif);
+  color: var(--ci-vert-clair);
 }
 .champ__label em { color: var(--creme-70); font-style: normal; }
 .mini { color: var(--adm-muet); display: block; margin-bottom: 0.3rem; }

@@ -465,7 +465,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     }
   }
   .rail__alt {
-    color: var(--ci-orange-vif);
+    color: var(--ci-vert-clair);
     font-size: 13px;
     letter-spacing: 0.06em;
     font-variant-numeric: tabular-nums;
@@ -570,7 +570,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     content: '';
     width: 1.6rem;
     height: 2px;
-    background: var(--ci-vert);
+    background: var(--ci-orange);
     border-radius: 2px;
   }
   .hero__titre {
@@ -616,7 +616,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     display: block;
     font: 600 10px var(--font-hud);
     letter-spacing: 0.2em;
-    color: var(--ci-orange-vif);
+    color: var(--ci-vert-clair);
   }
   .etiq b {
     display: block;
@@ -699,7 +699,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     width: 1px;
     height: 46px;
     margin: 10px auto 0;
-    background: linear-gradient(var(--ci-orange), transparent);
+    background: linear-gradient(var(--ci-vert), transparent);
     animation: goutte 2s infinite;
   }
   @keyframes goutte {
@@ -890,7 +890,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     height: 140px;
     display: grid;
     place-items: center;
-    border: 1px solid var(--ci-orange);
+    border: 1px solid var(--ci-vert);
     border-radius: 50%;
     font: 700 4rem var(--font-titre);
     background: linear-gradient(135deg, var(--ci-orange), var(--creme));
@@ -1016,7 +1016,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     white-space: nowrap;
     text-decoration: none;
     font-weight: 600;
-    color: var(--ci-orange-vif);
+    color: var(--ci-vert-clair);
   }
   .orbite__sous-titre {
     margin: 3rem 0 0;
@@ -1029,9 +1029,9 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     gap: 2.5rem;
     align-items: center;
     padding: 2rem;
-    border: 1px dashed var(--ci-orange);
+    border: 1px dashed var(--ci-vert);
     border-radius: var(--rayon);
-    background: rgba(247, 127, 0, 0.04);
+    background: rgba(0, 158, 96, 0.05);
   }
   .radar-carte p {
     color: var(--creme-70);
@@ -1052,12 +1052,12 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     animation: tourner 3.5s linear infinite;
   }
   .radar__balayage path {
-    fill: var(--ci-orange);
+    fill: var(--ci-vert);
     stroke: none;
     opacity: 0.25;
   }
   .radar__echo {
-    fill: var(--ci-orange);
+    fill: var(--ci-vert-clair);
     stroke: none;
   }
   @media (max-width: 640px) {
@@ -1079,7 +1079,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     overflow-x: auto;
     scroll-snap-type: x proximity;
     scrollbar-width: thin;
-    scrollbar-color: var(--ci-orange) transparent;
+    scrollbar-color: var(--ci-vert) transparent;
     cursor: grab;
   }
   .bande:global(.glisse) {
@@ -1100,7 +1100,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     transition: border-color 0.4s, transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .ev:hover {
-    border-color: var(--ci-orange);
+    border-color: var(--ci-vert);
     transform: translateY(-6px);
   }
   .ev__photo {
@@ -1124,7 +1124,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     font: 600 11px var(--font-hud);
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--ci-orange-vif);
+    color: var(--ci-vert-clair);
   }
   .ev h4 {
     margin: 0.5rem 0;
@@ -1218,7 +1218,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
   }
   .volet__num {
     font: 700 2.4rem / 1 var(--font-titre);
-    color: var(--ci-orange);
+    color: var(--ci-vert-clair);
   }
   .volet h3 {
     margin: 0;
@@ -1398,7 +1398,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     transition: border-color 0.4s, transform 0.4s;
   }
   .conseil:hover {
-    border-color: var(--ci-orange);
+    border-color: var(--ci-vert);
     transform: translateY(-5px);
   }
   .conseil i {
@@ -1406,7 +1406,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     margin-bottom: 0.5rem;
     font: 700 1.9rem var(--font-titre);
     font-style: normal;
-    color: var(--ci-orange);
+    color: var(--ci-vert-clair);
   }
   .conseil h3 {
     font-size: 1.1rem;
@@ -1491,7 +1491,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
   }
   .partenaire-chip:hover {
     color: var(--creme);
-    border-color: var(--ci-orange);
+    border-color: var(--ci-vert);
     transform: translateY(-2px) rotate(-1.5deg);
   }
   .partenaire-logo {
@@ -1538,6 +1538,17 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     .caillou {
       display: none;
     }
+  }
+
+  /* Équilibre des couleurs du drapeau : un élément sur deux en vert */
+  .manifeste__texte .fort:nth-of-type(2) {
+    color: var(--ci-vert-clair);
+  }
+  .stat:nth-child(even) b {
+    color: var(--ci-vert-clair);
+  }
+  .defile__piste b:nth-of-type(even) {
+    color: var(--ci-vert);
   }
 </style>
 

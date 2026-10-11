@@ -57,7 +57,7 @@ a {
 }
 
 a:hover {
-  color: var(--ci-orange-vif);
+  color: var(--ci-vert-clair);
   text-decoration-color: var(--ci-orange);
 }
 
@@ -137,7 +137,7 @@ html.lenis body {
   content: '';
   width: 1.6rem;
   height: 2px;
-  background: var(--ci-orange);
+  background: var(--ci-vert);
   border-radius: 2px;
 }
 

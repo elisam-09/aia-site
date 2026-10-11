@@ -298,7 +298,7 @@ const C = {
     top: -1px;
     height: 1px;
     width: 0;
-    background: var(--ci-orange);
+    background: var(--ci-vert);
     transition: width 1s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .mission.vu::before {
@@ -307,7 +307,7 @@ const C = {
   .mission__num {
     font: 700 3rem / 1 var(--font-titre);
     color: transparent;
-    -webkit-text-stroke: 1px var(--ci-orange);
+    -webkit-text-stroke: 1px var(--ci-vert);
   }
   .mission h3 {
     margin: 0.8rem 0 0.5rem;
@@ -414,7 +414,7 @@ const C = {
     transition: border-color 0.4s, transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .carte:hover {
-    border-color: var(--ci-orange);
+    border-color: var(--ci-vert);
     transform: translateY(-8px);
   }
   .carte__photo {
@@ -475,7 +475,7 @@ const C = {
     font: 600 10px var(--font-hud);
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--ci-orange-vif);
+    color: var(--ci-vert-clair);
   }
   .carte__corps h3 {
     margin: 0.5rem 0;
@@ -513,7 +513,7 @@ const C = {
     transition: border-color 0.4s, transform 0.4s;
   }
   .role:hover {
-    border-color: var(--ci-orange);
+    border-color: var(--ci-vert);
     transform: translateY(-5px);
   }
   .role i {
@@ -521,7 +521,7 @@ const C = {
     margin-bottom: 0.6rem;
     font: 700 1.8rem var(--font-titre);
     font-style: normal;
-    color: var(--ci-orange);
+    color: var(--ci-vert-clair);
   }
   .role h3 {
     font-size: 1.1rem;
@@ -570,6 +570,14 @@ const C = {
       opacity: 1;
       transform: none;
     }
+  }
+
+  .frise li:nth-child(even)::before {
+    background: var(--ci-vert);
+    box-shadow: 0 0 14px var(--ci-vert);
+  }
+  .frise li:nth-child(even) .frise__annee {
+    color: var(--ci-vert-clair);
   }
 </style>
 
