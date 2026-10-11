@@ -29,7 +29,7 @@ const langs = [
               <button type="button" data-cmd="italic" title="Italique"><i>I</i></button>
               <button type="button" data-cmd="h2" title="Sous-titre">H2</button>
               <button type="button" data-cmd="ul" title="Liste à puces">• Liste</button>
-              <button type="button" data-cmd="link" title="Lien">🔗</button>
+              <button type="button" data-cmd="link" title="Lien">Lien</button>
             </div>
             <div class="rich__zone" contenteditable="true" set:html={l.html} />
           </div>
@@ -46,9 +46,9 @@ const langs = [
 <style>
   .rich {
     border: 1px solid var(--adm-bord-fort);
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
-    background: #fff;
+    background: var(--adm-champ);
   }
   .rich__barre {
     display: flex;
@@ -63,13 +63,14 @@ const langs = [
     font-size: 0.82rem;
     padding: 0.25rem 0.55rem;
     border: 1px solid var(--adm-bord-fort);
-    background: #fff;
-    border-radius: 6px;
+    background: transparent;
+    border-radius: 999px;
     cursor: pointer;
     color: var(--adm-encre);
   }
   .rich__barre button:hover {
     border-color: var(--ci-orange);
+    color: var(--ci-orange-vif);
   }
   .rich__zone {
     min-height: 180px;

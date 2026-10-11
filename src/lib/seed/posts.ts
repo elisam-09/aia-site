@@ -1,6 +1,6 @@
 import type { Lang } from '../../i18n/ui';
 import type { Block, Localized } from '../types';
-import { h2, p, sources, ul } from '../blocks';
+import { h2, p, ul } from '../blocks';
 
 interface SeedPost {
   slug: string;
@@ -9,11 +9,14 @@ interface SeedPost {
   extrait: Localized;
   auteur: string;
   image?: string;
+  /** « AIA » pour nos articles, sinon le nom du média */
+  origine: string;
+  /** Sources : [libellé, url] */
+  liens?: [string, string][];
   corps: Record<Lang, Block[]>;
 }
 
 const FB = 'https://www.facebook.com/Association.Ivoirienne.Astronomie';
-const src = (l: [string, string][]) => ({ fr: sources(l), en: sources(l, 'Source:') });
 
 /**
  * Articles réels : ceux de l'AIA et ceux que la presse a consacrés à l'association.
@@ -37,32 +40,6 @@ const S_KOACI: [string, string] = [
   'https://www.koaci.com/article/2024/02/19/cote-divoire/societe/cote-divoire-sensibilisation-des-eleves-a-travers-le-domaine-spatial-par-la-mise-en-place-des-clubs-dastronomie-au-sein-de-la-communaute-educative_175870.html',
 ];
 
-const campagne2026 = src([['Facebook AIA', FB]]);
-const astroedu = src([
-  ["L'Astronomie Afrique", 'https://lastronomieafrique.com/constellations-africaines-expertise-et-engagement-a-astroedu-2025/'],
-]);
-const caBouge = src([
-  ["L'Astronomie Afrique", 'https://lastronomieafrique.com/les-sciences-spatiales-en-cote-divoire-ca-bouge/'],
-]);
-const koaci = src([S_KOACI]);
-const astrotour = src([S_ASTROTOUR]);
-const ird = src([
-  ['IRD', 'https://www.ird.fr/astrotour-lastronomie-pour-toutes-en-cote-divoire'],
-  ['SpaceBus France', 'https://www.spacebusfrance.fr/astrotour-edition-ivoire'],
-]);
-const astropause = src([S_ASTROPAUSE]);
-const cafe = src([S_CAFE]);
-const portrait = src([
-  [
-    'AfricaPSS',
-    'https://africapss.org/2021/03/15/aziz-diaby-le-chercheur-en-physique-spatiale-qui-veut-promouvoir-lastronomie-en-cote-divoire/',
-  ],
-  [
-    'Bouaké 360',
-    'https://bouake360.wordpress.com/2021/03/15/aziz-diaby-le-chercheur-en-physique-spatiale-qui-veut-promouvoir-lastronomie-en-cote-divoire/',
-  ],
-]);
-
 export const POSTS: SeedPost[] = [
   {
     slug: 'campagne-asteroides-2026-premiers-resultats',
@@ -76,6 +53,8 @@ export const POSTS: SeedPost[] = [
       en: 'From 7 September to 2 October, students and volunteers hunted asteroids. A preliminary discovery comes from the Lycée français Blaise Pascal club.',
     },
     auteur: "Le bureau de l'AIA",
+    origine: 'AIA',
+    liens: [['Facebook AIA', FB]],
     image: '/images/photos/orion.webp',
     corps: {
       fr: [
@@ -85,7 +64,6 @@ export const POSTS: SeedPost[] = [
         p(
           "L'AIA salue une découverte préliminaire d'astéroïde réalisée par le club d'astronomie du Lycée français Blaise Pascal d'Abidjan. Elle reste à confirmer, mais elle montre que la graine semée dans les clubs scolaires donne déjà des fruits.",
         ),
-        campagne2026.fr,
       ],
       en: [
         p(
@@ -94,7 +72,6 @@ export const POSTS: SeedPost[] = [
         p(
           'AIA congratulates the astronomy club of the Lycée français Blaise Pascal in Abidjan on a preliminary asteroid discovery. It still has to be confirmed, but it shows that the seeds sown in school clubs are already bearing fruit.',
         ),
-        campagne2026.en,
       ],
     },
   },
@@ -110,6 +87,7 @@ export const POSTS: SeedPost[] = [
       en: 'How a team of Ivorian volunteers detected six new asteroids as part of IAU and NASA campaigns.',
     },
     auteur: "Le bureau de l'AIA",
+    origine: 'AIA',
     image: '/images/photos/orion.webp',
     corps: {
       fr: [
@@ -154,6 +132,7 @@ export const POSTS: SeedPost[] = [
       en: 'Mobile planetarium, water-rocket workshops and new clubs: how our school tours plant astronomy in young minds.',
     },
     auteur: "Le bureau de l'AIA",
+    origine: 'AIA',
     image: '/images/photos/blaise-pascal.webp',
     corps: {
       fr: [
@@ -198,6 +177,8 @@ export const POSTS: SeedPost[] = [
       en: 'At the “Astronomy for education in the French-speaking world” conference, Dr Marc Harris Yao presented AIA’s activities.',
     },
     auteur: "L'Astronomie Afrique",
+    origine: "L'Astronomie Afrique",
+    liens: [["L'Astronomie Afrique", 'https://lastronomieafrique.com/constellations-africaines-expertise-et-engagement-a-astroedu-2025/']],
     image: '/images/photos/astropause-salle.webp',
     corps: {
       fr: [
@@ -207,7 +188,6 @@ export const POSTS: SeedPost[] = [
         p(
           "Il a détaillé les activités de l'AIA : observations publiques, clubs scolaires, campagnes de recherche d'astéroïdes avec des élèves et conférences scientifiques, ainsi que les projets pour renforcer les infrastructures de recherche. La rencontre réunissait des acteurs de Guinée, de Mauritanie, du Bénin, de Tunisie, d'Algérie et d'ailleurs.",
         ),
-        astroedu.fr,
       ],
       en: [
         p(
@@ -216,7 +196,6 @@ export const POSTS: SeedPost[] = [
         p(
           'He described AIA’s activities — public stargazing, school clubs, asteroid search campaigns with students and scientific lectures — as well as plans to strengthen research infrastructure. The meeting brought together people from Guinea, Mauritania, Benin, Tunisia, Algeria and beyond.',
         ),
-        astroedu.en,
       ],
     },
   },
@@ -232,6 +211,7 @@ export const POSTS: SeedPost[] = [
       en: 'Our most ambitious project: a national astronomical observatory, the first stone of a future Ivorian space agency.',
     },
     auteur: "Le bureau de l'AIA",
+    origine: 'AIA',
     image: '/images/photos/abidjan-nuit.webp',
     corps: {
       fr: [
@@ -274,6 +254,8 @@ export const POSTS: SeedPost[] = [
       en: 'An overview of Ivorian space science, in which AIA plays a leading role.',
     },
     auteur: "L'Astronomie Afrique",
+    origine: "L'Astronomie Afrique",
+    liens: [["L'Astronomie Afrique", 'https://lastronomieafrique.com/les-sciences-spatiales-en-cote-divoire-ca-bouge/']],
     image: '/images/photos/blaise-pascal.webp',
     corps: {
       fr: [
@@ -283,7 +265,6 @@ export const POSTS: SeedPost[] = [
         p(
           "L'article raconte les journées de l'espace du Lycée français Blaise Pascal, où les télescopes de l'AIA ont servi à une séance d'observation du ciel, dans le cadre du programme « Une école, un télescope » de l'ASPP-BGS. Il cite aussi l'Astro Tour Ivoire parmi les actions récentes de l'association.",
         ),
-        caBouge.fr,
       ],
       en: [
         p(
@@ -292,7 +273,6 @@ export const POSTS: SeedPost[] = [
         p(
           'The article recounts the space days at the Lycée français Blaise Pascal, where AIA’s telescopes were used for a sky-watching session as part of ASPP-BGS’s “One school, one telescope” programme. It also mentions the Astro Tour Ivoire among the association’s recent actions.',
         ),
-        caBouge.en,
       ],
     },
   },
@@ -308,6 +288,8 @@ export const POSTS: SeedPost[] = [
       en: 'The Lycée Blaise Pascal opens its astronomy club; five more clubs are announced under “One school, one telescope”.',
     },
     auteur: 'KOACI',
+    origine: 'KOACI',
+    liens: [S_KOACI],
     image: '/images/photos/blaise-pascal.webp',
     corps: {
       fr: [
@@ -317,7 +299,6 @@ export const POSTS: SeedPost[] = [
         p(
           "Les élèves ont observé le ciel, guidés par leur professeur de physique-chimie. L'annonce a aussi été faite de la remise de télescopes et de la création de cinq clubs d'astronomie en mars, dont trois dans des lycées d'excellence et un à Abobo, dans le cadre du programme « Une école, un télescope ».",
         ),
-        koaci.fr,
       ],
       en: [
         p(
@@ -326,7 +307,6 @@ export const POSTS: SeedPost[] = [
         p(
           'Students observed the sky, guided by their physics and chemistry teacher. Telescope donations and the creation of five astronomy clubs in March were also announced — three in elite high schools and one in Abobo — under the “One school, one telescope” programme.',
         ),
-        koaci.en,
       ],
     },
   },
@@ -342,6 +322,8 @@ export const POSTS: SeedPost[] = [
       en: 'Review of the first AstroTour, led by AIA and SpaceBus France, from 27 November to 8 December 2023.',
     },
     auteur: "L'Astronomie Afrique",
+    origine: "L'Astronomie Afrique",
+    liens: [S_ASTROTOUR],
     image: '/images/photos/fb-1.webp',
     corps: {
       fr: [
@@ -354,7 +336,6 @@ export const POSTS: SeedPost[] = [
         p(
           "Le soir du 8 décembre, le Dr Aziz Diaby était l'invité de l'émission « Le Grand Talk » sur Life TV pour expliquer les enjeux de la tournée et le rôle des sciences spatiales dans le développement du pays.",
         ),
-        astrotour.fr,
       ],
       en: [
         p(
@@ -366,7 +347,6 @@ export const POSTS: SeedPost[] = [
         p(
           'On the evening of 8 December, Dr Aziz Diaby was the guest of “Le Grand Talk” on Life TV to explain the tour and the role of space science in the country’s development.',
         ),
-        astrotour.en,
       ],
     },
   },
@@ -382,6 +362,8 @@ export const POSTS: SeedPost[] = [
       en: 'IRD announces the tour: four cities, nine dates, fifteen Ivorian and French scientists.',
     },
     auteur: 'IRD',
+    origine: 'IRD',
+    liens: [['IRD', 'https://www.ird.fr/astrotour-lastronomie-pour-toutes-en-cote-divoire'], ['SpaceBus France', 'https://www.spacebusfrance.fr/astrotour-edition-ivoire']],
     image: '/images/photos/fb-1.webp',
     corps: {
       fr: [
@@ -397,7 +379,6 @@ export const POSTS: SeedPost[] = [
         p(
           "Les objectifs : initier à la démarche scientifique et à l'esprit critique, montrer la diversité des métiers du spatial, susciter des vocations et promouvoir la place des femmes dans les sciences.",
         ),
-        ird.fr,
       ],
       en: [
         p(
@@ -412,7 +393,6 @@ export const POSTS: SeedPost[] = [
         p(
           'The goals: introduce the scientific method and critical thinking, show the variety of space careers, spark vocations and promote women in science.',
         ),
-        ird.en,
       ],
     },
   },
@@ -428,6 +408,8 @@ export const POSTS: SeedPost[] = [
       en: 'Report on the first AstroPause, 18 May 2023 at LASMES, in front of some fifty participants.',
     },
     auteur: "L'Astronomie Afrique",
+    origine: "L'Astronomie Afrique",
+    liens: [S_ASTROPAUSE],
     image: '/images/photos/astropause-public.webp',
     corps: {
       fr: [
@@ -442,7 +424,6 @@ export const POSTS: SeedPost[] = [
         p(
           "Le contexte : quelques semaines plus tôt, lors de la conférence NewSpace Africa à Abidjan, le gouvernement avait annoncé la création d'une agence spatiale nationale et un premier nanosatellite, Yam-Sat CI 01.",
         ),
-        astropause.fr,
       ],
       en: [
         p(
@@ -456,7 +437,6 @@ export const POSTS: SeedPost[] = [
         p(
           'The context: a few weeks earlier, at the NewSpace Africa conference in Abidjan, the government had announced a national space agency and a first nanosatellite, Yam-Sat CI 01.',
         ),
-        astropause.en,
       ],
     },
   },
@@ -472,6 +452,8 @@ export const POSTS: SeedPost[] = [
       en: 'On 26 January 2023, AIA was the special guest of the Institut Français de Côte d’Ivoire’s Café des Savoirs.',
     },
     auteur: "L'Astronomie Afrique",
+    origine: "L'Astronomie Afrique",
+    liens: [S_CAFE],
     image: '/placeholders/conference.svg',
     corps: {
       fr: [
@@ -484,7 +466,6 @@ export const POSTS: SeedPost[] = [
           "Dr David Baratoux, conseiller scientifique de l'AIA : une planète habitable a besoin d'eau liquide ; Mars a perdu l'essentiel de son atmosphère, il n'existe donc pas de solution de repli.",
           "Ahoua Stéphane, secrétaire à l'organisation : une « promenade dans l'espace » avec le logiciel Stellarium.",
         ]),
-        cafe.fr,
       ],
       en: [
         p(
@@ -496,7 +477,6 @@ export const POSTS: SeedPost[] = [
           'Dr David Baratoux, AIA’s scientific adviser: a habitable planet needs liquid water; Mars has lost most of its atmosphere, so there is no fallback option.',
           'Ahoua Stéphane, organisation secretary: a “walk through space” with the Stellarium software.',
         ]),
-        cafe.en,
       ],
     },
   },
@@ -512,6 +492,8 @@ export const POSTS: SeedPost[] = [
       en: 'Portrait of AIA’s newly elected president, an ionosphere specialist.',
     },
     auteur: 'AfricaPSS',
+    origine: 'AfricaPSS',
+    liens: [['AfricaPSS', 'https://africapss.org/2021/03/15/aziz-diaby-le-chercheur-en-physique-spatiale-qui-veut-promouvoir-lastronomie-en-cote-divoire/'], ['Bouaké 360', 'https://bouake360.wordpress.com/2021/03/15/aziz-diaby-le-chercheur-en-physique-spatiale-qui-veut-promouvoir-lastronomie-en-cote-divoire/']],
     image: '/images/photos/p-diaby.webp',
     corps: {
       fr: [
@@ -521,7 +503,6 @@ export const POSTS: SeedPost[] = [
         p(
           "Il explique avoir créé l'AIA face au désintérêt des jeunes pour les études scientifiques, faute d'infrastructures, de débouchés et de cours pratiques. Au programme : tournées dans les écoles, observations publiques de la Lune et des planètes, formations, conférences, et à terme un observatoire. Les cotisations doivent financer le matériel.",
         ),
-        portrait.fr,
       ],
       en: [
         p(
@@ -530,7 +511,6 @@ export const POSTS: SeedPost[] = [
         p(
           'He explains that he founded AIA because young people were turning away from science, for lack of infrastructure, jobs and practical classes. The plan: school tours, public observations of the Moon and planets, training, lectures, and eventually an observatory. Membership fees are meant to fund equipment.',
         ),
-        portrait.en,
       ],
     },
   },

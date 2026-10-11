@@ -12,9 +12,10 @@ import Card from './Card.astro';
 import SolarSystem from './solar/SolarSystem';
 import logo from '../assets/logo-aia-blanc.png';
 import { Image } from 'astro:assets';
-import { useT, routes, formatDate, type Lang } from '../i18n/ui';
+import { useT, routes, formatDate, formatPeriode, type Lang } from '../i18n/ui';
 import { getUpcomingEvents, getPastEvents, getPosts, getPartners } from '../lib/content';
 import { COPY } from './accueil/copy';
+import { reglagesSite } from '../lib/contact';
 import '../scripts/eclipse/eclipse-teaser.css';
 
 interface Props {
@@ -24,6 +25,9 @@ interface Props {
 const { lang } = Astro.props;
 const t = useT(lang);
 const c = COPY[lang];
+const R = reglagesSite();
+// phrase d'accueil modifiable dans /admin → Réglages
+const accroche = (lang === 'en' ? R.accroche_en : R.accroche_fr) || c.hero.lead;
 
 const evenements = await getUpcomingEvents(lang, 3);
 const passes = (await getPastEvents(lang)).slice(0, 8);
@@ -76,7 +80,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
         <span class="masque"><span>{c.hero.h1[0]}</span></span>
         <span class="masque"><span>{c.hero.h1[1]}</span></span>
       </h1>
-      <p class="lead hero__lead rv">{c.hero.lead}</p>
+      <p class="lead hero__lead rv">{accroche}</p>
       <div class="hero__actions rv">
         <a class="btn btn-primaire" href="#systeme">{c.hero.cta} ↓</a>
         <a class="btn btn-contour" href={routes.join[lang]}>{t('nav.join')}</a>
@@ -197,7 +201,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
             <Card
               href={routes.events[lang]}
               image={e.image}
-              chip={formatDate(e.date, lang) + (e.heure ? ` · ${e.heure}` : '')}
+              chip={formatPeriode(e, lang) + (e.heure ? ` · ${e.heure}` : '')}
               titre={e.titre}
               texte={e.description}
               meta={e.lieu}
@@ -233,7 +237,7 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
                   {e.image && <img src={e.image} alt="" loading="lazy" />}
                 </div>
                 <div class="ev__texte">
-                  <time datetime={e.date}>{formatDate(e.date, lang)}</time>
+                  <time datetime={e.date}>{formatPeriode(e, lang)}</time>
                   <h4>{e.titre}</h4>
                   <p>{e.description}</p>
                   <span class="ev__lieu">{e.lieu}</span>

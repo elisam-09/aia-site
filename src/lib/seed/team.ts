@@ -12,6 +12,7 @@ interface SeedMember {
   role: Localized;
   bio: Localized;
   photo?: string;
+  badge?: string;
 }
 
 export const TEAM: SeedMember[] = [
@@ -24,6 +25,7 @@ export const TEAM: SeedMember[] = [
       en: 'Space physicist specialising in the ionosphere, and physics and chemistry teacher. He has presented his work in Italy, India, the United States and Cyprus. Elected AIA president for six years in 2021.',
     },
     photo: '/images/photos/p-diaby.webp',
+    badge: 'FONDATEUR',
   },
   {
     id: 'yao',
@@ -79,5 +81,6 @@ export function seedTeam(lang: Lang): Member[] {
     role: pick(m.role, lang),
     bio: pick(m.bio, lang),
     photo: m.photo,
+    badge: m.badge,
   }));
 }

@@ -22,14 +22,15 @@ let v = {
   bio_fr: row?.bio_fr ?? '',
   bio_en: row?.bio_en ?? '',
   photo: row?.photo ?? '',
-  ordre: row?.ordre ?? 10,
+  ordre: row?.ordre ?? (repo.listMembres().length + 1) * 10,
+  badge: row?.badge ?? '',
 };
 
 if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   if (fd.get('_action') === 'supprimer' && !creation) {
     repo.deleteMembre(id);
-    return Astro.redirect('/admin/membres');
+    return Astro.redirect('/admin/membres?ok=supprime');
   }
   const photo = await imageFromForm(fd, 600);
   v = {
@@ -40,6 +41,7 @@ if (Astro.request.method === 'POST') {
     bio_en: str(fd, 'bio_en'),
     photo: photo ?? '',
     ordre: int(fd, 'ordre', 10),
+    badge: str(fd, 'badge').slice(0, 30),
   };
   if (!v.nom) erreur = 'Le nom est obligatoire.';
   else {
@@ -51,17 +53,18 @@ if (Astro.request.method === 'POST') {
       bio_en: v.bio_en || null,
       photo: v.photo || null,
       ordre: v.ordre,
+      badge: v.badge ? v.badge.toUpperCase() : null,
     };
     if (creation) repo.createMembre(data);
     else repo.updateMembre(id, data);
-    return Astro.redirect('/admin/membres');
+    return Astro.redirect(`/admin/membres?ok=${creation ? 'cree' : 'enregistre'}`);
   }
 }
 
 const titre = creation ? 'Nouveau membre' : 'Modifier le membre';
 ---
 
-<AdminLayout title={titre}>
+<AdminLayout title={titre} description="Sans photo, la carte affiche les initiales sur une constellation.">
   {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
 
   <form class="formulaire panneau" method="POST" enctype="multipart/form-data">
@@ -71,6 +74,13 @@ const titre = creation ? 'Nouveau membre' : 'Modifier le membre';
       <AdminField label="Ordre d'affichage" name="ordre" type="number" value={String(v.ordre)} help="Petit = affiché en premier." />
     </div>
     <BiField label="Fonction" name="role" fr={v.role_fr} en={v.role_en} help="Ex. Présidente, Responsable observations…" />
+    <AdminField
+      label="Étiquette sur la photo (facultatif)"
+      name="badge"
+      value={v.badge}
+      placeholder="FONDATEUR"
+      help="Courte mention affichée sur la carte, en majuscules."
+    />
     <BiField label="Courte biographie (optionnel)" name="bio" type="textarea" fr={v.bio_fr} en={v.bio_en} />
     <FormActions editing={!creation} retour="/admin/membres" />
   </form>

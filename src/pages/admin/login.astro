@@ -1,4 +1,5 @@
 ---
+import CielAdmin from '../../components/admin/CielAdmin.astro';
 import '@fontsource-variable/space-grotesk';
 import '@fontsource-variable/inter';
 import '../../styles/admin.css';
@@ -42,21 +43,18 @@ if (Astro.request.method === 'POST') {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#120A12" />
     <title>Connexion · Administration AIA</title>
     <link rel="icon" href="/favicon.png" type="image/png" />
   </head>
   <body>
-    <div class="adm-nuages" aria-hidden="true">
-      <div class="adm-nuage adm-nuage--1"></div>
-      <div class="adm-nuage adm-nuage--2"></div>
-      <div class="adm-nuage adm-nuage--3"></div>
-    </div>
+    <CielAdmin />
 
     <div class="connexion">
       <div class="connexion__carte">
         <img class="connexion__logo" src="/favicon.png" alt="AIA" />
-        <h1>Espace d'administration</h1>
-        <p class="sous">Association Ivoirienne d'Astronomie</p>
+        <h1>Espace bureau</h1>
+        <p class="sous">Association Ivoirienne d'Astronomie · administration du site</p>
 
         {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
 

@@ -5,44 +5,36 @@ import * as repo from '../../../server/db/repo';
 const partenaires = repo.listPartenaires();
 ---
 
-<AdminLayout title="Partenaires">
-  <div class="panneau">
-    <div class="liste-entete">
-      <p style="margin:0;color:var(--adm-muet)">{partenaires.length} partenaire(s)</p>
-      <a class="bouton bouton--primaire" href="/admin/partenaires/nouveau">+ Nouveau partenaire</a>
-    </div>
+<AdminLayout title="Partenaires" description="Les institutions affichées sur la page Partenaires et en bas de l’accueil.">
+  <Fragment slot="actions">
+    <a class="bouton bouton--primaire" href="/admin/partenaires/nouveau">+ Nouveau partenaire</a>
+  </Fragment>
 
-    {
-      partenaires.length === 0 ? (
-        <p style="color:var(--adm-muet)">Aucun partenaire pour l'instant.</p>
-      ) : (
-        <div class="table-wrap">
-          <table class="liste">
-            <thead>
-              <tr><th>Logo</th><th>Nom</th><th>Sigle</th><th>Site</th><th /></tr>
-            </thead>
-            <tbody>
-              {partenaires.map((p) => (
-                <tr>
-                  <td>
-                    {p.logo ? (
-                      <img class="liste__vignette" src={p.logo} alt="" />
-                    ) : (
-                      <span style="color:var(--adm-muet)">—</span>
-                    )}
-                  </td>
-                  <td>{p.nom}</td>
-                  <td style="color:var(--adm-muet)">{p.sigle ?? '—'}</td>
-                  <td style="color:var(--adm-muet)">{p.site ? '↗' : '—'}</td>
-                  <td class="liste__actions">
-                    <a class="bouton bouton--contour bouton--sm" href={`/admin/partenaires/${p.id}`}>Modifier</a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    }
-  </div>
+  {
+    partenaires.length === 0 ? (
+      <div class="lignes"><p class="vide"><b>Aucun partenaire</b>Ajoute les institutions qui soutiennent l’AIA.</p></div>
+    ) : (
+      <div class="lignes">
+        {partenaires.map((p) => (
+          <div class="ligne">
+            {p.logo ? (
+              <img class="vignette" style="background:var(--creme);object-fit:contain;padding:4px" src={p.logo} alt="" />
+            ) : (
+              <span class="vignette">{(p.sigle ?? p.nom).slice(0, 4)}</span>
+            )}
+            <div>
+              <h3><a href={`/admin/partenaires/${p.id}`}>{p.nom}</a></h3>
+              <div class="meta">
+                {p.sigle && <span class="pastille">{p.sigle}</span>}
+                {p.site && <a href={p.site} target="_blank" rel="noopener">{p.site.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a>}
+              </div>
+            </div>
+            <div class="ac">
+              <a class="bouton bouton--contour bouton--sm" href={`/admin/partenaires/${p.id}`}>Modifier</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 </AdminLayout>

@@ -23,6 +23,8 @@ let v = {
   slug: row?.slug ?? '',
   date: row?.date ?? new Date().toISOString().slice(0, 10),
   auteur: row?.auteur ?? "Le bureau de l'AIA",
+  origine: row?.origine ?? 'AIA',
+  liens: row?.liens ?? '',
   extrait_fr: row?.extrait_fr ?? '',
   extrait_en: row?.extrait_en ?? '',
   corps_fr: row?.corps_fr ?? '',
@@ -35,7 +37,7 @@ if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   if (fd.get('_action') === 'supprimer' && !creation) {
     repo.deleteActualite(id);
-    return Astro.redirect('/admin/actualites');
+    return Astro.redirect('/admin/actualites?ok=supprime');
   }
   const image = await imageFromForm(fd);
   v = {
@@ -44,6 +46,8 @@ if (Astro.request.method === 'POST') {
     slug: str(fd, 'slug'),
     date: str(fd, 'date'),
     auteur: str(fd, 'auteur') || "Le bureau de l'AIA",
+    origine: str(fd, 'origine') || 'AIA',
+    liens: str(fd, 'liens').slice(0, 3000),
     extrait_fr: str(fd, 'extrait_fr'),
     extrait_en: str(fd, 'extrait_en'),
     corps_fr: sanitizeHtml(str(fd, 'corps_fr')),
@@ -69,6 +73,8 @@ if (Astro.request.method === 'POST') {
       titre_en: v.titre_en || null,
       date: v.date,
       auteur: v.auteur,
+      origine: v.origine,
+      liens: v.liens || null,
       extrait_fr: v.extrait_fr || null,
       extrait_en: v.extrait_en || null,
       corps_fr: v.corps_fr || null,
@@ -78,14 +84,14 @@ if (Astro.request.method === 'POST') {
     };
     if (creation) repo.createActualite(data);
     else repo.updateActualite(id, data);
-    return Astro.redirect('/admin/actualites');
+    return Astro.redirect(`/admin/actualites?ok=${creation ? 'cree' : 'enregistre'}`);
   }
 }
 
-const titre = creation ? 'Nouvelle actualité' : "Modifier l'article";
+const titre = creation ? 'Nouvel article' : "Modifier l'article";
 ---
 
-<AdminLayout title={titre}>
+<AdminLayout title={titre} description="Les articles s'affichent dans le journal de bord, du plus récent au plus ancien.">
   {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
 
   <form class="formulaire panneau" method="POST" enctype="multipart/form-data">
@@ -93,6 +99,12 @@ const titre = creation ? 'Nouvelle actualité' : "Modifier l'article";
     <div class="ligne-champs">
       <AdminField label="Date de publication" name="date" type="date" value={v.date} required />
       <AdminField label="Auteur" name="auteur" value={v.auteur} />
+      <AdminField
+        label="Origine"
+        name="origine"
+        value={v.origine}
+        help="« AIA » pour vos articles, sinon le nom du média (KOACI, IRD…)."
+      />
     </div>
     <AdminField
       label="Adresse (slug) — laisser vide pour générer automatiquement"
@@ -104,6 +116,11 @@ const titre = creation ? 'Nouvelle actualité' : "Modifier l'article";
     <BiField label="Chapeau / résumé" name="extrait" type="textarea" rows={3} fr={v.extrait_fr} en={v.extrait_en} />
     <ImageField value={v.image} label="Image de couverture" />
     <RichField fr={v.corps_fr} en={v.corps_en} />
+    <div class="champ">
+      <label class="champ__label" for="liens">Liens vers la source</label>
+      <textarea id="liens" name="liens" rows="3" placeholder="L'Astronomie Afrique | https://lastronomieafrique.com/…">{v.liens}</textarea>
+      <p class="champ__help">Une source par ligne : « Libellé | adresse ». Affichées en bas de l'article.</p>
+    </div>
     <label class="case">
       <input type="checkbox" name="publie" value="1" checked={Boolean(v.publie)} /> Publié (visible sur le site)
     </label>

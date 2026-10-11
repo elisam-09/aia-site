@@ -101,7 +101,48 @@ CREATE TABLE IF NOT EXISTS membres (
   photo TEXT,
   ordre INTEGER NOT NULL DEFAULT 10
 );
+
+-- Réglages du site (coordonnées, réseaux, bandeau d'annonce…) : paires clé → valeur
+CREATE TABLE IF NOT EXISTS reglages (
+  cle TEXT PRIMARY KEY,
+  valeur TEXT
+);
+
+-- Demandes d'adhésion envoyées depuis la page « Rejoindre l'AIA »
+CREATE TABLE IF NOT EXISTS adhesions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nom TEXT NOT NULL,
+  email TEXT,
+  telephone TEXT,
+  ville TEXT,
+  profil TEXT,
+  motivation TEXT,
+  langue TEXT NOT NULL DEFAULT 'fr',
+  statut TEXT NOT NULL DEFAULT 'nouvelle',
+  note TEXT,
+  cree_le TEXT NOT NULL,
+  maj_le TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS adhesions_statut ON adhesions (statut, cree_le);
 `;
+
+/** Colonnes ajoutées après la première mise en ligne : créées si absentes (bases existantes). */
+const COLONNES_AJOUTEES: [table: string, colonne: string, definition: string][] = [
+  ['evenements', 'date_fin', 'TEXT'],
+  ['evenements', 'date_libelle', 'TEXT'],
+  ['actualites', 'origine', "TEXT NOT NULL DEFAULT 'AIA'"],
+  ['actualites', 'liens', 'TEXT'],
+  ['membres', 'badge', 'TEXT'],
+];
+
+function migrer(db: Database.Database): void {
+  for (const [table, colonne, def] of COLONNES_AJOUTEES) {
+    const existe = (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some(
+      (c) => c.name === colonne,
+    );
+    if (!existe) db.exec(`ALTER TABLE ${table} ADD COLUMN ${colonne} ${def}`);
+  }
+}
 
 export const DB_PATH = resolve(process.env.DATABASE_PATH ?? 'data/aia.db');
 
@@ -114,6 +155,7 @@ function open(): Database.Database {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  migrer(db);
   return db;
 }
 

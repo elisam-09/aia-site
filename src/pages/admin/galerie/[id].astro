@@ -34,7 +34,7 @@ if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   if (fd.get('_action') === 'supprimer' && !creation) {
     repo.deleteGalerie(id);
-    return Astro.redirect('/admin/galerie');
+    return Astro.redirect('/admin/galerie?ok=supprime');
   }
   const image = await imageFromForm(fd);
   v = {
@@ -56,7 +56,7 @@ if (Astro.request.method === 'POST') {
     };
     if (creation) repo.createGalerie(data);
     else repo.updateGalerie(id, data);
-    return Astro.redirect('/admin/galerie');
+    return Astro.redirect(`/admin/galerie?ok=${creation ? 'cree' : 'enregistre'}`);
   }
 }
 

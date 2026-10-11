@@ -1,0 +1,113 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import AdminField from '../../components/admin/AdminField.astro';
+import BiField from '../../components/admin/BiField.astro';
+import * as repo from '../../server/db/repo';
+import { str } from '../../server/formutil';
+import { DEFAUTS, TYPES_RESEAUX, type CleReglage, type TypeReseau } from '../../lib/contact';
+
+let erreur = '';
+const urlOk = (u: string) => !u || /^https?:\/\//i.test(u);
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  const v: Partial<Record<CleReglage, string>> = {};
+  for (const k of Object.keys(DEFAUTS) as CleReglage[]) if (k !== 'reseaux') v[k] = str(fd, k).slice(0, 600);
+  // réseaux : listes parallèles reseau_type[] / reseau_url[]
+  const types = fd.getAll('reseau_type').map(String);
+  const urls = fd.getAll('reseau_url').map((u) => String(u).trim());
+  const reseaux = types
+    .map((type, i) => ({ type: type as TypeReseau, url: urls[i] ?? '' }))
+    .filter((n) => n.type in TYPES_RESEAUX && n.url);
+  v.reseaux = JSON.stringify(reseaux);
+  v.whatsapp = (v.whatsapp ?? '').replace(/\D/g, '');
+
+  const mauvaises = [v.facebook, v.facebook_reels, ...reseaux.map((n) => n.url)].filter((u) => !urlOk(u ?? ''));
+  if (mauvaises.length) erreur = 'Les liens doivent commencer par https:// (vérifie Facebook et les autres réseaux).';
+  else if (v.annonce_lien && !urlOk(v.annonce_lien) && !v.annonce_lien.startsWith('/'))
+    erreur = 'Le lien du bandeau doit commencer par https:// ou par / (page du site).';
+  else {
+    repo.setReglages(v as Record<string, string>);
+    return Astro.redirect('/admin/reglages?ok=enregistre');
+  }
+}
+
+const r = { ...DEFAUTS, ...repo.getReglages() } as Record<CleReglage, string>;
+let reseaux: { type: string; url: string }[] = [];
+try {
+  reseaux = JSON.parse(r.reseaux || '[]');
+} catch {
+  reseaux = [];
+}
+if (!reseaux.length) reseaux = [{ type: 'instagram', url: '' }];
+---
+
+<AdminLayout title="Réglages" description="Coordonnées, réseaux sociaux et annonce affichés sur tout le site.">
+  {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
+  <form class="formulaire panneau" method="POST">
+    <h2 class="section-form" style="border:0;padding:0">Texte d’accueil<small>La phrase sous « Le ciel commence ici. ». Laisse vide pour garder le texte par défaut.</small></h2>
+    <BiField label="Phrase d’accueil" name="accroche" type="textarea" rows={3} fr={r.accroche_fr} en={r.accroche_en} />
+
+    <h2 class="section-form">Contact</h2>
+    <div class="ligne-champs">
+      <AdminField label="Téléphone" name="telephone" type="tel" value={r.telephone} placeholder="+225 07 58 00 29 93" />
+      <AdminField label="Numéro WhatsApp" name="whatsapp" value={r.whatsapp} help="Chiffres seulement, avec l’indicatif. Ex. 2250758002993" />
+    </div>
+    <AdminField label="Adresse e-mail publique" name="email" type="email" value={r.email} help="Facultatif. Elle apparaîtra dans le pied de page et sur la page Contact." />
+
+    <h2 class="section-form">Réseaux sociaux</h2>
+    <div class="ligne-champs">
+      <AdminField label="Page Facebook" name="facebook" type="url" value={r.facebook} />
+      <AdminField label="Vidéos Facebook (Reels)" name="facebook_reels" type="url" value={r.facebook_reels} />
+    </div>
+    <AdminField label="Nombre d’abonnés Facebook" name="abonnes" value={r.abonnes} help="Affiché tel quel, par exemple « 3,7 K ». Laisse vide pour le masquer." />
+
+    <div class="champ">
+      <span class="champ__label">Autres réseaux</span>
+      <div class="rangees" id="reseaux">
+        {
+          reseaux.map((n) => (
+            <div class="rangee-champs">
+              <select name="reseau_type" aria-label="Réseau">
+                {Object.entries(TYPES_RESEAUX).map(([k, l]) => <option value={k} selected={k === n.type}>{l}</option>)}
+              </select>
+              <input type="url" name="reseau_url" value={n.url} placeholder="https://…" aria-label="Adresse" />
+              <button class="bouton bouton--contour bouton--icone" type="button" data-retirer aria-label="Retirer">×</button>
+            </div>
+          ))
+        }
+      </div>
+      <div><button class="bouton bouton--contour bouton--sm" type="button" id="ajouter-reseau">+ Ajouter un réseau</button></div>
+    </div>
+
+    <h2 class="section-form" id="annonce">Annonce en haut du site<small>Un bandeau orange visible sur toutes les pages. Laisse le message vide pour le masquer.</small></h2>
+    <BiField label="Message" name="annonce" fr={r.annonce_fr} en={r.annonce_en} />
+    <BiField label="Texte du bouton" name="annonce_bouton" fr={r.annonce_bouton_fr} en={r.annonce_bouton_en} help="Facultatif (par défaut « En savoir plus »)." />
+    <AdminField label="Lien du bouton" name="annonce_lien" value={r.annonce_lien} placeholder="https://… ou /evenements/" />
+
+    <div class="form-actions">
+      <button class="bouton bouton--primaire" type="submit">Enregistrer les réglages</button>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  const boite = document.getElementById('reseaux')!;
+  document.getElementById('ajouter-reseau')?.addEventListener('click', () => {
+    const modele = boite.querySelector('.rangee-champs');
+    if (!modele) return;
+    const copie = modele.cloneNode(true) as HTMLElement;
+    copie.querySelector<HTMLInputElement>('input')!.value = '';
+    boite.appendChild(copie);
+    copie.querySelector('input')?.focus();
+  });
+  boite.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest('[data-retirer]');
+    if (!b) return;
+    const rangee = b.closest('.rangee-champs') as HTMLElement;
+    // on garde toujours une ligne (vidée) pour pouvoir en ajouter
+    if (boite.children.length > 1) rangee.remove();
+    else rangee.querySelector<HTMLInputElement>('input')!.value = '';
+  });
+</script>

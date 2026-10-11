@@ -1,13 +1,15 @@
 ---
 import { useT, routes, type Lang, type PageId } from '../i18n/ui';
-import { FACEBOOK, FACEBOOK_REELS, WHATSAPP, TELEPHONE, TELEPHONE_LIEN, ICONES } from '../lib/contact';
+import { reglagesSite, ICONES, TYPES_RESEAUX } from '../lib/contact';
 
+const R = reglagesSite();
 const reseaux = [
-  { href: FACEBOOK, label: 'Facebook', icone: ICONES.facebook, externe: true },
-  { href: FACEBOOK_REELS, label: 'Reels', icone: ICONES.reels, externe: true },
-  { href: WHATSAPP, label: 'WhatsApp', icone: ICONES.whatsapp, externe: true },
-  { href: TELEPHONE_LIEN, label: TELEPHONE, icone: ICONES.telephone, externe: false },
-];
+  R.facebook && { href: R.facebook, label: 'Facebook', icone: ICONES.facebook, externe: true },
+  R.facebook_reels && { href: R.facebook_reels, label: 'Reels', icone: ICONES.reels, externe: true },
+  ...R.reseaux.map((n) => ({ href: n.url, label: TYPES_RESEAUX[n.type], icone: ICONES[n.type], externe: true })),
+  R.whatsappLien && { href: R.whatsappLien, label: 'WhatsApp', icone: ICONES.whatsapp, externe: true },
+  R.telephoneLien && { href: R.telephoneLien, label: R.telephone, icone: ICONES.telephone, externe: false },
+].filter(Boolean) as { href: string; label: string; icone: string; externe: boolean }[];
 
 interface Props {
   lang: Lang;
@@ -59,7 +61,15 @@ const labels: Record<PageId, string> = {
           ))
         }
       </div>
-      <a class="pied__tel" href={TELEPHONE_LIEN}>{TELEPHONE}</a>
+      {R.telephoneLien && <a class="pied__tel" href={R.telephoneLien}>{R.telephone}</a>}
+      {R.email && <a class="pied__tel" href={`mailto:${R.email}`}>{R.email}</a>}
+      {
+        R.facebook && R.abonnes && (
+          <a class="pied__tel" href={R.facebook} target="_blank" rel="noopener">
+            {R.abonnes} {lang === 'fr' ? 'abonnés sur Facebook' : 'followers on Facebook'}
+          </a>
+        )
+      }
     </div>
 
     <nav class="pied__col" aria-label={t('footer.explorer')}>
@@ -107,7 +117,7 @@ const labels: Record<PageId, string> = {
   }
 
   .pied__tel {
-    display: inline-block;
+    display: block;
     margin-top: 0.8rem;
     font-size: 0.9rem;
     color: var(--creme-70);

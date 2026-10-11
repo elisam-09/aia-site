@@ -9,42 +9,36 @@ const libelle: Record<string, string> = {
   evenement: 'Événement',
   ecole: 'École',
 };
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
 
-<AdminLayout title="Galerie">
-  <div class="panneau">
-    <div class="liste-entete">
-      <p style="margin:0;color:var(--adm-muet)">{photos.length} photo(s)</p>
-      <a class="bouton bouton--primaire" href="/admin/galerie/nouveau">+ Ajouter une photo</a>
-    </div>
+<AdminLayout title="Galerie" description="Les photos de la page Galerie, classées par catégorie.">
+  <Fragment slot="actions">
+    <a class="bouton bouton--primaire" href="/admin/galerie/nouveau">+ Ajouter une photo</a>
+  </Fragment>
 
-    {
-      photos.length === 0 ? (
-        <p style="color:var(--adm-muet)">Aucune photo pour l'instant.</p>
-      ) : (
-        <div class="table-wrap">
-          <table class="liste">
-            <thead>
-              <tr><th>Photo</th><th>Légende</th><th>Catégorie</th><th>Date</th><th /></tr>
-            </thead>
-            <tbody>
-              {photos.map((p) => (
-                <tr>
-                  <td><img class="liste__vignette" src={p.image} alt="" /></td>
-                  <td>{p.titre_fr}</td>
-                  <td style="color:var(--adm-muet)">{libelle[p.categorie] ?? p.categorie}</td>
-                  <td style="color:var(--adm-muet)">
-                    {p.date ? new Date(p.date).toLocaleDateString('fr-FR') : '—'}
-                  </td>
-                  <td class="liste__actions">
-                    <a class="bouton bouton--contour bouton--sm" href={`/admin/galerie/${p.id}`}>Modifier</a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    }
-  </div>
+  {
+    photos.length === 0 ? (
+      <div class="lignes"><p class="vide"><b>Aucune photo</b>Ajoute les photos des observations, conférences et tournées.</p></div>
+    ) : (
+      <div class="lignes">
+        {photos.map((p) => (
+          <div class="ligne">
+            <img class="vignette" src={p.image} alt="" />
+            <div>
+              <h3><a href={`/admin/galerie/${p.id}`}>{p.titre_fr}</a></h3>
+              <div class="meta">
+                <span class="pastille">{libelle[p.categorie] ?? p.categorie}</span>
+                {p.date && <span>{fmt(p.date)}</span>}
+              </div>
+            </div>
+            <div class="ac">
+              <a class="bouton bouton--contour bouton--sm" href={`/admin/galerie/${p.id}`}>Modifier</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 </AdminLayout>

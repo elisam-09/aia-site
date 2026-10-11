@@ -17,6 +17,9 @@ import { TEAM } from '../../lib/seed/team';
 
 type DB = BetterSqlite3.Database;
 
+/** [libellé, url][] → texte « Libellé | url » une ligne par source (format de l'admin). */
+const texteLiens = (l?: [string, string][]) => (l?.length ? l.map(([a, b]) => `${a} | ${b}`).join('\n') : null);
+
 const isEmpty = (db: DB, table: string): boolean =>
   (db.prepare(`SELECT COUNT(*) n FROM ${table}`).get() as { n: number }).n === 0;
 
@@ -34,8 +37,8 @@ function insererEvenements(db: DB): void {
   const t = new Date().toISOString();
   {
     const stmt = db.prepare(
-      `INSERT INTO evenements (titre_fr,titre_en,date,heure,lieu,description_fr,description_en,image,lien,publie,cree_le,maj_le)
-       VALUES (@titre_fr,@titre_en,@date,@heure,@lieu,@description_fr,@description_en,@image,@lien,1,@t,@t)`,
+      `INSERT INTO evenements (titre_fr,titre_en,date,date_fin,date_libelle,heure,lieu,description_fr,description_en,image,lien,publie,cree_le,maj_le)
+       VALUES (@titre_fr,@titre_en,@date,@date_fin,@date_libelle,@heure,@lieu,@description_fr,@description_en,@image,@lien,1,@t,@t)`,
     );
     db.transaction(() => {
       for (const e of EVENTS) {
@@ -43,6 +46,8 @@ function insererEvenements(db: DB): void {
           titre_fr: e.titre.fr,
           titre_en: e.titre.en ?? null,
           date: e.date,
+          date_fin: e.dateFin ?? null,
+          date_libelle: e.dateLibelle ?? null,
           heure: e.heure ?? null,
           lieu: e.lieu,
           description_fr: e.description.fr,
@@ -61,8 +66,8 @@ function insererActualites(db: DB): void {
   const t = new Date().toISOString();
   {
     const stmt = db.prepare(
-      `INSERT OR IGNORE INTO actualites (slug,titre_fr,titre_en,date,auteur,extrait_fr,extrait_en,corps_fr,corps_en,image,publie,cree_le,maj_le)
-       VALUES (@slug,@titre_fr,@titre_en,@date,@auteur,@extrait_fr,@extrait_en,@corps_fr,@corps_en,@image,1,@t,@t)`,
+      `INSERT OR IGNORE INTO actualites (slug,titre_fr,titre_en,date,auteur,origine,liens,extrait_fr,extrait_en,corps_fr,corps_en,image,publie,cree_le,maj_le)
+       VALUES (@slug,@titre_fr,@titre_en,@date,@auteur,@origine,@liens,@extrait_fr,@extrait_en,@corps_fr,@corps_en,@image,1,@t,@t)`,
     );
     db.transaction(() => {
       for (const a of POSTS) {
@@ -72,6 +77,8 @@ function insererActualites(db: DB): void {
           titre_en: a.titre.en ?? null,
           date: a.date,
           auteur: a.auteur,
+          origine: a.origine,
+          liens: texteLiens(a.liens),
           extrait_fr: a.extrait.fr,
           extrait_en: a.extrait.en ?? null,
           corps_fr: renderBlocks(a.corps.fr),
@@ -158,8 +165,8 @@ function insererPartenaires(db: DB): void {
 function insererMembres(db: DB): void {
   {
     const stmt = db.prepare(
-      `INSERT INTO membres (nom,role_fr,role_en,bio_fr,bio_en,photo,ordre)
-       VALUES (@nom,@role_fr,@role_en,@bio_fr,@bio_en,@photo,@ordre)`,
+      `INSERT INTO membres (nom,role_fr,role_en,bio_fr,bio_en,photo,ordre,badge)
+       VALUES (@nom,@role_fr,@role_en,@bio_fr,@bio_en,@photo,@ordre,@badge)`,
     );
     db.transaction(() => {
       TEAM.forEach((m, i) =>
@@ -171,6 +178,7 @@ function insererMembres(db: DB): void {
           bio_en: m.bio.en ?? null,
           photo: m.photo ?? null,
           ordre: (i + 1) * 10,
+          badge: m.badge ?? null,
         }),
       );
     })();
@@ -198,7 +206,7 @@ const DEMO_GALERIE = [
   "Naissance du club d'Abobo",
 ];
 const DEMO_PARTENAIRES = ['UAI', 'NASA', 'IASC', 'AfAS', 'UFHB', 'URANOSCOPE'];
-const VERSION_CONTENU = 'reel-2026-10';
+const VERSION_CONTENU = 'reel-2026-10b';
 
 /** Vrai si toutes les valeurs de la colonne appartiennent à l'ensemble « démo ». */
 function toutDemo(db: DB, sql: string, demo: string[]): boolean {
@@ -237,7 +245,8 @@ export function remplacerDemo(db: DB): void {
     // puis les nouveaux articles sont ajoutés (les slugs existants sont ignorés).
     const maj = db.prepare(
       `UPDATE actualites SET titre_fr=@titre_fr, titre_en=@titre_en, extrait_fr=@extrait_fr,
-         extrait_en=@extrait_en, corps_fr=@corps_fr, corps_en=@corps_en, image=@image
+         extrait_en=@extrait_en, corps_fr=@corps_fr, corps_en=@corps_en, image=@image,
+         origine=@origine, liens=@liens
        WHERE slug=@slug AND maj_le = cree_le`,
     );
     for (const a of POSTS) {
@@ -250,9 +259,20 @@ export function remplacerDemo(db: DB): void {
         corps_fr: renderBlocks(a.corps.fr),
         corps_en: a.corps.en ? renderBlocks(a.corps.en) : null,
         image: a.image ?? null,
+        origine: a.origine,
+        liens: texteLiens(a.liens),
       });
     }
     insererActualites(db);
+    // Champs ajoutés ensuite (dates de fin, étiquettes) : complétés s'ils sont vides
+    const majEv = db.prepare(
+      `UPDATE evenements SET date_fin = COALESCE(date_fin, @date_fin), date_libelle = COALESCE(date_libelle, @date_libelle)
+       WHERE titre_fr = @titre_fr`,
+    );
+    for (const e of EVENTS)
+      majEv.run({ titre_fr: e.titre.fr, date_fin: e.dateFin ?? null, date_libelle: e.dateLibelle ?? null });
+    const majMb = db.prepare('UPDATE membres SET badge = COALESCE(badge, @badge) WHERE nom = @nom');
+    for (const m of TEAM) if (m.badge) majMb.run({ nom: m.nom, badge: m.badge });
     db.prepare("INSERT OR REPLACE INTO meta (cle, valeur) VALUES ('contenu', ?)").run(VERSION_CONTENU);
   })();
 }

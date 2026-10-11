@@ -2,7 +2,7 @@
 import PageIntro from './PageIntro.astro';
 import FormBlock from './FormBlock.astro';
 import { useT, type Lang } from '../i18n/ui';
-import { TELEPHONE, TELEPHONE_LIEN, WHATSAPP, FACEBOOK, ICONES } from '../lib/contact';
+import { reglagesSite, ICONES } from '../lib/contact';
 
 interface Props {
   lang: Lang;
@@ -10,7 +10,8 @@ interface Props {
 
 const { lang } = Astro.props;
 const t = useT(lang);
-const email = (import.meta.env.PUBLIC_CONTACT_EMAIL as string | undefined) ?? 'contact@aia-ci.org';
+const R = reglagesSite();
+const email = R.email || ((import.meta.env.PUBLIC_CONTACT_EMAIL as string | undefined) ?? 'contact@aia-ci.org');
 
 const C = {
   fr: {
@@ -66,15 +67,19 @@ const C = {
     <p class="coords__ligne">
       ✉️ {C.emailLabel} : <a href={`mailto:${email}`}>{email}</a>
     </p>
-    <p class="coords__ligne">
-      📞 {C.telLabel} : <a href={TELEPHONE_LIEN}>{TELEPHONE}</a>
-    </p>
+    {
+      R.telephoneLien && (
+        <p class="coords__ligne">
+          📞 {C.telLabel} : <a href={R.telephoneLien}>{R.telephone}</a>
+        </p>
+      )
+    }
     <div class="coords__reseaux">
-      <a class="btn btn-vert" href={WHATSAPP} target="_blank" rel="noopener">
+      <a class="btn btn-vert" href={R.whatsappLien} target="_blank" rel="noopener" hidden={!R.whatsappLien}>
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" set:html={ICONES.whatsapp} />
         {C.whatsapp}
       </a>
-      <a class="btn btn-contour" href={FACEBOOK} target="_blank" rel="noopener">
+      <a class="btn btn-contour" href={R.facebook} target="_blank" rel="noopener" hidden={!R.facebook}>
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" set:html={ICONES.facebook} />
         {C.facebook}
       </a>

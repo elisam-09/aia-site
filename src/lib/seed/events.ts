@@ -6,6 +6,10 @@ interface SeedEvent {
   id: string;
   titre: Localized;
   date: string;
+  /** Fin, si l'événement dure plusieurs jours */
+  dateFin?: string;
+  /** Texte de date affiché tel quel sur la version française (ex. « Février 2024 ») */
+  dateLibelle?: string;
   heure?: string;
   lieu: string;
   description: Localized;
@@ -22,6 +26,7 @@ export const EVENTS: SeedEvent[] = [
     id: 'campagne-asteroides-2026',
     titre: { fr: "Campagne d'astéroïdes 2026/2027", en: '2026/2027 asteroid campaign' },
     date: '2026-09-07',
+    dateFin: '2026-10-02',
     lieu: 'En ligne · Science citoyenne',
     description: {
       fr: "Du 7 septembre au 2 octobre : une nouvelle campagne de recherche avec des élèves et bénévoles. Résultats préliminaires publiés début octobre, dont une découverte préliminaire au Lycée français Blaise Pascal.",
@@ -47,6 +52,7 @@ export const EVENTS: SeedEvent[] = [
       en: 'Space days · Lycée Blaise Pascal',
     },
     date: '2024-02-01',
+    dateLibelle: 'Février 2024',
     lieu: 'Abidjan · Lycée français Blaise Pascal',
     description: {
       fr: "Initiation à l'astronomie et observation du ciel avec les télescopes de l'AIA, lors de l'inauguration du club d'astronomie du lycée.",
@@ -58,6 +64,7 @@ export const EVENTS: SeedEvent[] = [
     id: 'astro-tour-ivoire-2023',
     titre: { fr: 'Astro Tour Ivoire', en: 'Astro Tour Ivoire' },
     date: '2023-11-27',
+    dateFin: '2023-12-08',
     lieu: 'Abidjan · Yamoussoukro · Korhogo · Bouaké',
     description: {
       fr: "Du 27 novembre au 8 décembre : quatre villes, neuf dates. Ateliers, formations d'enseignants, observations et conférences gratuits pour tous, avec SpaceBus France et l'IRD. Quinze scientifiques, dix Ivoiriens et cinq Français.",
@@ -96,6 +103,7 @@ export const EVENTS: SeedEvent[] = [
     id: 'on-the-moon-again-2021',
     titre: { fr: 'On The Moon Again', en: 'On The Moon Again' },
     date: '2021-07-16',
+    dateFin: '2021-07-18',
     lieu: 'Abidjan · Université Félix Houphouët-Boigny',
     description: {
       fr: "Du 16 au 18 juillet : trois jours d'observation de la Lune à l'Université Félix Houphouët-Boigny, avec l'opération internationale On The Moon Again.",
@@ -122,11 +130,13 @@ export function seedEvents(lang: Lang): EventItem[] {
     id: e.id,
     titre: pick(e.titre, lang),
     date: e.date,
+    dateFin: e.dateFin,
+    dateLibelle: e.dateLibelle,
     heure: e.heure,
     lieu: e.lieu,
     description: pick(e.description, lang),
     image: e.image,
     lien: e.lien,
-    passe: e.date < aujourdhui,
+    passe: (e.dateFin ?? e.date) < aujourdhui,
   }));
 }

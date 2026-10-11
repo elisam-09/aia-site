@@ -1,0 +1,69 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+import { PROFILS, STATUTS } from '../../../lib/adhesion';
+import type { StatutAdhesion } from '../../../server/db/types';
+
+const filtre = Astro.url.searchParams.get('statut') as StatutAdhesion | null;
+const statut = filtre && filtre in STATUTS ? filtre : undefined;
+const demandes = repo.listAdhesions(statut);
+const compte = repo.countAdhesionsParStatut();
+const total = Object.values(compte).reduce((a, b) => a + b, 0);
+const estAdmin = Astro.locals.admin?.role === 'admin';
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const initiales = (n: string) =>
+  n.split(/\s+/).slice(0, 2).map((m) => m[0]?.toUpperCase() ?? '').join('');
+---
+
+<AdminLayout
+  title="Demandes d’adhésion"
+  description="Les personnes qui ont rempli le formulaire « Rejoindre l’AIA ». Ouvre une demande pour la traiter."
+>
+  <Fragment slot="actions">
+    {estAdmin && total > 0 && <a class="bouton bouton--contour" href="/admin/adhesions/export.csv">Exporter (CSV)</a>}
+  </Fragment>
+
+  <nav class="filtres" aria-label="Filtrer par statut">
+    <a href="/admin/adhesions" class:list={{ actif: !statut }}>Toutes<span>{total}</span></a>
+    {
+      (Object.keys(STATUTS) as StatutAdhesion[]).map((s) => (
+        <a href={`/admin/adhesions?statut=${s}`} class:list={{ actif: statut === s }}>
+          {STATUTS[s]}s<span>{compte[s]}</span>
+        </a>
+      ))
+    }
+  </nav>
+
+  {
+    demandes.length === 0 ? (
+      <div class="lignes">
+        <p class="vide">
+          <b>Aucune demande{statut ? ` « ${STATUTS[statut].toLowerCase()} »` : ''}</b>
+          Elles arrivent ici dès que quelqu’un remplit le formulaire de la page « Rejoindre l’AIA ».
+        </p>
+      </div>
+    ) : (
+      <div class="lignes">
+        {demandes.map((d) => (
+          <div class="ligne">
+            <span class="vignette vignette--rond">{initiales(d.nom)}</span>
+            <div>
+              <h3><a href={`/admin/adhesions/${d.id}`}>{d.nom}</a></h3>
+              <div class="meta">
+                <span class:list={['pastille', d.statut]}>{STATUTS[d.statut]}</span>
+                {d.profil && <span>{PROFILS[d.profil as keyof typeof PROFILS]?.fr}</span>}
+                {d.ville && <span>{d.ville}</span>}
+                <span>{d.email ?? d.telephone}</span>
+                <span>reçue le {fmt(d.cree_le)}</span>
+              </div>
+            </div>
+            <div class="ac">
+              <a class="bouton bouton--contour bouton--sm" href={`/admin/adhesions/${d.id}`}>Ouvrir</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+</AdminLayout>

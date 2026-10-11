@@ -1,0 +1,84 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as repo from '../../../server/db/repo';
+import { str } from '../../../server/formutil';
+import { PROFILS, STATUTS } from '../../../lib/adhesion';
+import type { StatutAdhesion } from '../../../server/db/types';
+
+const id = Number(Astro.params.id);
+const d = repo.getAdhesion(id);
+if (!d) return Astro.redirect('/admin/adhesions');
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  if (fd.get('_action') === 'supprimer') {
+    repo.deleteAdhesion(id);
+    return Astro.redirect('/admin/adhesions?ok=supprime');
+  }
+  const s = str(fd, 'statut') as StatutAdhesion;
+  repo.updateAdhesion(id, s in STATUTS ? s : d.statut, str(fd, 'note').slice(0, 2000) || null);
+  return Astro.redirect(`/admin/adhesions/${id}?ok=enregistre`);
+}
+
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Abidjan' });
+const chiffres = (d.telephone ?? '').replace(/\D/g, '');
+// numéro ivoirien saisi sans indicatif (10 chiffres commençant par 0) → +225
+const wa = chiffres ? (chiffres.length === 10 && chiffres.startsWith('0') ? '225' + chiffres : chiffres) : '';
+const salut = d.langue === 'en' ? `Hello ${d.nom}, this is the Ivorian Astronomy Association (AIA) about your membership request.` : `Bonjour ${d.nom}, c'est l'Association Ivoirienne d'Astronomie (AIA) au sujet de ta demande d'adhésion.`;
+---
+
+<AdminLayout title={d.nom} description={`Demande reçue le ${fmt(d.cree_le)}.`}>
+  <Fragment slot="actions">
+    {d.email && <a class="bouton bouton--contour" href={`mailto:${d.email}?subject=${encodeURIComponent('Ta demande d’adhésion à l’AIA')}`}>Écrire un e-mail</a>}
+    {wa && <a class="bouton bouton--vert" href={`https://wa.me/${wa}?text=${encodeURIComponent(salut)}`} target="_blank" rel="noopener">WhatsApp</a>}
+  </Fragment>
+
+  <div class="grille-2">
+    <section class="panneau">
+      <h2>Informations</h2>
+      <dl class="fiche">
+        <dt>Statut</dt>
+        <dd><span class:list={['pastille', d.statut]}>{STATUTS[d.statut]}</span></dd>
+        <dt>Profil</dt>
+        <dd>{d.profil ? PROFILS[d.profil as keyof typeof PROFILS]?.fr : '—'}</dd>
+        <dt>E-mail</dt>
+        <dd>{d.email ? <a href={`mailto:${d.email}`}>{d.email}</a> : '—'}</dd>
+        <dt>Téléphone</dt>
+        <dd>{d.telephone ? <a href={`tel:${d.telephone.replace(/[^\d+]/g, '')}`}>{d.telephone}</a> : '—'}</dd>
+        <dt>Ville</dt>
+        <dd>{d.ville ?? '—'}</dd>
+        <dt>Langue du site</dt>
+        <dd>{d.langue === 'en' ? 'Anglais' : 'Français'}</dd>
+        <dt>Motivation</dt>
+        <dd style="white-space:pre-line">{d.motivation ?? '—'}</dd>
+      </dl>
+    </section>
+
+    <section class="panneau">
+      <h2>Suivi</h2>
+      <form class="formulaire" method="POST">
+        <div class="champ">
+          <label class="champ__label" for="statut">Statut</label>
+          <select id="statut" name="statut">
+            {(Object.keys(STATUTS) as StatutAdhesion[]).map((s) => <option value={s} selected={s === d.statut}>{STATUTS[s]}</option>)}
+          </select>
+        </div>
+        <div class="champ">
+          <label class="champ__label" for="note">Note interne</label>
+          <textarea id="note" name="note" rows="5" placeholder="Ex. appelé le 12/10, vient à la prochaine observation.">{d.note ?? ''}</textarea>
+          <p class="champ__help">Visible seulement par le bureau.</p>
+        </div>
+        <div class="form-actions">
+          <button class="bouton bouton--primaire" type="submit">Enregistrer</button>
+          <a class="bouton bouton--contour" href="/admin/adhesions">Retour à la liste</a>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <form method="POST" onsubmit="return confirm('Supprimer définitivement cette demande ?')" style="margin-top:1.4rem">
+    <input type="hidden" name="_action" value="supprimer" />
+    <button class="bouton bouton--danger" type="submit">Supprimer cette demande</button>
+  </form>
+</AdminLayout>

@@ -30,7 +30,7 @@ if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   if (fd.get('_action') === 'supprimer' && !creation) {
     repo.deleteProduit(id);
-    return Astro.redirect('/admin/produits');
+    return Astro.redirect('/admin/produits?ok=supprime');
   }
   const image = await imageFromForm(fd, 900);
   v = {
@@ -57,7 +57,7 @@ if (Astro.request.method === 'POST') {
     };
     if (creation) repo.createProduit(data);
     else repo.updateProduit(id, data);
-    return Astro.redirect('/admin/produits');
+    return Astro.redirect(`/admin/produits?ok=${creation ? 'cree' : 'enregistre'}`);
   }
 }
 

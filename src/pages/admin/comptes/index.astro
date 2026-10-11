@@ -7,51 +7,40 @@ if (Astro.locals.admin?.role !== 'admin') return Astro.redirect('/admin');
 
 const admins = repo.listAdmins();
 const moi = Astro.locals.admin!.id;
+const initiales = (n: string) => n.split(/\s+/).slice(0, 2).map((m) => m[0]?.toUpperCase() ?? '').join('');
 ---
 
-<AdminLayout title="Comptes administrateurs">
-  <div class="panneau">
-    <div class="liste-entete">
-      <p style="margin:0;color:var(--adm-muet)">{admins.length} compte(s)</p>
-      <a class="bouton bouton--primaire" href="/admin/comptes/nouveau">+ Nouveau compte</a>
-    </div>
+<AdminLayout
+  title="Comptes"
+  description="Les personnes qui peuvent se connecter à l’espace bureau. Un éditeur gère le contenu ; un administrateur gère aussi les comptes."
+>
+  <Fragment slot="actions">
+    <a class="bouton bouton--primaire" href="/admin/comptes/nouveau">+ Nouveau compte</a>
+  </Fragment>
 
-    <div class="table-wrap">
-      <table class="liste">
-        <thead>
-          <tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th><th /></tr>
-        </thead>
-        <tbody>
-          {
-            admins.map((a) => (
-              <tr>
-                <td>{a.nom} {a.id === moi && <span style="color:var(--adm-muet)">(vous)</span>}</td>
-                <td style="color:var(--adm-muet)">{a.email}</td>
-                <td>
-                  <span class:list={['pastille', a.role === 'admin' ? 'oui' : 'non']}>
-                    {a.role === 'admin' ? 'Admin' : 'Éditeur'}
-                  </span>
-                </td>
-                <td>
-                  {a.actif ? (
-                    <span class="pastille oui">Actif</span>
-                  ) : (
-                    <span class="pastille non">Désactivé</span>
-                  )}
-                </td>
-                <td style="color:var(--adm-muet)">
-                  {a.derniere_connexion
-                    ? new Date(a.derniere_connexion).toLocaleDateString('fr-FR')
-                    : 'Jamais'}
-                </td>
-                <td class="liste__actions">
-                  <a class="bouton bouton--contour bouton--sm" href={`/admin/comptes/${a.id}`}>Modifier</a>
-                </td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-    </div>
+  <div class="lignes">
+    {
+      admins.map((a) => (
+        <div class="ligne">
+          <span class="vignette vignette--rond">{initiales(a.nom)}</span>
+          <div>
+            <h3>
+              <a href={`/admin/comptes/${a.id}`}>{a.nom}</a> {a.id === moi && <span style="color:var(--adm-muet);font-weight:400">(vous)</span>}
+            </h3>
+            <div class="meta">
+              <span class:list={['adm__badge', { admin: a.role === 'admin' }]}>{a.role === 'admin' ? 'Administrateur' : 'Éditeur'}</span>
+              {!a.actif && <span class="pastille refusee">Désactivé</span>}
+              <span>{a.email}</span>
+              <span>
+                Dernière connexion : {a.derniere_connexion ? new Date(a.derniere_connexion).toLocaleDateString('fr-FR', { timeZone: 'Africa/Abidjan' }) : 'jamais'}
+              </span>
+            </div>
+          </div>
+          <div class="ac">
+            <a class="bouton bouton--contour bouton--sm" href={`/admin/comptes/${a.id}`}>Modifier</a>
+          </div>
+        </div>
+      ))
+    }
   </div>
 </AdminLayout>

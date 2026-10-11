@@ -3,51 +3,43 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import * as repo from '../../../server/db/repo';
 
 const actus = repo.listActualites();
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
 
-<AdminLayout title="Actualités">
-  <div class="panneau">
-    <div class="liste-entete">
-      <p style="margin:0;color:var(--adm-muet)">{actus.length} article(s)</p>
-      <a class="bouton bouton--primaire" href="/admin/actualites/nouveau">+ Écrire une actualité</a>
-    </div>
+<AdminLayout title="Articles" description="Ils s’affichent dans le journal de bord, du plus récent au plus ancien.">
+  <Fragment slot="actions">
+    <a class="bouton bouton--primaire" href="/admin/actualites/nouveau">+ Nouvel article</a>
+  </Fragment>
 
-    {
-      actus.length === 0 ? (
-        <p style="color:var(--adm-muet)">Aucun article pour l'instant.</p>
-      ) : (
-        <div class="table-wrap">
-          <table class="liste">
-            <thead>
-              <tr><th>Image</th><th>Date</th><th>Titre</th><th>Auteur</th><th>Statut</th><th /></tr>
-            </thead>
-            <tbody>
-              {actus.map((a) => (
-                <tr>
-                  <td>
-                    <img class="liste__vignette" src={a.image || '/placeholders/recherche.svg'} alt="" />
-                  </td>
-                  <td>{new Date(a.date).toLocaleDateString('fr-FR')}</td>
-                  <td>{a.titre_fr}</td>
-                  <td style="color:var(--adm-muet)">{a.auteur}</td>
-                  <td>
-                    {a.publie ? (
-                      <span class="pastille oui">Publié</span>
-                    ) : (
-                      <span class="pastille non">Brouillon</span>
-                    )}
-                  </td>
-                  <td class="liste__actions">
-                    <a class="bouton bouton--contour bouton--sm" href={`/admin/actualites/${a.id}`}>
-                      Modifier
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    }
-  </div>
+  {
+    actus.length === 0 ? (
+      <div class="lignes"><p class="vide"><b>Aucun article</b>Écris le premier article du journal.</p></div>
+    ) : (
+      <div class="lignes">
+        {actus.map((a) => (
+          <div class="ligne">
+            {a.image && !a.image.endsWith('.svg') ? (
+              <img class="vignette" src={a.image} alt="" />
+            ) : (
+              <span class="vignette">{a.origine.slice(0, 3).toUpperCase()}</span>
+            )}
+            <div>
+              <h3><a href={`/admin/actualites/${a.id}`}>{a.titre_fr}</a></h3>
+              <div class="meta">
+                <span class:list={['pastille', a.origine === 'AIA' ? 'venir' : '']}>{a.origine === 'AIA' ? 'AIA' : 'Presse'}</span>
+                {!a.publie && <span class="pastille non">Brouillon</span>}
+                <span>{fmt(a.date)}</span>
+                {a.origine !== 'AIA' && <span>{a.origine}</span>}
+              </div>
+            </div>
+            <div class="ac">
+              <a class="bouton bouton--contour bouton--sm" href={`/actualites/${a.slug}/`} target="_blank" rel="noopener">Voir</a>
+              <a class="bouton bouton--contour bouton--sm" href={`/admin/actualites/${a.id}`}>Modifier</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 </AdminLayout>

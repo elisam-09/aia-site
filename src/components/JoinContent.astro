@@ -1,8 +1,10 @@
 ---
 import PageIntro from './PageIntro.astro';
-import FormBlock from './FormBlock.astro';
+import AdhesionForm from './AdhesionForm.astro';
 import { useT, type Lang } from '../i18n/ui';
-import { WHATSAPP, FACEBOOK } from '../lib/contact';
+import { reglagesSite } from '../lib/contact';
+
+const R = reglagesSite();
 
 interface Props {
   lang: Lang;
@@ -29,7 +31,6 @@ const C = {
       'Le bureau te recontacte et t’invite à une prochaine activité pour faire connaissance.',
       'Tu deviens membre et l’univers devient un peu plus le tien.',
     ],
-    formSujet: "Candidature — Rejoindre l'AIA",
     formTitre: 'Ta candidature',
     femmes: 'Jeunes femmes : les filières scientifiques ont besoin de vous, et l’AIA vous fait une place particulière. Osez.',
     faqTitre: 'Questions fréquentes',
@@ -59,7 +60,6 @@ const C = {
       'The board gets back to you and invites you to an upcoming activity.',
       'You become a member and the universe becomes a little more yours.',
     ],
-    formSujet: 'Application — Join AIA',
     formTitre: 'Your application',
     femmes: 'Young women: science needs you, and AIA makes a special place for you. Dare.',
     faqTitre: 'Frequently asked questions',
@@ -105,19 +105,7 @@ const C = {
 
 <section class="container bloc-form" id="formulaire">
   <h2 class="section-title">{C.formTitre}</h2>
-  <FormBlock
-    lang={lang}
-    id="adhesion"
-    sujet={C.formSujet}
-    bouton={t('form.envoyer')}
-    champs={[
-      { name: 'nom', label: t('form.nom'), requis: true },
-      { name: 'email', label: t('form.email'), type: 'email', requis: true },
-      { name: 'telephone', label: t('form.tel'), type: 'tel' },
-      { name: 'ville', label: t('form.ville') },
-      { name: 'motivation', label: t('form.motivation'), type: 'textarea', requis: true },
-    ]}
-  />
+  <AdhesionForm lang={lang} />
 </section>
 
 <section class="container bloc-faq">
@@ -135,8 +123,8 @@ const C = {
   <aside class="rapide">
     <h3>{C.rapide}</h3>
     <p>{C.rapideP}</p>
-    <a class="btn btn-vert" href={WHATSAPP} target="_blank" rel="noopener">WhatsApp</a>
-    <a class="btn btn-contour" href={FACEBOOK} target="_blank" rel="noopener">Facebook</a>
+    {R.whatsappLien && <a class="btn btn-vert" href={R.whatsappLien} target="_blank" rel="noopener">WhatsApp</a>}
+    {R.facebook && <a class="btn btn-contour" href={R.facebook} target="_blank" rel="noopener">Facebook</a>}
   </aside>
 </section>
 

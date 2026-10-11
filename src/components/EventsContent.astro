@@ -2,7 +2,7 @@
 import PageIntro from './PageIntro.astro';
 import Card from './Card.astro';
 import { getUpcomingEvents, getPastEvents } from '../lib/content';
-import { useT, formatDate, type Lang } from '../i18n/ui';
+import { useT, formatDate, formatPeriode, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -37,7 +37,7 @@ const C = {
         {aVenir.map((e) => (
           <Card
             image={e.image}
-            chip={formatDate(e.date, lang) + (e.heure ? ` · ${e.heure}` : '')}
+            chip={formatPeriode(e, lang) + (e.heure ? ` · ${e.heure}` : '')}
             titre={e.titre}
             texte={e.description}
             meta={`📍 ${e.lieu}`}
@@ -56,7 +56,7 @@ const C = {
     {
       passes.map((e) => (
         <li>
-          <span class="archives__date">{formatDate(e.date, lang)}</span>
+          <span class="archives__date">{formatPeriode(e, lang)}</span>
           <div>
             <h3>{e.titre}</h3>
             <p>{e.description}</p>

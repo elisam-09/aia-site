@@ -2,56 +2,61 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import * as repo from '../../../server/db/repo';
 
-const evenements = repo.listEvenements();
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  if (fd.get('_action') === 'dupliquer') {
+    const copie = repo.dupliquerEvenement(Number(fd.get('id')));
+    if (copie) return Astro.redirect(`/admin/evenements/${copie}?ok=duplique`);
+  }
+}
+
 const today = new Date().toISOString().slice(0, 10);
+const evenements = repo.listEvenements();
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const periode = (e: (typeof evenements)[number]) =>
+  e.date_libelle || (e.date_fin && e.date_fin !== e.date ? `${fmt(e.date)} – ${fmt(e.date_fin)}` : fmt(e.date));
 ---
 
-<AdminLayout title="Événements">
-  <div class="panneau">
-    <div class="liste-entete">
-      <p style="margin:0;color:var(--adm-muet)">{evenements.length} événement(s)</p>
-      <a class="bouton bouton--primaire" href="/admin/evenements/nouveau">+ Nouvel événement</a>
-    </div>
+<AdminLayout
+  title="Événements"
+  description="Ceux à venir apparaissent dans « Prochaines missions », avec compte à rebours ; les autres dans « Missions accomplies »."
+>
+  <Fragment slot="actions">
+    <a class="bouton bouton--primaire" href="/admin/evenements/nouveau">+ Nouvel événement</a>
+  </Fragment>
 
-    {
-      evenements.length === 0 ? (
-        <p style="color:var(--adm-muet)">Aucun événement pour l'instant.</p>
-      ) : (
-        <div class="table-wrap">
-          <table class="liste">
-            <thead>
-              <tr><th>Image</th><th>Date</th><th>Titre</th><th>Lieu</th><th>Statut</th><th /></tr>
-            </thead>
-            <tbody>
-              {evenements.map((e) => (
-                <tr>
-                  <td>
-                    <img class="liste__vignette" src={e.image || '/placeholders/observation.svg'} alt="" />
-                  </td>
-                  <td>
-                    {new Date(e.date).toLocaleDateString('fr-FR')}
-                    {e.date < today && <span style="color:var(--adm-muet)"> · passé</span>}
-                  </td>
-                  <td>{e.titre_fr}</td>
-                  <td style="color:var(--adm-muet)">{e.lieu}</td>
-                  <td>
-                    {e.publie ? (
-                      <span class="pastille oui">Publié</span>
-                    ) : (
-                      <span class="pastille non">Masqué</span>
-                    )}
-                  </td>
-                  <td class="liste__actions">
-                    <a class="bouton bouton--contour bouton--sm" href={`/admin/evenements/${e.id}`}>
-                      Modifier
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    }
-  </div>
+  {
+    evenements.length === 0 ? (
+      <div class="lignes"><p class="vide"><b>Aucun événement</b>Ajoute le premier : observation, AstroPause, tournée…</p></div>
+    ) : (
+      <div class="lignes">
+        {evenements.map((e) => {
+          const avenir = (e.date_fin || e.date) >= today;
+          return (
+            <div class="ligne">
+              {e.image ? <img class="vignette" src={e.image} alt="" /> : <span class="vignette">{e.titre_fr.slice(0, 1)}</span>}
+              <div>
+                <h3><a href={`/admin/evenements/${e.id}`}>{e.titre_fr}</a></h3>
+                <div class="meta">
+                  <span class:list={['pastille', avenir ? 'venir' : 'non']}>{avenir ? 'À venir' : 'Passé'}</span>
+                  {!e.publie && <span class="pastille non">Masqué</span>}
+                  <span>{periode(e)}</span>
+                  <span>{e.lieu}</span>
+                </div>
+              </div>
+              <div class="ac">
+                <a class="bouton bouton--contour bouton--sm" href={`/admin/evenements/${e.id}`}>Modifier</a>
+                <form method="POST">
+                  <input type="hidden" name="_action" value="dupliquer" />
+                  <input type="hidden" name="id" value={e.id} />
+                  <button class="bouton bouton--contour bouton--sm" type="submit">Dupliquer</button>
+                </form>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )
+  }
 </AdminLayout>

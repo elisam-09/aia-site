@@ -6,6 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Starfield from '../components/Starfield.astro';
 import Curseur from '../components/Curseur.astro';
+import Annonce from '../components/Annonce.astro';
 import { useT, altLangUrl, routes, type Lang, type PageId } from '../i18n/ui';
 
 interface Props {
@@ -58,6 +59,7 @@ const ogImage = new URL('/logo-aia-blanc.png', site);
   <body>
     <a class="skip-link" href="#contenu">{lang === 'fr' ? 'Aller au contenu' : 'Skip to content'}</a>
     <Starfield />
+    <Annonce lang={lang} />
     <Header lang={lang} pageId={pageId} altUrl={altUrl} />
     <main id="contenu">
       <slot />

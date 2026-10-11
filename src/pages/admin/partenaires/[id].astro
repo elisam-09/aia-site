@@ -29,7 +29,7 @@ if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   if (fd.get('_action') === 'supprimer' && !creation) {
     repo.deletePartenaire(id);
-    return Astro.redirect('/admin/partenaires');
+    return Astro.redirect('/admin/partenaires?ok=supprime');
   }
   const logo = await imageFromForm(fd, 500);
   v = {
@@ -54,7 +54,7 @@ if (Astro.request.method === 'POST') {
     };
     if (creation) repo.createPartenaire(data);
     else repo.updatePartenaire(id, data);
-    return Astro.redirect('/admin/partenaires');
+    return Astro.redirect(`/admin/partenaires?ok=${creation ? 'cree' : 'enregistre'}`);
   }
 }
 

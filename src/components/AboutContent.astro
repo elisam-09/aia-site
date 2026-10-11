@@ -178,6 +178,7 @@ const C = {
           return (
             <article class="carte">
               <div class="carte__photo">
+                {m.badge && <span class="carte__badge">{m.badge}</span>}
                 {m.photo && !m.photo.endsWith('.svg') ? (
                   <img src={m.photo} alt={m.nom} loading="lazy" />
                 ) : (
@@ -431,6 +432,18 @@ const C = {
   }
   .carte:hover .carte__photo img {
     transform: scale(1.06);
+  }
+  .carte__badge {
+    position: absolute;
+    z-index: 2;
+    left: 1rem;
+    top: 1rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: var(--ci-orange);
+    color: var(--aubergine-950);
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.2em;
   }
   .carte__cst {
     position: absolute;

@@ -4,6 +4,7 @@
  */
 import { getDb } from './index';
 import type {
+  AdhesionRow,
   ActualiteRow,
   AdminRow,
   EvenementRow,
@@ -13,6 +14,7 @@ import type {
   ProduitRow,
   Role,
   SessionRow,
+  StatutAdhesion,
 } from './types';
 
 const now = () => new Date().toISOString();
@@ -114,6 +116,8 @@ export interface EvenementInput {
   image: string | null;
   lien: string | null;
   publie: number;
+  date_fin: string | null;
+  date_libelle: string | null;
 }
 
 export function listEvenements(onlyPublished = false): EvenementRow[] {
@@ -134,9 +138,9 @@ export function createEvenement(e: EvenementInput): number {
   const info = getDb()
     .prepare(
       `INSERT INTO evenements
-        (titre_fr, titre_en, date, heure, lieu, description_fr, description_en, image, lien, publie, cree_le, maj_le)
+        (titre_fr, titre_en, date, date_fin, date_libelle, heure, lieu, description_fr, description_en, image, lien, publie, cree_le, maj_le)
        VALUES
-        (@titre_fr, @titre_en, @date, @heure, @lieu, @description_fr, @description_en, @image, @lien, @publie, @t, @t)`,
+        (@titre_fr, @titre_en, @date, @date_fin, @date_libelle, @heure, @lieu, @description_fr, @description_en, @image, @lien, @publie, @t, @t)`,
     )
     .run({ ...e, t });
   return Number(info.lastInsertRowid);
@@ -146,7 +150,8 @@ export function updateEvenement(id: number, e: EvenementInput): void {
   getDb()
     .prepare(
       `UPDATE evenements SET
-        titre_fr=@titre_fr, titre_en=@titre_en, date=@date, heure=@heure, lieu=@lieu,
+        titre_fr=@titre_fr, titre_en=@titre_en, date=@date, date_fin=@date_fin,
+        date_libelle=@date_libelle, heure=@heure, lieu=@lieu,
         description_fr=@description_fr, description_en=@description_en, image=@image,
         lien=@lien, publie=@publie, maj_le=@t
        WHERE id=@id`,
@@ -156,6 +161,26 @@ export function updateEvenement(id: number, e: EvenementInput): void {
 
 export function deleteEvenement(id: number): void {
   getDb().prepare('DELETE FROM evenements WHERE id = ?').run(id);
+}
+
+/** Copie un événement (masqué, titre suffixé « copie ») et renvoie l'id de la copie. */
+export function dupliquerEvenement(id: number): number | undefined {
+  const e = getEvenement(id);
+  if (!e) return undefined;
+  return createEvenement({
+    titre_fr: `${e.titre_fr} (copie)`,
+    titre_en: e.titre_en ? `${e.titre_en} (copy)` : null,
+    date: e.date,
+    date_fin: e.date_fin,
+    date_libelle: e.date_libelle,
+    heure: e.heure,
+    lieu: e.lieu,
+    description_fr: e.description_fr,
+    description_en: e.description_en,
+    image: e.image,
+    lien: e.lien,
+    publie: 0,
+  });
 }
 
 /* ============================ ACTUALITÉS ============================ */
@@ -172,6 +197,8 @@ export interface ActualiteInput {
   corps_en: string | null;
   image: string | null;
   publie: number;
+  origine: string;
+  liens: string | null;
 }
 
 export function listActualites(onlyPublished = false): ActualiteRow[] {
@@ -205,9 +232,9 @@ export function createActualite(a: ActualiteInput): number {
   const info = getDb()
     .prepare(
       `INSERT INTO actualites
-        (slug, titre_fr, titre_en, date, auteur, extrait_fr, extrait_en, corps_fr, corps_en, image, publie, cree_le, maj_le)
+        (slug, titre_fr, titre_en, date, auteur, origine, liens, extrait_fr, extrait_en, corps_fr, corps_en, image, publie, cree_le, maj_le)
        VALUES
-        (@slug, @titre_fr, @titre_en, @date, @auteur, @extrait_fr, @extrait_en, @corps_fr, @corps_en, @image, @publie, @t, @t)`,
+        (@slug, @titre_fr, @titre_en, @date, @auteur, @origine, @liens, @extrait_fr, @extrait_en, @corps_fr, @corps_en, @image, @publie, @t, @t)`,
     )
     .run({ ...a, t });
   return Number(info.lastInsertRowid);
@@ -218,6 +245,7 @@ export function updateActualite(id: number, a: ActualiteInput): void {
     .prepare(
       `UPDATE actualites SET
         slug=@slug, titre_fr=@titre_fr, titre_en=@titre_en, date=@date, auteur=@auteur,
+        origine=@origine, liens=@liens,
         extrait_fr=@extrait_fr, extrait_en=@extrait_en, corps_fr=@corps_fr, corps_en=@corps_en,
         image=@image, publie=@publie, maj_le=@t
        WHERE id=@id`,
@@ -374,6 +402,7 @@ export interface MembreInput {
   bio_en: string | null;
   photo: string | null;
   ordre: number;
+  badge: string | null;
 }
 
 export function listMembres(): MembreRow[] {
@@ -387,8 +416,8 @@ export function getMembre(id: number): MembreRow | undefined {
 export function createMembre(m: MembreInput): number {
   const info = getDb()
     .prepare(
-      `INSERT INTO membres (nom, role_fr, role_en, bio_fr, bio_en, photo, ordre)
-       VALUES (@nom, @role_fr, @role_en, @bio_fr, @bio_en, @photo, @ordre)`,
+      `INSERT INTO membres (nom, role_fr, role_en, bio_fr, bio_en, photo, ordre, badge)
+       VALUES (@nom, @role_fr, @role_en, @bio_fr, @bio_en, @photo, @ordre, @badge)`,
     )
     .run(m);
   return Number(info.lastInsertRowid);
@@ -398,11 +427,112 @@ export function updateMembre(id: number, m: MembreInput): void {
   getDb()
     .prepare(
       `UPDATE membres SET nom=@nom, role_fr=@role_fr, role_en=@role_en, bio_fr=@bio_fr,
-        bio_en=@bio_en, photo=@photo, ordre=@ordre WHERE id=@id`,
+        bio_en=@bio_en, photo=@photo, ordre=@ordre, badge=@badge WHERE id=@id`,
     )
     .run({ ...m, id });
 }
 
 export function deleteMembre(id: number): void {
   getDb().prepare('DELETE FROM membres WHERE id = ?').run(id);
+}
+
+/** Monte (-1) ou descend (+1) un membre d'un cran ; renumérote l'ordre par pas de 10. */
+export function deplacerMembre(id: number, sens: -1 | 1): void {
+  const db = getDb();
+  const ids = listMembres().map((m) => m.id);
+  const i = ids.indexOf(id), j = i + sens;
+  if (i < 0 || j < 0 || j >= ids.length) return;
+  [ids[i], ids[j]] = [ids[j], ids[i]];
+  const maj = db.prepare('UPDATE membres SET ordre = ? WHERE id = ?');
+  db.transaction(() => ids.forEach((mid, k) => maj.run((k + 1) * 10, mid)))();
+}
+
+/* ============================ RÉGLAGES ============================ */
+
+export function getReglages(): Record<string, string> {
+  const rows = getDb().prepare('SELECT cle, valeur FROM reglages').all() as {
+    cle: string;
+    valeur: string | null;
+  }[];
+  return Object.fromEntries(rows.map((r) => [r.cle, r.valeur ?? '']));
+}
+
+export function setReglages(valeurs: Record<string, string>): void {
+  const db = getDb();
+  const stmt = db.prepare(
+    'INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur',
+  );
+  db.transaction(() => {
+    for (const [k, v] of Object.entries(valeurs)) stmt.run(k, v);
+  })();
+}
+
+/* ============================ ADHÉSIONS ============================ */
+
+export interface AdhesionInput {
+  nom: string;
+  email: string | null;
+  telephone: string | null;
+  ville: string | null;
+  profil: string | null;
+  motivation: string | null;
+  langue: string;
+}
+
+export function createAdhesion(a: AdhesionInput): number {
+  const t = now();
+  const info = getDb()
+    .prepare(
+      `INSERT INTO adhesions (nom, email, telephone, ville, profil, motivation, langue, statut, cree_le, maj_le)
+       VALUES (@nom, @email, @telephone, @ville, @profil, @motivation, @langue, 'nouvelle', @t, @t)`,
+    )
+    .run({ ...a, t });
+  return Number(info.lastInsertRowid);
+}
+
+export function listAdhesions(statut?: StatutAdhesion): AdhesionRow[] {
+  const db = getDb();
+  return (
+    statut
+      ? db.prepare('SELECT * FROM adhesions WHERE statut = ? ORDER BY cree_le DESC').all(statut)
+      : db.prepare('SELECT * FROM adhesions ORDER BY cree_le DESC').all()
+  ) as AdhesionRow[];
+}
+
+export function getAdhesion(id: number): AdhesionRow | undefined {
+  return getDb().prepare('SELECT * FROM adhesions WHERE id = ?').get(id) as AdhesionRow | undefined;
+}
+
+export function countAdhesionsParStatut(): Record<StatutAdhesion, number> {
+  const c: Record<StatutAdhesion, number> = { nouvelle: 0, contactee: 0, acceptee: 0, refusee: 0 };
+  const rows = getDb().prepare('SELECT statut, COUNT(*) n FROM adhesions GROUP BY statut').all() as {
+    statut: StatutAdhesion;
+    n: number;
+  }[];
+  for (const r of rows) if (r.statut in c) c[r.statut] = r.n;
+  return c;
+}
+
+export function updateAdhesion(id: number, statut: StatutAdhesion, note: string | null): void {
+  getDb()
+    .prepare('UPDATE adhesions SET statut = ?, note = ?, maj_le = ? WHERE id = ?')
+    .run(statut, note, now(), id);
+}
+
+export function deleteAdhesion(id: number): void {
+  getDb().prepare('DELETE FROM adhesions WHERE id = ?').run(id);
+}
+
+/* ============================ SAUVEGARDE ============================ */
+
+/** Tout le contenu éditorial (hors comptes, sessions et demandes d'adhésion). */
+export function exporterContenu(): Record<string, unknown> {
+  const db = getDb();
+  const tables = ['evenements', 'actualites', 'galerie', 'produits', 'partenaires', 'membres', 'reglages'];
+  return {
+    format: 'aia-sauvegarde',
+    version: 1,
+    exporte_le: now(),
+    ...Object.fromEntries(tables.map((t) => [t, db.prepare(`SELECT * FROM ${t}`).all()])),
+  };
 }

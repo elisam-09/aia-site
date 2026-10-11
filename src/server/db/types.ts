@@ -34,6 +34,8 @@ export interface EvenementRow {
   publie: number;
   cree_le: string;
   maj_le: string;
+  date_fin: string | null; // ISO, si l'événement dure plusieurs jours
+  date_libelle: string | null; // texte de date affiché tel quel (facultatif)
 }
 
 export interface ActualiteRow {
@@ -51,6 +53,8 @@ export interface ActualiteRow {
   publie: number;
   cree_le: string;
   maj_le: string;
+  origine: string; // « AIA » ou nom du média (presse)
+  liens: string | null; // une source par ligne : « Libellé | https://… »
 }
 
 export type Categorie = 'astrophoto' | 'observation' | 'evenement' | 'ecole';
@@ -97,4 +101,22 @@ export interface MembreRow {
   bio_en: string | null;
   photo: string | null;
   ordre: number;
+  badge: string | null; // étiquette sur la photo (ex. FONDATEUR)
+}
+
+export type StatutAdhesion = 'nouvelle' | 'contactee' | 'acceptee' | 'refusee';
+
+export interface AdhesionRow {
+  id: number;
+  nom: string;
+  email: string | null;
+  telephone: string | null;
+  ville: string | null;
+  profil: string | null;
+  motivation: string | null;
+  langue: string;
+  statut: StatutAdhesion;
+  note: string | null;
+  cree_le: string;
+  maj_le: string;
 }
