@@ -150,6 +150,46 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
   </div>
 </section>
 
+<!-- ═══════════ Ce soir : Lune, ciel, éclipse ═══════════ -->
+<section class="couche couche--observer apparait" id="observer" data-alt="Abidjan">
+  <div class="observer__photo" style="background-image:url(/images/photos/abidjan-nuit.webp)"></div>
+  <div class="container">
+    <p class="eyebrow">{c.observer.eyebrow}</p>
+    <h2 class="section-title">{c.observer.titre}</h2>
+    <p class="lead">{c.observer.lead}</p>
+    <div class="observer__grille" id="lune">
+      <div class="lune">
+        <canvas class="lune__disque" width="440" height="440" role="img" aria-label={c.observer.luneAria}></canvas>
+        <p class="lune__resume" data-lune="resume"></p>
+        <button type="button" class="ecl-teaser" id="ecl-teaser" aria-haspopup="dialog" hidden></button>
+      </div>
+      <div class="ciel-grille">
+        {
+          c.observer.cases.map(([titre, cle, sous]) => (
+            <div class="ciel-case">
+              <small>{titre}</small>
+              <b data-lune={cle || undefined}>{cle === 'heure' ? '--:--' : cle ? '…' : '≈ 400 km'}</b>
+              <span data-lune={cle === 'phase' ? 'age' : undefined}>{sous}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+    <div class="conseils">
+      {
+        c.observer.conseils.map(([titre, texte], i) => (
+          <div class="conseil rv">
+            <i>0{i + 1}</i>
+            <h3>{titre}</h3>
+            <p>{texte}</p>
+          </div>
+        ))
+      }
+    </div>
+    <p class="credits">{c.observer.credits}</p>
+  </div>
+</section>
+
 <!-- ═══════════ Couche 3 · Ceinture d'astéroïdes ═══════════ -->
 <section class="couche couche--ceinture apparait" id="ceinture" data-alt="400 M km">
   <div class="container ceinture__grille">
@@ -304,46 +344,6 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
     <p class="atmo__lien"><a class="orbite__tout" href={routes.activities[lang]}>{c.atmo.toutes} →</a></p>
   </div>
   <HudPanel titre={c.atmo.hud.titre} lignes={[...c.atmo.hud.lignes]} classe="couche__hud" />
-</section>
-
-<!-- ═══════════ Ce soir : Lune, ciel, éclipse ═══════════ -->
-<section class="couche couche--observer apparait" id="observer" data-alt="10 km">
-  <div class="observer__photo" style="background-image:url(/images/photos/abidjan-nuit.webp)"></div>
-  <div class="container">
-    <p class="eyebrow">{c.observer.eyebrow}</p>
-    <h2 class="section-title">{c.observer.titre}</h2>
-    <p class="lead">{c.observer.lead}</p>
-    <div class="observer__grille" id="lune">
-      <div class="lune">
-        <canvas class="lune__disque" width="440" height="440" role="img" aria-label={c.observer.luneAria}></canvas>
-        <p class="lune__resume" data-lune="resume"></p>
-        <button type="button" class="ecl-teaser" id="ecl-teaser" aria-haspopup="dialog" hidden></button>
-      </div>
-      <div class="ciel-grille">
-        {
-          c.observer.cases.map(([titre, cle, sous]) => (
-            <div class="ciel-case">
-              <small>{titre}</small>
-              <b data-lune={cle || undefined}>{cle === 'heure' ? '--:--' : cle ? '…' : '≈ 400 km'}</b>
-              <span data-lune={cle === 'phase' ? 'age' : undefined}>{sous}</span>
-            </div>
-          ))
-        }
-      </div>
-    </div>
-    <div class="conseils">
-      {
-        c.observer.conseils.map(([titre, texte], i) => (
-          <div class="conseil rv">
-            <i>0{i + 1}</i>
-            <h3>{titre}</h3>
-            <p>{texte}</p>
-          </div>
-        ))
-      }
-    </div>
-    <p class="credits">{c.observer.credits}</p>
-  </div>
 </section>
 
 <!-- ═══════════ Couche 6 · Ciel d'Abidjan ═══════════ -->
