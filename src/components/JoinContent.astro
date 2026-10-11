@@ -2,6 +2,7 @@
 import PageIntro from './PageIntro.astro';
 import FormBlock from './FormBlock.astro';
 import { useT, type Lang } from '../i18n/ui';
+import { WHATSAPP, FACEBOOK } from '../lib/contact';
 
 interface Props {
   lang: Lang;
@@ -31,6 +32,15 @@ const C = {
     formSujet: "Candidature — Rejoindre l'AIA",
     formTitre: 'Ta candidature',
     femmes: 'Jeunes femmes : les filières scientifiques ont besoin de vous, et l’AIA vous fait une place particulière. Osez.',
+    faqTitre: 'Questions fréquentes',
+    faq: [
+      ['Faut-il un télescope pour participer ?', "Non. Les observations publiques se font avec les télescopes de l'AIA, et on commence très bien à l'œil nu."],
+      ['À quoi servent les cotisations ?', "À acheter du matériel (télescopes, équipements d'observation) et à financer les activités, l'AIA manquant de financement public."],
+      ['Je suis enseignant, puis-je créer un club ?', "Oui. L'AIA accompagne les lycées dans la création de clubs d'astronomie. Écris-nous pour en parler."],
+      ['Où ont lieu les observations ?', 'Régulièrement sur le campus de Cocody à Abidjan, et lors des tournées dans les lycées et les villes. Les dates sont annoncées sur la page Facebook.'],
+    ],
+    rapide: 'Plus rapide ?',
+    rapideP: 'Écris directement au bureau sur WhatsApp, ou suis la page Facebook pour ne rater aucune sortie.',
   },
   en: {
     eyebrow: 'Join AIA',
@@ -52,6 +62,15 @@ const C = {
     formSujet: 'Application — Join AIA',
     formTitre: 'Your application',
     femmes: 'Young women: science needs you, and AIA makes a special place for you. Dare.',
+    faqTitre: 'Frequently asked questions',
+    faq: [
+      ['Do I need a telescope to take part?', 'No. Public stargazing uses AIA’s telescopes, and the naked eye is a great place to start.'],
+      ['What are membership fees for?', 'Buying equipment (telescopes, observing gear) and funding activities, as AIA lacks public funding.'],
+      ['I am a teacher — can I start a club?', 'Yes. AIA helps high schools set up astronomy clubs. Write to us to talk about it.'],
+      ['Where do observations take place?', 'Regularly on the Cocody campus in Abidjan, and during tours of schools and cities. Dates are announced on the Facebook page.'],
+    ],
+    rapide: 'In a hurry?',
+    rapideP: 'Message the board directly on WhatsApp, or follow the Facebook page so you never miss an outing.',
   },
 }[lang];
 ---
@@ -101,7 +120,103 @@ const C = {
   />
 </section>
 
+<section class="container bloc-faq">
+  <div>
+    <h2 class="section-title">{C.faqTitre}</h2>
+    {
+      C.faq.map(([q, r]) => (
+        <details class="faq">
+          <summary>{q}</summary>
+          <p>{r}</p>
+        </details>
+      ))
+    }
+  </div>
+  <aside class="rapide">
+    <h3>{C.rapide}</h3>
+    <p>{C.rapideP}</p>
+    <a class="btn btn-vert" href={WHATSAPP} target="_blank" rel="noopener">WhatsApp</a>
+    <a class="btn btn-contour" href={FACEBOOK} target="_blank" rel="noopener">Facebook</a>
+  </aside>
+</section>
+
 <style>
+  .bloc-faq {
+    display: grid;
+    gap: 2.5rem;
+    margin-top: clamp(3rem, 8vh, 5rem);
+  }
+
+  @media (min-width: 900px) {
+    .bloc-faq {
+      grid-template-columns: 1.6fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .faq {
+    border-top: 1px solid var(--creme-12);
+    padding: 1rem 0;
+  }
+
+  .faq:last-of-type {
+    border-bottom: 1px solid var(--creme-12);
+  }
+
+  .faq summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    min-height: 44px;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-titre);
+    font-weight: 600;
+    color: var(--creme);
+  }
+
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq summary::after {
+    content: '+';
+    font-size: 1.5rem;
+    color: var(--ci-orange);
+    transition: transform var(--transition);
+  }
+
+  .faq[open] summary::after {
+    transform: rotate(45deg);
+  }
+
+  .faq p {
+    margin: 0.6rem 0 0;
+    color: var(--creme-70);
+  }
+
+  .rapide {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    padding: 1.6rem;
+    border: 1px solid var(--ci-orange);
+    border-radius: var(--rayon);
+    background: linear-gradient(135deg, rgba(247, 127, 0, 0.12), transparent);
+  }
+
+  .rapide h3,
+  .rapide p {
+    flex-basis: 100%;
+    margin: 0;
+  }
+
+  .rapide p {
+    color: var(--creme-70);
+    margin-bottom: 0.4rem;
+  }
+
   .avantage {
     display: flex;
     gap: 1rem;

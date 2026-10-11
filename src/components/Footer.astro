@@ -1,5 +1,13 @@
 ---
 import { useT, routes, type Lang, type PageId } from '../i18n/ui';
+import { FACEBOOK, FACEBOOK_REELS, WHATSAPP, TELEPHONE, TELEPHONE_LIEN, ICONES } from '../lib/contact';
+
+const reseaux = [
+  { href: FACEBOOK, label: 'Facebook', icone: ICONES.facebook, externe: true },
+  { href: FACEBOOK_REELS, label: 'Reels', icone: ICONES.reels, externe: true },
+  { href: WHATSAPP, label: 'WhatsApp', icone: ICONES.whatsapp, externe: true },
+  { href: TELEPHONE_LIEN, label: TELEPHONE, icone: ICONES.telephone, externe: false },
+];
 
 interface Props {
   lang: Lang;
@@ -36,6 +44,22 @@ const labels: Record<PageId, string> = {
         <span class="pied__drapeau" aria-hidden="true"><i></i><i></i><i></i></span>
         Abidjan, Côte d'Ivoire
       </p>
+      <div class="pied__reseaux">
+        {
+          reseaux.map((r) => (
+            <a
+              href={r.href}
+              aria-label={r.label}
+              title={r.label}
+              target={r.externe ? '_blank' : undefined}
+              rel={r.externe ? 'noopener' : undefined}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" set:html={r.icone} />
+            </a>
+          ))
+        }
+      </div>
+      <a class="pied__tel" href={TELEPHONE_LIEN}>{TELEPHONE}</a>
     </div>
 
     <nav class="pied__col" aria-label={t('footer.explorer')}>
@@ -57,6 +81,39 @@ const labels: Record<PageId, string> = {
 </footer>
 
 <style>
+  .pied__reseaux {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1.1rem;
+  }
+
+  .pied__reseaux a {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--creme-12);
+    border-radius: 50%;
+    color: var(--creme);
+    transition: background var(--transition), color var(--transition), border-color var(--transition),
+      transform var(--transition);
+  }
+
+  .pied__reseaux a:hover {
+    background: var(--ci-orange);
+    border-color: var(--ci-orange);
+    color: var(--aubergine-950);
+    transform: translateY(-4px) rotate(-6deg);
+  }
+
+  .pied__tel {
+    display: inline-block;
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+    color: var(--creme-70);
+    text-decoration: none;
+  }
+
   .pied {
     margin-top: var(--espace-section);
     border-top: 1px solid var(--creme-12);

@@ -283,7 +283,7 @@ export function initTelescope(stage: HTMLElement, canvas: HTMLCanvasElement, S: 
     const asp = w / h;
     const cadrer = (sw: number, sh: number) => Math.max(sw / (0.4986 * asp), sh / 0.4986);
     const portrait = !large && asp < 1, paysage = !large && asp >= 1.3;
-    const Da = large ? (w < 1300 ? 18.5 : 15.5) : cadrer(9.6, 6.8);
+    const Da = large ? (w < 1300 ? 18.5 : 15.5) : portrait ? cadrer(11.5, 8.6) : cadrer(9.6, 6.8);
     const Dp = large ? 22 : portrait ? cadrer(10, 14.8) : cadrer(14, 10.5);
     const ty0 = lerp(-0.2, portrait ? -1.55 : -0.95, o);
     const hh = lerp(lerp(2.3, 0.5, o) + my * -0.5, 0.05, d);
@@ -304,7 +304,7 @@ export function initTelescope(stage: HTMLElement, canvas: HTMLCanvasElement, S: 
       : paysage
         ? lerp(0.24 * w, 0, Math.max(o, d))
         : 0;
-    const sy = large || paysage ? 0 : lerp(-(h < 620 ? 0.33 : 0.25) * h, 0, o);
+    const sy = large || paysage ? 0 : lerp(-(h < 620 ? 0.33 : 0.3) * h, 0, o);
     cam.setViewOffset(w, h, -sx, -sy, w, h);
 
     pieces.objectif.g.getWorldPosition(wp);

@@ -10,6 +10,7 @@ import Lenis from 'lenis';
 import type { EtatTelescope } from './telescope';
 import { initLune } from './lune';
 import { initEclipseTeaser } from './eclipse-teaser';
+import { activerGlisser, activerRevele } from './interactions';
 
 type Lang = 'fr' | 'en';
 const $ = <T extends Element = HTMLElement>(s: string, c: ParentNode = document) => c.querySelector<T>(s);
@@ -31,21 +32,14 @@ export function initAccueil(lang: Lang): void {
   const gl = webglDispo();
   if (gl) racine.classList.add('webgl');
 
+  // la scène plein écran glisse sous l'en-tête collant
+  const entete = document.querySelector<HTMLElement>('header');
+  const majEntete = () => racine.style.setProperty('--entete-h', `${entete?.offsetHeight ?? 0}px`);
+  majEntete();
+  addEventListener('resize', majEntete);
+
   /* ---------- apparitions simples des couches (sans GSAP) ---------- */
-  const couches = $$('.apparait');
-  if ('IntersectionObserver' in window) {
-    const obs = new IntersectionObserver(
-      (es) =>
-        es.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('vu');
-            obs.unobserve(e.target);
-          }
-        }),
-      { threshold: 0.08 },
-    );
-    couches.forEach((s) => obs.observe(s));
-  } else couches.forEach((s) => s.classList.add('vu'));
+  activerRevele('.apparait', 0.08);
 
   /* ---------- Lune, éclipse, globe ---------- */
   const lune = $('#lune');
@@ -100,40 +94,7 @@ export function initAccueil(lang: Lang): void {
   });
 
   /* ---------- bandes à faire glisser à la souris ---------- */
-  $$('[data-glisser]').forEach((el) => {
-    let bas = false, sx = 0, sl = 0, bouge = false;
-    el.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'touch') return;
-      bas = true;
-      bouge = false;
-      sx = e.clientX;
-      sl = el.scrollLeft;
-    });
-    addEventListener('pointermove', (e) => {
-      if (!bas) return;
-      const dx = e.clientX - sx;
-      if (Math.abs(dx) > 4) {
-        bouge = true;
-        el.classList.add('glisse');
-      }
-      el.scrollLeft = sl - dx;
-    });
-    addEventListener('pointerup', () => {
-      bas = false;
-      setTimeout(() => el.classList.remove('glisse'), 0);
-    });
-    el.addEventListener(
-      'click',
-      (e) => {
-        if (bouge) {
-          e.preventDefault();
-          e.stopPropagation();
-          bouge = false;
-        }
-      },
-      true,
-    );
-  });
+  activerGlisser();
 
   /* ---------- altimètre (couche visible) ---------- */
   const alt = $('#rail-alt'), point = $('#rail-point');

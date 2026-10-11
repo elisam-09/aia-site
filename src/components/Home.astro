@@ -507,6 +507,8 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
   /* ============ Couche 1 : scène du télescope ============ */
   .couche--espace {
     padding: 0;
+    /* la scène passe sous l'en-tête collant (hauteur mesurée par accueil.ts) */
+    margin-top: calc(-1 * var(--entete-h, 0px));
   }
   /* le HUD de l'espace profond est masqué pendant l'intro animée */
   :global(html.anim) .couche--espace :global(.hud-espace) {
@@ -729,15 +731,44 @@ const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB
   @media (max-width: 980px) {
     :global(html.webgl) .hero {
       align-self: flex-end;
-      padding-block: 6rem 5.5rem;
+      padding-block: 0 4.4rem;
     }
     :global(html.webgl) .hero :global(.hero__logo) {
-      width: 84px;
-      height: 84px;
-      margin-bottom: 1rem;
+      width: 56px;
+      height: 56px;
+      margin-bottom: 0.8rem;
+    }
+    :global(html.webgl) .hero .eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      margin-bottom: 0.6rem;
+    }
+    :global(html.webgl) .hero .eyebrow::after {
+      display: none;
+    }
+    :global(html.webgl) .hero__titre {
+      font-size: clamp(2rem, 8.6vw, 3.4rem);
+      margin-bottom: 0.3em;
     }
     :global(html.webgl) .hero__lead {
-      font-size: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    :global(html.webgl) .hero__actions {
+      flex-wrap: nowrap;
+      gap: 0.6rem;
+      margin-top: 1.1rem;
+      width: 100%;
+    }
+    :global(html.webgl) .hero__actions .btn {
+      flex: 1;
+      justify-content: center;
+      padding: 0.75rem 0.6rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .scene__indice {
+      display: none !important;
     }
   }
 
