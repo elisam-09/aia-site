@@ -14,6 +14,10 @@ export interface EventItem {
   id: string;
   titre: string;
   date: string; // ISO
+  /** Fin (ISO) si l'événement dure plusieurs jours */
+  dateFin?: string;
+  /** Texte de date saisi dans l'admin, affiché tel quel */
+  dateLibelle?: string;
   heure?: string;
   lieu: string;
   description: string;
@@ -31,6 +35,10 @@ export interface Post {
   corpsHtml: string;
   image?: string;
   auteur: string;
+  /** « AIA » ou nom du média */
+  origine: string;
+  /** Sources de l'article */
+  liens: { label: string; url: string }[];
 }
 
 export interface GalleryItem {
@@ -39,15 +47,6 @@ export interface GalleryItem {
   image: string;
   categorie: 'observation' | 'astrophoto' | 'evenement' | 'ecole';
   date?: string;
-}
-
-export interface Product {
-  id: string;
-  nom: string;
-  description: string;
-  image?: string;
-  prix: string;
-  dispo: boolean;
 }
 
 export interface Partner {
@@ -65,6 +64,7 @@ export interface Member {
   role: string;
   bio?: string;
   photo?: string;
+  badge?: string;
 }
 
 /** Champ bilingue tel que stocké dans le seed et dans Sanity. */

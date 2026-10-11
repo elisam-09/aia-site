@@ -37,9 +37,15 @@ const C = {
     {
       partenaires.map((pa) => (
         <article class="partenaire">
-          <span class="partenaire__mono" aria-hidden="true">
-            {(pa.sigle ?? pa.nom).slice(0, 4)}
-          </span>
+          {pa.logo ? (
+            <span class="partenaire__logo">
+              <img src={pa.logo} alt="" loading="lazy" />
+            </span>
+          ) : (
+            <span class="partenaire__mono" aria-hidden="true">
+              {(pa.sigle ?? pa.nom).slice(0, 4)}
+            </span>
+          )}
           <div>
             <h3>{pa.nom}</h3>
             <p>{pa.description}</p>
@@ -62,6 +68,22 @@ const C = {
 </section>
 
 <style>
+  .partenaire__logo {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    padding: 0.5rem;
+    border-radius: var(--rayon-sm);
+    background: var(--creme);
+  }
+
+  .partenaire__logo img {
+    max-height: 100%;
+    width: auto;
+  }
+
   .partenaire {
     display: flex;
     gap: 1.2rem;

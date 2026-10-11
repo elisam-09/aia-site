@@ -1,0 +1,208 @@
+---
+/**
+ * Formulaire de demande d'adhésion. Les demandes sont enregistrées en base
+ * (POST /api/adhesion) et apparaissent dans /admin → Adhésions.
+ * Fonctionne sans JavaScript (redirection) ; avec JS, envoi sans recharger la page.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { PROFILS } from '../lib/adhesion';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const retour = Astro.url.searchParams.get('adhesion');
+
+const C = {
+  fr: {
+    profil: 'Je suis',
+    contactNote: 'Indique au moins un e-mail ou un numéro de téléphone pour qu’on puisse te répondre.',
+    confidentialite:
+      "Tes informations servent uniquement au bureau de l'AIA pour te recontacter. Elles ne sont ni publiées ni transmises.",
+    merci: 'Demande bien reçue ! Le bureau te recontacte très vite. Bienvenue à bord.',
+    erreurs: {
+      champs: 'Vérifie ton nom et indique un e-mail ou un téléphone valide.',
+      limite: 'Trop de demandes envoyées depuis cette connexion. Réessaie dans quelques minutes.',
+      erreur: "L'envoi a échoué. Réessaie, ou écris-nous sur WhatsApp.",
+    },
+  },
+  en: {
+    profil: 'I am',
+    contactNote: 'Give at least an email or a phone number so we can get back to you.',
+    confidentialite:
+      'Your details are only used by the AIA board to get back to you. They are never published or shared.',
+    merci: 'Request received! The board will get back to you very soon. Welcome aboard.',
+    erreurs: {
+      champs: 'Check your name and give a valid email or phone number.',
+      limite: 'Too many requests from this connection. Please try again in a few minutes.',
+      erreur: 'Sending failed. Try again, or message us on WhatsApp.',
+    },
+  },
+}[lang];
+const erreurInitiale =
+  retour && retour !== 'ok' ? C.erreurs[retour as keyof typeof C.erreurs] ?? C.erreurs.erreur : '';
+---
+
+<form class="adhesion" method="POST" action="/api/adhesion" data-erreurs={JSON.stringify(C.erreurs)}>
+  <input type="hidden" name="langue" value={lang} />
+  <div class="adhesion__ligne">
+    <label class="adhesion__champ">
+      <span>{t('form.nom')} <em aria-hidden="true">*</em></span>
+      <input name="nom" autocomplete="name" required minlength="2" maxlength="120" />
+    </label>
+    <label class="adhesion__champ">
+      <span>{C.profil}</span>
+      <select name="profil">
+        {Object.entries(PROFILS).map(([v, l]) => <option value={v}>{l[lang]}</option>)}
+      </select>
+    </label>
+  </div>
+  <div class="adhesion__ligne">
+    <label class="adhesion__champ">
+      <span>{t('form.email')}</span>
+      <input type="email" name="email" autocomplete="email" maxlength="160" />
+    </label>
+    <label class="adhesion__champ">
+      <span>{t('form.tel')}</span>
+      <input type="tel" name="telephone" autocomplete="tel" maxlength="40" placeholder="+225 …" />
+    </label>
+  </div>
+  <p class="adhesion__note">{C.contactNote}</p>
+  <label class="adhesion__champ">
+    <span>{t('form.ville')}</span>
+    <input name="ville" autocomplete="address-level2" maxlength="80" />
+  </label>
+  <label class="adhesion__champ">
+    <span>{t('form.motivation')}</span>
+    <textarea name="motivation" rows="5" maxlength="2000"></textarea>
+  </label>
+  <input type="text" name="_gotcha" class="adhesion__piege" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+  <p class="adhesion__note">{C.confidentialite}</p>
+  <button class="btn btn-primaire" type="submit">{t('form.envoyer')}</button>
+
+  <p class="adhesion__etat ok" role="status" hidden={retour !== 'ok'}>{C.merci}</p>
+  <p class="adhesion__etat err" role="alert" hidden={!erreurInitiale}>{erreurInitiale}</p>
+</form>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('form.adhesion').forEach((f) => {
+    const ok = f.querySelector<HTMLElement>('.adhesion__etat.ok')!;
+    const err = f.querySelector<HTMLElement>('.adhesion__etat.err')!;
+    const msgs = JSON.parse(f.dataset.erreurs ?? '{}') as Record<string, string>;
+    const bouton = f.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    f.addEventListener('submit', async (e) => {
+      const fd = new FormData(f);
+      // au moins un moyen de contact
+      if (!String(fd.get('email') ?? '').trim() && !String(fd.get('telephone') ?? '').trim()) {
+        e.preventDefault();
+        err.textContent = msgs.champs;
+        err.hidden = false;
+        ok.hidden = true;
+        return;
+      }
+      e.preventDefault();
+      bouton.disabled = true;
+      try {
+        const r = await fetch(f.action, { method: 'POST', body: fd, headers: { accept: 'application/json' } });
+        const j = (await r.json()) as { ok: boolean; code?: string };
+        if (j.ok) {
+          f.reset();
+          ok.hidden = false;
+          err.hidden = true;
+        } else {
+          err.textContent = msgs[j.code ?? 'erreur'] ?? msgs.erreur;
+          err.hidden = false;
+          ok.hidden = true;
+        }
+      } catch {
+        err.textContent = msgs.erreur;
+        err.hidden = false;
+      } finally {
+        bouton.disabled = false;
+      }
+    });
+  });
+</script>
+
+<style>
+  .adhesion {
+    display: grid;
+    gap: 1.1rem;
+    max-width: 640px;
+  }
+  .adhesion__ligne {
+    display: grid;
+    gap: 1.1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  }
+  .adhesion__champ {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .adhesion__champ span {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--creme-2);
+  }
+  .adhesion__champ em {
+    color: var(--ci-orange-vif);
+    font-style: normal;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: var(--creme);
+    background: rgba(248, 247, 248, 0.05);
+    border: 1px solid var(--creme-25);
+    border-radius: var(--rayon-sm);
+    padding: 0.75rem 0.9rem;
+    transition: border-color var(--transition), background var(--transition);
+  }
+  select option {
+    background: var(--aubergine-900);
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--ci-orange);
+    background: rgba(248, 247, 248, 0.08);
+  }
+  .adhesion__piege {
+    position: absolute;
+    left: -9999px;
+    width: 0;
+    height: 0;
+    border: 0;
+    padding: 0;
+  }
+  .adhesion__note {
+    margin: -0.3rem 0 0;
+    font-size: 0.8rem;
+    color: var(--creme-45);
+  }
+  .adhesion button {
+    justify-self: start;
+  }
+  .adhesion button:disabled {
+    opacity: 0.6;
+  }
+  .adhesion__etat {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    border-radius: var(--rayon-sm);
+  }
+  .adhesion__etat.ok {
+    color: var(--ci-vert-clair);
+    background: rgba(0, 158, 96, 0.1);
+    border: 1px solid rgba(0, 158, 96, 0.4);
+  }
+  .adhesion__etat.err {
+    color: var(--ci-orange-vif);
+    background: rgba(247, 127, 0, 0.08);
+    border: 1px solid rgba(247, 127, 0, 0.4);
+  }
+</style>

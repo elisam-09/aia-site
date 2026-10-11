@@ -1,81 +1,125 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import * as repo from '../../server/db/repo';
+import { PROFILS, STATUTS } from '../../lib/adhesion';
 
+const admin = Astro.locals.admin!;
 const today = new Date().toISOString().slice(0, 10);
 const evenements = repo.listEvenements();
-const aVenir = evenements.filter((e) => e.date >= today).length;
-const actus = repo.listActualites();
-const galerie = repo.listGalerie();
-const produits = repo.listProduits();
-const partenaires = repo.listPartenaires();
-const membres = repo.listMembres();
+const aVenir = evenements
+  .filter((e) => (e.date_fin || e.date) >= today)
+  .sort((a, b) => a.date.localeCompare(b.date));
+const parStatut = repo.countAdhesionsParStatut();
+const demandes = repo.listAdhesions('nouvelle').slice(0, 5);
 
 const stats = [
-  { n: aVenir, l: 'événements à venir', href: '/admin/evenements', ic: '📅' },
-  { n: actus.length, l: 'actualités', href: '/admin/actualites', ic: '📰' },
-  { n: galerie.length, l: 'photos', href: '/admin/galerie', ic: '🖼️' },
-  { n: produits.length, l: 'produits', href: '/admin/produits', ic: '🛍️' },
-  { n: partenaires.length, l: 'partenaires', href: '/admin/partenaires', ic: '🤝' },
-  { n: membres.length, l: 'membres du bureau', href: '/admin/membres', ic: '👤' },
+  { n: parStatut.nouvelle, l: 'demande(s) d’adhésion à traiter', href: '/admin/adhesions?statut=nouvelle', alerte: parStatut.nouvelle > 0 },
+  { n: aVenir.length, l: 'événement(s) à venir', href: '/admin/evenements' },
+  { n: evenements.length, l: 'événements au total', href: '/admin/evenements' },
+  { n: repo.listActualites().length, l: 'articles', href: '/admin/actualites' },
+  { n: repo.listMembres().length, l: 'membres de l’équipe', href: '/admin/membres' },
+  { n: repo.listGalerie().length, l: 'photos', href: '/admin/galerie' },
 ];
-
-const prochains = evenements
-  .filter((e) => e.date >= today)
-  .sort((a, b) => a.date.localeCompare(b.date))
-  .slice(0, 5);
+const fmt = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const prenom = admin.nom.split(/\s+/)[0];
 ---
 
-<AdminLayout title="Tableau de bord">
+<AdminLayout title={`Bonjour ${prenom}`} description="Voici l’état du site de l’AIA.">
+  <Fragment slot="actions">
+    <a class="bouton bouton--primaire" href="/admin/evenements/nouveau">+ Nouvel événement</a>
+  </Fragment>
+
   <div class="grille-stats">
     {
       stats.map((s) => (
-        <a class="stat" href={s.href}>
-          <div class="stat__n">{s.n}</div>
-          <div class="stat__l">{s.ic} {s.l}</div>
+        <a class:list={['stat', { 'stat--alerte': s.alerte }]} href={s.href}>
+          <span class="stat__n">{s.n}</span>
+          <span class="stat__l">{s.l}</span>
         </a>
       ))
     }
   </div>
 
-  <div class="panneau" style="margin-top:1.4rem">
-    <div class="liste-entete">
-      <h2 style="margin:0;font-size:1.15rem">Prochains événements</h2>
-      <a class="bouton bouton--primaire bouton--sm" href="/admin/evenements/nouveau">+ Nouvel événement</a>
-    </div>
-    {
-      prochains.length === 0 ? (
-        <p style="color:var(--adm-muet)">Aucun événement à venir. Ajoute-en un pour le voir apparaître sur le site.</p>
-      ) : (
-        <div class="table-wrap">
-          <table class="liste">
-            <thead>
-              <tr><th>Date</th><th>Titre</th><th>Lieu</th><th></th></tr>
-            </thead>
-            <tbody>
-              {prochains.map((e) => (
-                <tr>
-                  <td>{new Date(e.date).toLocaleDateString('fr-FR')}</td>
-                  <td>{e.titre_fr}</td>
-                  <td style="color:var(--adm-muet)">{e.lieu}</td>
-                  <td class="liste__actions">
-                    <a class="bouton bouton--contour bouton--sm" href={`/admin/evenements/${e.id}`}>Modifier</a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    }
+  <div class="grille-2">
+    <section class="panneau">
+      <div class="liste-entete">
+        <h2 style="margin:0">Nouvelles demandes d’adhésion</h2>
+        <a class="bouton bouton--sm" href="/admin/adhesions">Tout voir</a>
+      </div>
+      {
+        demandes.length === 0 ? (
+          <p>Aucune nouvelle demande. Elles arrivent depuis la page « Rejoindre l’AIA » du site.</p>
+        ) : (
+          <div class="lignes">
+            {demandes.map((d) => (
+              <div class="ligne ligne--sans-vignette">
+                <div>
+                  <h3><a href={`/admin/adhesions/${d.id}`}>{d.nom}</a></h3>
+                  <div class="meta">
+                    <span class="pastille nouvelle">{STATUTS[d.statut]}</span>
+                    {d.profil && <span>{PROFILS[d.profil as keyof typeof PROFILS]?.fr}</span>}
+                    {d.ville && <span>{d.ville}</span>}
+                    <span>{fmt(d.cree_le)}</span>
+                  </div>
+                </div>
+                <div class="ac">
+                  <a class="bouton bouton--contour bouton--sm" href={`/admin/adhesions/${d.id}`}>Ouvrir</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section class="panneau">
+      <div class="liste-entete">
+        <h2 style="margin:0">Prochains événements</h2>
+        <a class="bouton bouton--sm" href="/admin/evenements/nouveau">+ Ajouter</a>
+      </div>
+      {
+        aVenir.length === 0 ? (
+          <p>Aucun événement programmé : le site affiche « Le radar est en veille ». Ajoute la prochaine observation ou AstroPause.</p>
+        ) : (
+          <div class="lignes">
+            {aVenir.slice(0, 5).map((e) => (
+              <div class="ligne">
+                {e.image ? <img class="vignette" src={e.image} alt="" /> : <span class="vignette">{e.titre_fr.slice(0, 1)}</span>}
+                <div>
+                  <h3><a href={`/admin/evenements/${e.id}`}>{e.titre_fr}</a></h3>
+                  <div class="meta">
+                    <span class="pastille venir">À venir</span>
+                    <span>{e.date_libelle || fmt(e.date)}</span>
+                    <span>{e.lieu}</span>
+                  </div>
+                </div>
+                <div class="ac">
+                  <a class="bouton bouton--contour bouton--sm" href={`/admin/evenements/${e.id}`}>Modifier</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
   </div>
 
-  <div class="panneau">
-    <h2 style="margin:0 0 .6rem;font-size:1.15rem">Raccourcis</h2>
-    <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-      <a class="bouton bouton--contour" href="/admin/actualites/nouveau">+ Écrire une actualité</a>
-      <a class="bouton bouton--contour" href="/admin/galerie/nouveau">+ Ajouter une photo</a>
-      <a class="bouton bouton--contour" href="/admin/evenements/nouveau">+ Nouvel événement</a>
-    </div>
+  <div class="grille-2" style="margin-top:1.2rem">
+    <section class="panneau">
+      <h2>Raccourcis</h2>
+      <div class="actions">
+        <a class="bouton bouton--contour" href="/admin/actualites/nouveau">+ Nouvel article</a>
+        <a class="bouton bouton--contour" href="/admin/membres/nouveau">+ Nouveau membre</a>
+        <a class="bouton bouton--contour" href="/admin/galerie/nouveau">+ Ajouter une photo</a>
+        <a class="bouton bouton--contour" href="/admin/reglages#annonce">Afficher une annonce</a>
+      </div>
+    </section>
+    <section class="panneau">
+      <h2>Sauvegarde</h2>
+      <p>Télécharge une copie de tout le contenu du site (événements, articles, équipe, réglages…), à garder en lieu sûr.</p>
+      <div class="actions">
+        <a class="bouton bouton--contour" href="/admin/sauvegarde.json" download>Télécharger la sauvegarde (JSON)</a>
+      </div>
+    </section>
   </div>
 </AdminLayout>

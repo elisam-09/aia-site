@@ -34,7 +34,7 @@ if (Astro.request.method === 'POST') {
       erreur = 'Vous ne pouvez pas supprimer votre propre compte.';
     } else {
       repo.deleteAdmin(id);
-      return Astro.redirect('/admin/comptes');
+      return Astro.redirect('/admin/comptes?ok=supprime');
     }
   } else {
     const email = str(fd, 'email').toLowerCase();
@@ -60,7 +60,7 @@ if (Astro.request.method === 'POST') {
         repo.updateAdmin(id, { email, nom, role, actif });
         if (motdepasse) repo.setAdminPassword(id, await hashPassword(motdepasse));
       }
-      return Astro.redirect('/admin/comptes');
+      return Astro.redirect('/admin/comptes?ok=enregistre');
     }
   }
 }

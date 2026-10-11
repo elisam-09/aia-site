@@ -4,12 +4,21 @@
  * n'ont pas changé — seule la source (base au lieu du seed/Sanity) a changé.
  */
 import type { Lang } from '../i18n/ui';
-import type { EventItem, GalleryItem, Member, Partner, Post, Product } from './types';
+import type { EventItem, GalleryItem, Member, Partner, Post } from './types';
 import * as repo from '../server/db/repo';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 /** Choisit la langue : anglais si présent et non vide, sinon repli français. */
+/** Liens saisis une par ligne : « Libellé | https://… » (seules les URL http(s) sont gardées). */
+function liens(texte: string | null): { label: string; url: string }[] {
+  return (texte ?? '')
+    .split('\n')
+    .map((l) => l.split('|').map((x) => x.trim()))
+    .map(([a, b]) => (b ? { label: a, url: b } : { label: a, url: a }))
+    .filter((l) => /^https?:\/\//i.test(l.url));
+}
+
 function L(fr: string | null, en: string | null, lang: Lang): string {
   if (lang === 'en' && en && en.trim()) return en;
   return fr ?? '';
@@ -21,12 +30,14 @@ export function getEvents(lang: Lang): EventItem[] {
     id: String(e.id),
     titre: L(e.titre_fr, e.titre_en, lang),
     date: e.date,
+    dateFin: e.date_fin ?? undefined,
+    dateLibelle: e.date_libelle ?? undefined,
     heure: e.heure ?? undefined,
     lieu: e.lieu,
     description: L(e.description_fr, e.description_en, lang),
     image: e.image ?? undefined,
     lien: e.lien ?? undefined,
-    passe: e.date < t,
+    passe: (e.date_fin || e.date) < t,
   }));
 }
 
@@ -52,6 +63,8 @@ export function getPosts(lang: Lang): Post[] {
     corpsHtml: L(a.corps_fr, a.corps_en, lang),
     image: a.image ?? undefined,
     auteur: a.auteur,
+    origine: a.origine,
+    liens: liens(a.liens),
   }));
 }
 
@@ -66,6 +79,8 @@ export function getPost(lang: Lang, slug: string): Post | undefined {
     corpsHtml: L(a.corps_fr, a.corps_en, lang),
     image: a.image ?? undefined,
     auteur: a.auteur,
+    origine: a.origine,
+    liens: liens(a.liens),
   };
 }
 
@@ -76,17 +91,6 @@ export function getGallery(lang: Lang): GalleryItem[] {
     image: p.image,
     categorie: p.categorie,
     date: p.date ?? undefined,
-  }));
-}
-
-export function getProducts(lang: Lang): Product[] {
-  return repo.listProduits().map((p) => ({
-    id: String(p.id),
-    nom: L(p.nom_fr, p.nom_en, lang),
-    description: L(p.description_fr, p.description_en, lang),
-    image: p.image ?? undefined,
-    prix: p.prix ?? '',
-    dispo: Boolean(p.disponible),
   }));
 }
 
@@ -108,5 +112,6 @@ export function getTeam(lang: Lang): Member[] {
     role: L(m.role_fr, m.role_en, lang),
     bio: L(m.bio_fr, m.bio_en, lang) || undefined,
     photo: m.photo ?? undefined,
+    badge: m.badge ?? undefined,
   }));
 }

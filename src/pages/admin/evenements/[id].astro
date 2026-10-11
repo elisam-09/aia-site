@@ -19,6 +19,8 @@ let v = {
   titre_fr: row?.titre_fr ?? '',
   titre_en: row?.titre_en ?? '',
   date: row?.date ?? '',
+  date_fin: row?.date_fin ?? '',
+  date_libelle: row?.date_libelle ?? '',
   heure: row?.heure ?? '',
   lieu: row?.lieu ?? '',
   description_fr: row?.description_fr ?? '',
@@ -32,13 +34,15 @@ if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   if (fd.get('_action') === 'supprimer' && !creation) {
     repo.deleteEvenement(id);
-    return Astro.redirect('/admin/evenements');
+    return Astro.redirect('/admin/evenements?ok=supprime');
   }
   const image = await imageFromForm(fd);
   v = {
     titre_fr: str(fd, 'titre_fr'),
     titre_en: str(fd, 'titre_en'),
     date: str(fd, 'date'),
+    date_fin: str(fd, 'date_fin'),
+    date_libelle: str(fd, 'date_libelle'),
     heure: str(fd, 'heure'),
     lieu: str(fd, 'lieu'),
     description_fr: str(fd, 'description_fr'),
@@ -49,11 +53,15 @@ if (Astro.request.method === 'POST') {
   };
   if (!v.titre_fr || !v.date || !v.lieu) {
     erreur = 'Le titre (français), la date et le lieu sont obligatoires.';
+  } else if (v.date_fin && v.date_fin < v.date) {
+    erreur = 'La date de fin doit être après la date de début.';
   } else {
     const data = {
       titre_fr: v.titre_fr,
       titre_en: v.titre_en || null,
       date: v.date,
+      date_fin: v.date_fin || null,
+      date_libelle: v.date_libelle || null,
       heure: v.heure || null,
       lieu: v.lieu,
       description_fr: v.description_fr || null,
@@ -64,22 +72,30 @@ if (Astro.request.method === 'POST') {
     };
     if (creation) repo.createEvenement(data);
     else repo.updateEvenement(id, data);
-    return Astro.redirect('/admin/evenements');
+    return Astro.redirect(`/admin/evenements?ok=${creation ? 'cree' : 'enregistre'}`);
   }
 }
 
 const titre = creation ? 'Nouvel événement' : "Modifier l'événement";
 ---
 
-<AdminLayout title={titre}>
+<AdminLayout title={titre} description="Un événement à venir s'affiche dans « Prochaines missions » jusqu'au lendemain de sa date de fin.">
   {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
 
   <form class="formulaire panneau" method="POST" enctype="multipart/form-data">
     <BiField label="Titre" name="titre" fr={v.titre_fr} en={v.titre_en} required />
     <div class="ligne-champs">
-      <AdminField label="Date" name="date" type="date" value={v.date} required />
+      <AdminField label="Date de début" name="date" type="date" value={v.date} required />
+      <AdminField label="Date de fin (si plusieurs jours)" name="date_fin" type="date" value={v.date_fin} />
       <AdminField label="Heure (optionnel)" name="heure" type="time" value={v.heure} />
     </div>
+    <AdminField
+      label="Texte de date affiché (facultatif)"
+      name="date_libelle"
+      value={v.date_libelle}
+      placeholder="Ex. Février 2024, ou Chaque premier samedi du mois"
+      help="Remplace la date sur la version française du site. Les dates restent utilisées pour le classement et le compte à rebours."
+    />
     <AdminField
       label="Lieu"
       name="lieu"

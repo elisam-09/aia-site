@@ -1,6 +1,5 @@
 ---
 import PageIntro from './PageIntro.astro';
-import { getProducts } from '../lib/content';
 import { routes, type Lang } from '../i18n/ui';
 
 interface Props {
@@ -8,32 +7,61 @@ interface Props {
 }
 
 const { lang } = Astro.props;
-const produits = await getProducts(lang);
 
 const C = {
   fr: {
-    eyebrow: 'Support',
+    eyebrow: 'Nous soutenir',
     titre: 'Soutenir l’AIA, c’est financer des étoiles',
-    lead: "Nos produits dérivés financent les tournées scolaires, l'entretien des télescopes et les campagnes de recherche. Vitrine uniquement : pour commander, contacte-nous — remise en main propre à Abidjan.",
-    dispo: 'Disponible',
-    rupture: 'Bientôt de retour',
-    commander: 'Commander via la page Contact',
-    donsTitre: 'Dons & mécénat',
-    donsP1: "Institutions, entreprises, diaspora : un don ou un partenariat matériel (optique, informatique, transport) a un impact direct et visible — chaque télescope financé, ce sont des centaines de premiers regards vers le ciel.",
-    donsP2: 'Nous privilégions la transparence : chaque soutien est documenté et remercié publiquement (sauf demande contraire).',
-    donsCta: 'Discuter d’un soutien',
+    lead: "L'AIA manque de financement public : chaque soutien sert directement le matériel d'observation, les tournées scolaires et le projet d'observatoire national.",
+    facons: [
+      {
+        t: 'Devenir membre',
+        p: 'Les cotisations des membres financent les premiers équipements : télescopes, matériel d’observation.',
+        cta: 'Rejoindre l’AIA',
+        href: routes.join.fr,
+      },
+      {
+        t: 'Faire un don',
+        p: 'Un don, même modeste, aide à faire tourner les observations publiques gratuites et les clubs dans les lycées.',
+        cta: 'Nous écrire',
+        href: routes.contact.fr,
+      },
+      {
+        t: 'Mécénat & partenariat',
+        p: 'Institutions, entreprises, diaspora : un partenariat matériel (optique, informatique, transport) a un impact direct et visible.',
+        cta: 'Discuter d’un soutien',
+        href: routes.contact.fr,
+      },
+    ],
+    transparence:
+      'Nous privilégions la transparence : chaque soutien est documenté et remercié publiquement (sauf demande contraire).',
   },
   en: {
-    eyebrow: 'Support',
+    eyebrow: 'Support us',
     titre: 'Supporting AIA means funding stars',
-    lead: 'Our merchandise funds school tours, telescope maintenance and research campaigns. Showcase only: to order, contact us — hand delivery in Abidjan.',
-    dispo: 'Available',
-    rupture: 'Back soon',
-    commander: 'Order via the Contact page',
-    donsTitre: 'Donations & sponsorship',
-    donsP1: 'Institutions, companies, diaspora: a donation or in-kind partnership (optics, computing, transport) has a direct, visible impact — every funded telescope means hundreds of first looks at the sky.',
-    donsP2: 'We value transparency: every contribution is documented and publicly acknowledged (unless requested otherwise).',
-    donsCta: 'Discuss a contribution',
+    lead: 'AIA lacks public funding: every contribution goes directly to observing equipment, school tours and the national observatory project.',
+    facons: [
+      {
+        t: 'Become a member',
+        p: 'Membership fees fund the first equipment: telescopes and observing gear.',
+        cta: 'Join AIA',
+        href: routes.join.en,
+      },
+      {
+        t: 'Make a donation',
+        p: 'Even a small donation helps keep free public stargazing and high-school clubs running.',
+        cta: 'Write to us',
+        href: routes.contact.en,
+      },
+      {
+        t: 'Sponsorship & partnership',
+        p: 'Institutions, companies, diaspora: an in-kind partnership (optics, computing, transport) has a direct, visible impact.',
+        cta: 'Discuss a contribution',
+        href: routes.contact.en,
+      },
+    ],
+    transparence:
+      'We value transparency: every contribution is documented and publicly acknowledged (unless requested otherwise).',
   },
 }[lang];
 ---
@@ -41,110 +69,66 @@ const C = {
 <PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
 
 <section class="container">
-  <div class="grid-2 produits">
+  <div class="facons">
     {
-      produits.map((pr) => (
-        <article class="produit">
-          <div class="produit__visuel">
-            <img src={pr.image} alt={pr.nom} loading="lazy" />
-            <span class:list={['produit__badge', { off: !pr.dispo }]}>
-              {pr.dispo ? C.dispo : C.rupture}
-            </span>
-          </div>
-          <div class="produit__corps">
-            <h3>{pr.nom}</h3>
-            <p>{pr.description}</p>
-            <p class="produit__prix">{pr.prix}</p>
-          </div>
+      C.facons.map((f, i) => (
+        <article class="facon">
+          <span class="facon__num">0{i + 1}</span>
+          <h2>{f.t}</h2>
+          <p>{f.p}</p>
+          <a class:list={['btn', i === 0 ? 'btn-primaire' : 'btn-contour']} href={f.href}>
+            {f.cta} →
+          </a>
         </article>
       ))
     }
   </div>
-  <p class="produits__note">
-    <a class="btn btn-contour" href={routes.contact[lang]}>{C.commander} →</a>
-  </p>
-</section>
-
-<section class="container dons">
-  <h2 class="section-title">{C.donsTitre}</h2>
-  <p>{C.donsP1}</p>
-  <p>{C.donsP2}</p>
-  <a class="btn btn-vert" href={routes.contact[lang]}>{C.donsCta}</a>
+  <p class="transparence">{C.transparence}</p>
 </section>
 
 <style>
-  .produit {
-    border: 1px solid var(--creme-12);
-    border-radius: var(--rayon);
-    overflow: hidden;
-    background: rgba(248, 247, 248, 0.03);
+  .facons {
+    display: grid;
+    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+  }
+
+  .facon {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 1.8rem 1.6rem;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    background: rgba(18, 10, 18, 0.5);
+    transition: border-color var(--transition), transform var(--transition);
   }
 
-  .produit__visuel {
-    position: relative;
+  .facon:hover {
+    border-color: var(--ci-vert);
+    transform: translateY(-4px);
   }
 
-  .produit__badge {
-    position: absolute;
-    top: 0.8rem;
-    left: 0.8rem;
-    font-family: var(--font-hud);
-    font-size: 0.66rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--aubergine-950);
-    background: var(--ci-vert-clair);
-    border-radius: 999px;
-    padding: 0.3rem 0.7rem;
+  .facon__num {
+    font: 700 2.4rem / 1 var(--font-titre);
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ci-vert);
   }
 
-  .produit__badge.off {
-    background: var(--creme-3);
+  .facon h2 {
+    font-size: var(--taille-h3);
+    margin: 0.4rem 0 0;
   }
 
-  .produit__corps {
-    padding: 1.2rem 1.3rem 1.4rem;
-  }
-
-  .produit__corps h3 {
-    font-size: 1.15rem;
-    margin-bottom: 0.4rem;
-  }
-
-  .produit__corps p {
+  .facon p {
     color: var(--creme-70);
-    font-size: 0.93rem;
+    flex: 1;
   }
 
-  .produit__prix {
-    font-family: var(--font-hud);
-    color: var(--ci-orange-vif) !important;
-    letter-spacing: 0.08em;
-    margin: 0;
-  }
-
-  .produits__note {
-    margin-top: 1.8rem;
-  }
-
-  .dons {
-    margin-top: clamp(3rem, 8vh, 5rem);
-    border: 1px solid rgba(0, 158, 96, 0.35);
-    border-radius: calc(var(--rayon) * 1.4);
-    padding: clamp(1.6rem, 4vw, 2.6rem);
-    background:
-      radial-gradient(70% 130% at 0% 0%, rgba(0, 158, 96, 0.08), transparent 60%),
-      rgba(18, 10, 18, 0.5);
-  }
-
-  .dons p {
-    max-width: 52rem;
-    color: var(--creme-2);
-  }
-
-  .dons .btn {
-    margin-top: 0.4rem;
+  .transparence {
+    margin-top: 2rem;
+    color: var(--creme-45);
+    font-size: 0.9rem;
   }
 </style>

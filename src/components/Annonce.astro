@@ -1,0 +1,89 @@
+---
+/**
+ * Bandeau d'annonce en haut de toutes les pages publiques, saisi dans /admin → Réglages.
+ * Masqué si le texte est vide ; le visiteur peut le fermer (mémorisé pour la session).
+ */
+import { reglagesSite } from '../lib/contact';
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const R = reglagesSite();
+const texte = (lang === 'en' && R.annonce_en) || R.annonce_fr;
+const bouton = (lang === 'en' && R.annonce_bouton_en) || R.annonce_bouton_fr || (lang === 'fr' ? 'En savoir plus' : 'Learn more');
+const externe = /^https?:/i.test(R.annonce_lien);
+// la clé change avec le texte : une nouvelle annonce réapparaît même si l'ancienne a été fermée
+const cle = 'aia-annonce-' + [...texte].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
+---
+
+{
+  texte && (
+    <div class="annonce" data-cle={cle} role="region" aria-label={lang === 'fr' ? 'Annonce' : 'Announcement'}>
+      <p>
+        {texte}
+        {R.annonce_lien && (
+          <a href={R.annonce_lien} target={externe ? '_blank' : undefined} rel={externe ? 'noopener' : undefined}>
+            {bouton} →
+          </a>
+        )}
+      </p>
+      <button type="button" aria-label={lang === 'fr' ? "Fermer l'annonce" : 'Close announcement'}>×</button>
+    </div>
+  )
+}
+
+<script>
+  const el = document.querySelector<HTMLElement>('.annonce');
+  if (el) {
+    const cle = el.dataset.cle!;
+    try {
+      if (sessionStorage.getItem(cle)) el.remove();
+    } catch {}
+    el.querySelector('button')?.addEventListener('click', () => {
+      el.remove();
+      try {
+        sessionStorage.setItem(cle, '1');
+      } catch {}
+    });
+  }
+</script>
+
+<style>
+  .annonce {
+    position: relative;
+    z-index: 60;
+    display: flex;
+    justify-content: center;
+    padding: 0.6rem 3.2rem;
+    background: linear-gradient(90deg, var(--ci-orange), var(--ci-orange-vif));
+    color: var(--aubergine-950);
+    font: 600 0.88rem / 1.4 var(--font-titre);
+    text-align: center;
+  }
+  .annonce p {
+    margin: 0;
+  }
+  .annonce a {
+    margin-left: 0.8rem;
+    color: var(--aubergine-950);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+  }
+  .annonce button {
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(18, 10, 18, 0.12);
+    color: var(--aubergine-950);
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+</style>

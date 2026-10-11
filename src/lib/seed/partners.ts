@@ -8,6 +8,7 @@ interface SeedPartner {
   sigle: string;
   description: Localized;
   site?: string;
+  logo?: string;
 }
 
 export const PARTNERS: SeedPartner[] = [
@@ -20,6 +21,7 @@ export const PARTNERS: SeedPartner[] = [
       en: 'The world organisation of professional astronomers, sponsor of the citizen-science campaigns AIA takes part in.',
     },
     site: 'https://www.iau.org',
+    logo: '/images/partenaires/iau.webp',
   },
   {
     id: 'nasa',
@@ -30,6 +32,7 @@ export const PARTNERS: SeedPartner[] = [
       en: 'The asteroid search campaigns rely on NASA-supported data and programmes — the source of our six 2022 discoveries.',
     },
     site: 'https://science.nasa.gov/citizen-science/',
+    logo: '/images/partenaires/nasa.webp',
   },
   {
     id: 'iasc',
@@ -71,6 +74,44 @@ export const PARTNERS: SeedPartner[] = [
     },
     site: 'https://uranoscope.org',
   },
+  {
+    id: 'ird',
+    nom: 'Institut de Recherche pour le Développement',
+    sigle: 'IRD',
+    description: {
+      fr: "Co-organisateur de l'AstroTour Ivoire 2023 ; son directeur de recherche David Baratoux est le conseiller scientifique de l'AIA.",
+      en: 'Co-organiser of the 2023 AstroTour Ivoire; its research director David Baratoux is AIA’s scientific adviser.',
+    },
+    site: 'https://www.ird.fr',
+  },
+  {
+    id: 'spacebus',
+    nom: 'SpaceBus France',
+    sigle: 'SPACEBUS',
+    description: {
+      fr: "L'association française de médiation scientifique avec laquelle l'AIA a porté l'AstroTour Ivoire dans quatre villes.",
+      en: 'The French science-outreach association with which AIA ran the AstroTour Ivoire in four cities.',
+    },
+    site: 'https://www.spacebusfrance.fr/astrotour-edition-ivoire',
+  },
+  {
+    id: 'aspp-bgs',
+    nom: "Association pour la Sauvegarde et la Promotion de la Pensée d'El-Hadj Boubacar Gamby-Sakho",
+    sigle: 'ASPP-BGS',
+    description: {
+      fr: "Porteuse du programme « Une école, un télescope », qui équipe les clubs d'astronomie des lycées accompagnés par l'AIA.",
+      en: 'Runs the “One school, one telescope” programme, which equips the high-school astronomy clubs AIA supports.',
+    },
+  },
+  {
+    id: 'pacs',
+    nom: 'Pan-African Citizen Science e-Laboratory',
+    sigle: 'PACS',
+    description: {
+      fr: "Le cadre panafricain des campagnes de recherche d'astéroïdes menées avec les élèves.",
+      en: 'The pan-African framework for the asteroid search campaigns run with students.',
+    },
+  },
 ];
 
 export function seedPartners(lang: Lang): Partner[] {
@@ -80,5 +121,6 @@ export function seedPartners(lang: Lang): Partner[] {
     sigle: pa.sigle,
     description: pick(pa.description, lang),
     site: pa.site,
+    logo: pa.logo,
   }));
 }

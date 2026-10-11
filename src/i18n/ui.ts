@@ -47,7 +47,7 @@ export const ui = {
     'nav.news': 'Actualités',
     'nav.gallery': 'Galerie',
     'nav.join': "Rejoindre l'AIA",
-    'nav.support': 'Support',
+    'nav.support': 'Nous soutenir',
     'nav.partners': 'Partenaires',
     'nav.contact': 'Contact',
     'nav.menu': 'Menu',
@@ -117,7 +117,7 @@ export const ui = {
     'nav.news': 'News',
     'nav.gallery': 'Gallery',
     'nav.join': 'Join AIA',
-    'nav.support': 'Support',
+    'nav.support': 'Support us',
     'nav.partners': 'Partners',
     'nav.contact': 'Contact',
     'nav.menu': 'Menu',
@@ -202,9 +202,35 @@ export function altLangUrl(pathname: string, target: Lang): string {
 
 /** Formate une date ISO selon la langue. */
 export function formatDate(iso: string, lang: Lang): string {
+  // dates « AAAA-MM-JJ » = minuit UTC : on formate en UTC pour ne pas reculer d'un jour
   return new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'UTC',
   });
 }
+
+/**
+ * Date d'un événement : texte libre saisi dans l'admin (version française uniquement),
+ * sinon période « 27 nov. – 8 déc. 2023 » si une date de fin existe, sinon date simple.
+ */
+export function formatPeriode(
+  e: { date: string; dateFin?: string; dateLibelle?: string },
+  lang: Lang,
+): string {
+  if (e.dateLibelle && lang === 'fr') return e.dateLibelle;
+  if (!e.dateFin || e.dateFin === e.date) return formatDate(e.date, lang);
+  const loc = lang === 'fr' ? 'fr-FR' : 'en-GB';
+  const d1 = new Date(e.date), d2 = new Date(e.dateFin);
+  const memeAnnee = d1.getUTCFullYear() === d2.getUTCFullYear();
+  const memeMois = memeAnnee && d1.getUTCMonth() === d2.getUTCMonth();
+  const tz = { timeZone: 'UTC' } as const;
+  const debut = d1.toLocaleDateString(
+    loc,
+    memeMois ? { day: 'numeric', ...tz } : { day: 'numeric', month: 'short', ...(memeAnnee ? {} : { year: 'numeric' }), ...tz },
+  );
+  const fin = d2.toLocaleDateString(loc, { day: 'numeric', month: memeMois ? 'long' : 'short', year: 'numeric', ...tz });
+  return `${debut} – ${fin}`;
+}
+

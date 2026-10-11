@@ -1,35 +1,113 @@
 ---
-/** Fond étoilé fixe, deux couches parallax. Styles dans global.css (tuiles SVG inline). */
+/**
+ * Fond étoilé fixe.
+ * - Sans JS : deux couches de tuiles SVG (styles dans global.css).
+ * - Avec JS : un canvas par-dessus — étoiles qui scintillent, parallaxe souris/défilement,
+ *   étoiles filantes occasionnelles. Pause quand l'onglet est caché.
+ */
 ---
 
 <div class="ciel" aria-hidden="true">
-  <div class="ciel__couche ciel__couche--loin" data-vitesse="0.04"></div>
-  <div class="ciel__couche ciel__couche--pres" data-vitesse="0.09"></div>
+  <div class="ciel__couche ciel__couche--loin"></div>
+  <div class="ciel__couche ciel__couche--pres"></div>
+  <canvas class="ciel__canvas"></canvas>
 </div>
+<div class="progression" aria-hidden="true"></div>
 
 <script>
-  const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduit) {
-    const couches = Array.from(
-      document.querySelectorAll<HTMLElement>('.ciel__couche'),
-    ).map((el) => ({ el, v: parseFloat(el.dataset.vitesse ?? '0') }));
-    let demande = false;
-    const rendre = () => {
-      demande = false;
-      const y = window.scrollY;
-      for (const { el, v } of couches) {
-        el.style.transform = `translate3d(0, ${-(y * v)}px, 0)`;
+  const cv = document.querySelector<HTMLCanvasElement>('.ciel__canvas');
+  const ctx = cv?.getContext('2d');
+  const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (cv && ctx) {
+    document.documentElement.classList.add('ciel-anime');
+    type Etoile = { x: number; y: number; r: number; l: number; p: number; s: number };
+    let W = 0, H = 0, etoiles: Etoile[] = [], mx = 0, sy = 0, visible = true;
+    let filante: { x: number; y: number; n: number } | null = null;
+
+    const taille = () => {
+      const d = Math.min(devicePixelRatio || 1, 2);
+      W = cv.width = innerWidth * d;
+      H = cv.height = innerHeight * d;
+      etoiles = [];
+      const n = Math.round((innerWidth * innerHeight) / 5500);
+      for (let i = 0; i < n; i++) {
+        const l = Math.random();
+        etoiles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: (0.4 + l * 1.4) * d,
+          l,
+          p: Math.random() * 6.28,
+          s: 0.5 + Math.random() * 1.5,
+        });
       }
     };
-    window.addEventListener(
+    taille();
+    addEventListener('resize', taille);
+    addEventListener('mousemove', (e) => (mx = e.clientX / innerWidth - 0.5));
+    addEventListener('scroll', () => (sy = scrollY), { passive: true });
+    document.addEventListener('visibilitychange', () => (visible = !document.hidden));
+
+    const dessiner = (t: number) => {
+      if (visible) {
+        ctx.clearRect(0, 0, W, H);
+        for (const e of etoiles) {
+          const x = e.x - mx * 60 * e.l;
+          const y = (((e.y - sy * (0.05 + e.l * 0.3)) % H) + H) % H;
+          const a = 0.35 + 0.65 * Math.abs(Math.sin((t / 1000) * e.s + e.p));
+          ctx.globalAlpha = a * (0.4 + e.l * 0.6);
+          // quelques étoiles chaudes (orangées), les autres crème
+          ctx.fillStyle = e.l > 0.88 ? '#FFC58A' : '#F8F7F8';
+          ctx.beginPath();
+          ctx.arc(x, y, e.r, 0, 6.28);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        if (!reduit) {
+          if (!filante && Math.random() < 0.003)
+            filante = { x: Math.random() * W * 0.8, y: Math.random() * H * 0.4, n: 0 };
+          if (filante) {
+            filante.x += 14;
+            filante.y += 6;
+            filante.n++;
+            const g = ctx.createLinearGradient(filante.x, filante.y, filante.x - 120, filante.y - 52);
+            g.addColorStop(0, 'rgba(255, 197, 138, .9)');
+            g.addColorStop(1, 'rgba(255, 197, 138, 0)');
+            ctx.strokeStyle = g;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(filante.x, filante.y);
+            ctx.lineTo(filante.x - 120, filante.y - 52);
+            ctx.stroke();
+            if (filante.n > 60) filante = null;
+          }
+        }
+      }
+      if (!reduit) requestAnimationFrame(dessiner);
+    };
+    reduit ? dessiner(0) : requestAnimationFrame(dessiner);
+  }
+
+  // Barre de progression de lecture
+  const barre = document.querySelector<HTMLElement>('.progression');
+  if (barre) {
+    let attente = false;
+    const maj = () => {
+      attente = false;
+      const max = document.documentElement.scrollHeight - innerHeight;
+      barre.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+    };
+    addEventListener(
       'scroll',
       () => {
-        if (!demande) {
-          demande = true;
-          requestAnimationFrame(rendre);
+        if (!attente) {
+          attente = true;
+          requestAnimationFrame(maj);
         }
       },
       { passive: true },
     );
+    maj();
   }
 </script>

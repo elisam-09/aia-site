@@ -2,42 +2,53 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import * as repo from '../../../server/db/repo';
 
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  const sens = fd.get('_action') === 'monter' ? -1 : fd.get('_action') === 'descendre' ? 1 : 0;
+  if (sens) repo.deplacerMembre(Number(fd.get('id')), sens);
+  return Astro.redirect('/admin/membres');
+}
+
 const membres = repo.listMembres();
+const initiales = (n: string) =>
+  n.replace(/^(Dr|Pr|Prof)\.?\s+/i, '').split(/\s+/).slice(0, 2).map((m) => m[0]?.toUpperCase() ?? '').join('');
 ---
 
-<AdminLayout title="Membres du bureau">
-  <div class="panneau">
-    <div class="liste-entete">
-      <p style="margin:0;color:var(--adm-muet)">{membres.length} membre(s)</p>
-      <a class="bouton bouton--primaire" href="/admin/membres/nouveau">+ Nouveau membre</a>
-    </div>
+<AdminLayout title="Équipe" description="Utilise les flèches pour changer l’ordre d’affichage sur la page « Qui sommes-nous ».">
+  <Fragment slot="actions">
+    <a class="bouton bouton--primaire" href="/admin/membres/nouveau">+ Nouveau membre</a>
+  </Fragment>
 
-    {
-      membres.length === 0 ? (
-        <p style="color:var(--adm-muet)">Aucun membre pour l'instant.</p>
-      ) : (
-        <div class="table-wrap">
-          <table class="liste">
-            <thead>
-              <tr><th>Photo</th><th>Nom</th><th>Fonction</th><th /></tr>
-            </thead>
-            <tbody>
-              {membres.map((m) => (
-                <tr>
-                  <td>
-                    <img class="liste__vignette" style="border-radius:50%;width:40px" src={m.photo || '/placeholders/avatar.svg'} alt="" />
-                  </td>
-                  <td>{m.nom}</td>
-                  <td style="color:var(--adm-muet)">{m.role_fr ?? '—'}</td>
-                  <td class="liste__actions">
-                    <a class="bouton bouton--contour bouton--sm" href={`/admin/membres/${m.id}`}>Modifier</a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    }
-  </div>
+  {
+    membres.length === 0 ? (
+      <div class="lignes"><p class="vide"><b>Aucun membre</b>Ajoute le président et les membres du bureau.</p></div>
+    ) : (
+      <div class="lignes">
+        {membres.map((m, i) => (
+          <div class="ligne">
+            {m.photo && !m.photo.endsWith('.svg') ? (
+              <img class="vignette vignette--rond" src={m.photo} alt="" />
+            ) : (
+              <span class="vignette vignette--rond">{initiales(m.nom)}</span>
+            )}
+            <div>
+              <h3><a href={`/admin/membres/${m.id}`}>{m.nom}</a></h3>
+              <div class="meta">
+                {m.badge && <span class="pastille venir">{m.badge}</span>}
+                <span>{m.role_fr ?? '—'}</span>
+              </div>
+            </div>
+            <div class="ac">
+              <form method="POST">
+                <input type="hidden" name="id" value={m.id} />
+                <button class="bouton bouton--contour bouton--icone" name="_action" value="monter" disabled={i === 0} aria-label={`Monter ${m.nom}`}>↑</button>
+                <button class="bouton bouton--contour bouton--icone" name="_action" value="descendre" disabled={i === membres.length - 1} aria-label={`Descendre ${m.nom}`}>↓</button>
+              </form>
+              <a class="bouton bouton--contour bouton--sm" href={`/admin/membres/${m.id}`}>Modifier</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 </AdminLayout>

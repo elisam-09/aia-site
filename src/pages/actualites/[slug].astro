@@ -20,11 +20,47 @@ const t = useT('fr');
     <p class="lead">{post.extrait}</p>
     {post.image && <img class="article__visuel" src={post.image} alt="" />}
     <div class="article__corps" set:html={post.corpsHtml} />
+    {
+      post.liens.length > 0 && (
+        <aside class="article__sources">
+          <span>Sources</span>
+          {post.liens.map((l) => (
+            <a href={l.url} target="_blank" rel="noopener">
+              {l.label} ↗
+            </a>
+          ))}
+        </aside>
+      )
+    }
     <a class="article__retour" href={routes.news.fr}>← {t('nav.news')}</a>
   </article>
 </Base>
 
 <style>
+  .article__sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.2rem;
+    align-items: baseline;
+    margin-top: 2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--creme-12);
+  }
+
+  .article__sources span {
+    font-family: var(--font-hud);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--creme-45);
+  }
+
+  .article__sources a {
+    color: var(--ci-orange-vif);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
   .article {
     max-width: 46rem;
     padding-block: clamp(3rem, 8vh, 5rem) 2rem;

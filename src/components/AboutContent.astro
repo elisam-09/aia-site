@@ -2,7 +2,7 @@
 import PageIntro from './PageIntro.astro';
 import JoinBanner from './JoinBanner.astro';
 import { getTeam } from '../lib/content';
-import type { Lang } from '../i18n/ui';
+import { routes, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -11,79 +11,136 @@ interface Props {
 const { lang } = Astro.props;
 const equipe = await getTeam(lang);
 
+/** Initiales d'un nom (« Dr Aziz Diaby » → « AD »), pour les cartes sans photo. */
+const initiales = (nom: string) =>
+  nom
+    .replace(/^(Dr|Pr|Prof)\.?\s+/i, '')
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((m) => m[0]?.toUpperCase() ?? '')
+    .join('');
+
+/** Petites constellations décoratives pour les cartes sans photo. */
+const CONSTELLATIONS = [
+  'M40 220 L110 150 L170 175 L240 70',
+  'M50 90 L120 130 L150 220 L250 190 L230 80',
+  'M60 200 L100 110 L190 140 L220 60 M190 140 L240 230',
+  'M50 210 L120 120 L190 170 L250 60',
+  'M60 80 L130 150 L90 230 M130 150 L230 130 L250 220',
+];
+const points = (d: string) =>
+  [...d.matchAll(/(\d+) (\d+)/g)].map(([, x, y]) => ({ x: Number(x), y: Number(y) }));
+
 const C = {
   fr: {
     eyebrow: 'Qui sommes-nous',
-    titre: 'Une association née sous le ciel d’Abidjan',
-    lead: "Fondée en 2021 à l'UFR Sciences des Structures de la Matière et Technologies de l'Université Félix Houphouët-Boigny, l'AIA rassemble une quarantaine de passionnés décidés à faire de l'astronomie une affaire ivoirienne.",
+    titre: 'Faire de l’astronomie une affaire ivoirienne',
+    lead: "L'AIA a été fondée en 2021 à l'UFR Sciences des Structures de la Matière et Technologies (SSMT) de l'Université Félix Houphouët-Boigny, à Abidjan. Elle réunit une quarantaine de passionnés, dont dix-sept siègent au bureau : chercheurs, enseignants, étudiants et curieux.",
+    fondationTitre: 'Tout est parti d’une assemblée générale',
+    fondation:
+      "Le 13 février 2021, à Abidjan-Cocody, le Dr Aziz Diaby, chercheur en physique spatiale, est élu président pour six ans. Il fonde l'AIA avec une idée simple : réconcilier les Ivoiriens avec les sciences et donner aux jeunes, filles comprises, l'envie de s'y lancer.",
+    legende: ['Assemblée générale constitutive · 13 février 2021', 'Université Félix Houphouët-Boigny, Abidjan-Cocody.'],
     missionTitre: 'Notre mission',
     missions: [
-      {
-        t: 'Partager le ciel',
-        p: "Observations publiques gratuites, séances d'astrophotographie et conférences ouvertes à tous : le ciel appartient à tout le monde.",
-      },
-      {
-        t: 'Former la relève',
-        p: "Tournées dans les écoles, création de clubs d'astronomie, accompagnement vers les filières scientifiques — avec une attention particulière portée aux jeunes femmes.",
-      },
-      {
-        t: 'Faire de la science',
-        p: "Campagnes de recherche d'astéroïdes avec l'UAI et la NASA, et à terme un observatoire national produisant des données utiles à la communauté internationale.",
-      },
+      { t: 'Partager le ciel', p: "Observations publiques gratuites, séances d'astrophotographie et conférences ouvertes à tous, sur les esplanades, les campus et les plages." },
+      { t: 'Former la relève', p: 'Tournées dans les écoles, clubs d’astronomie dans les lycées, accompagnement vers les filières scientifiques, avec une attention particulière pour les jeunes femmes.' },
+      { t: 'Faire de la science', p: "Campagnes de recherche d'astéroïdes avec l'Union Astronomique Internationale et la NASA, et à terme un observatoire national." },
+      { t: 'Défendre la science', p: 'Lutter contre la désinformation scientifique avec des faits, des conférences et de la curiosité.' },
     ],
     parcoursTitre: 'Notre trajectoire',
     parcours: [
-      { annee: '2021', texte: "Naissance de l'AIA à l'UFR SSMT de l'Université Félix Houphouët-Boigny." },
-      { annee: '2022', texte: 'Six astéroïdes détectés lors des campagnes IASC menées avec l’UAI et la NASA.' },
-      { annee: '2023', texte: 'Lancement des conférences AstroPause et multiplication des clubs scolaires.' },
-      { annee: 'Demain', texte: "Un observatoire astronomique national — première pierre d'une agence spatiale ivoirienne." },
+      { annee: '2021', titre: "Naissance de l'AIA", texte: "Assemblée générale du 13 février à l'UFR SSMT. En juillet, trois jours d'observation de la Lune avec On The Moon Again." },
+      { annee: '2022', titre: 'Six astéroïdes', texte: 'Première participation aux campagnes IASC, avec l’UAI et la NASA : six astéroïdes détectés depuis Abidjan, en cours de confirmation au Minor Planet Center.' },
+      { annee: '2023', titre: 'AstroPause et AstroTour', texte: 'Café des Savoirs en janvier, première AstroPause en mai, puis l’AstroTour Ivoire en novembre-décembre dans quatre villes.' },
+      { annee: '2024+', titre: 'Les clubs essaiment', texte: '« Une école, un télescope » au Lycée Blaise Pascal, nouvelles campagnes d’astéroïdes chaque année, présence à AstroEdu 2025.' },
+      { annee: 'Demain', titre: "L'observatoire national", texte: "Un site permanent, ouvert aux chercheurs, aux étudiants et au public : la première pierre d'une future agence spatiale ivoirienne." },
     ],
-    bureauTitre: 'Le bureau',
-    bureauNote:
-      'Les portraits des membres du bureau arrivent bientôt — cette section est alimentée directement par l’équipe via le back-office.',
+    bureauTitre: 'Ceux qui font l’AIA',
+    bureauLead: 'Des chercheurs et des enseignants derrière chaque télescope.',
+    glisser: 'Fais glisser pour parcourir l’équipe →',
+    toiTitre: 'Et toi ?',
+    toiTexte: "L'AIA grandit grâce à ses membres : élèves, étudiants, enseignants, photographes, curieux. Pas besoin de diplôme, seulement de l'envie.",
+    toiCta: "Rejoindre l'équipe",
+    rolesTitre: 'Le bureau, rôle par rôle',
+    roles: [
+      ['⌖', 'Présidence', "Porte la vision de l'association et la représente auprès des institutions."],
+      ['☰', 'Secrétariat général', 'Coordonne la vie associative, les adhésions et le lien avec les membres.'],
+      ['◉', 'Observations', 'Planifie les sorties, gère les télescopes et forme les observateurs.'],
+      ['✎', 'Pédagogie & clubs', 'Conçoit les tournées scolaires et accompagne les clubs des lycées.'],
+      ['✦', 'Recherche', 'Anime les campagnes IASC et le suivi des six astéroïdes auprès du Minor Planet Center.'],
+      ['☏', 'Communication', "Fait connaître l'AIA : réseaux sociaux, presse, site web."],
+    ],
+    projetLabel: 'Le grand projet',
+    projetTitre: 'Un observatoire astronomique national.',
+    projetTexte: "Un lieu permanent, équipé d'instruments de qualité, pour observer, former et faire de la recherche en Côte d'Ivoire. Les cotisations des membres servent à acheter les premiers équipements.",
+    projetCta: "Soutenir l'AIA",
   },
   en: {
     eyebrow: 'About us',
-    titre: 'An association born under the Abidjan sky',
-    lead: 'Founded in 2021 at the UFR SSMT of Félix Houphouët-Boigny University, AIA gathers some forty enthusiasts determined to make astronomy an Ivorian affair.',
+    titre: 'Making astronomy an Ivorian affair',
+    lead: 'AIA was founded in 2021 at the UFR SSMT (Matter Sciences and Technology) of Félix Houphouët-Boigny University in Abidjan. It brings together some forty enthusiasts, seventeen of whom sit on the board: researchers, teachers, students and curious minds.',
+    fondationTitre: 'It all started with a general assembly',
+    fondation:
+      'On 13 February 2021, in Abidjan-Cocody, space physicist Dr Aziz Diaby was elected president for six years. He founded AIA with a simple idea: reconcile Ivorians with science and make young people, girls included, want to pursue it.',
+    legende: ['Founding general assembly · 13 February 2021', 'Félix Houphouët-Boigny University, Abidjan-Cocody.'],
     missionTitre: 'Our mission',
     missions: [
-      {
-        t: 'Share the sky',
-        p: 'Free public stargazing, astrophotography sessions and lectures open to all: the sky belongs to everyone.',
-      },
-      {
-        t: 'Train the next generation',
-        p: 'School tours, astronomy clubs, guidance towards scientific careers — with particular attention to young women.',
-      },
-      {
-        t: 'Do science',
-        p: 'Asteroid search campaigns with the IAU and NASA, and eventually a national observatory producing data useful to the international community.',
-      },
+      { t: 'Share the sky', p: 'Free public stargazing, astrophotography sessions and lectures open to all, on esplanades, campuses and beaches.' },
+      { t: 'Train the next generation', p: 'School tours, high-school astronomy clubs, guidance towards science careers, with particular attention to young women.' },
+      { t: 'Do science', p: 'Asteroid search campaigns with the International Astronomical Union and NASA, and eventually a national observatory.' },
+      { t: 'Defend science', p: 'Fighting scientific misinformation with facts, lectures and curiosity.' },
     ],
     parcoursTitre: 'Our trajectory',
     parcours: [
-      { annee: '2021', texte: 'Birth of AIA at the UFR SSMT of Félix Houphouët-Boigny University.' },
-      { annee: '2022', texte: 'Six asteroids detected during IASC campaigns run with the IAU and NASA.' },
-      { annee: '2023', texte: 'Launch of the AstroPause lectures and growth of school clubs.' },
-      { annee: 'Tomorrow', texte: 'A national astronomical observatory — first stone of an Ivorian space agency.' },
+      { annee: '2021', titre: 'AIA is born', texte: 'General assembly on 13 February at the UFR SSMT. In July, three days of Moon observation with On The Moon Again.' },
+      { annee: '2022', titre: 'Six asteroids', texte: 'First IASC campaigns with the IAU and NASA: six asteroids detected from Abidjan, being confirmed by the Minor Planet Center.' },
+      { annee: '2023', titre: 'AstroPause and AstroTour', texte: 'Café des Savoirs in January, first AstroPause in May, then the AstroTour Ivoire in November–December across four cities.' },
+      { annee: '2024+', titre: 'Clubs spread', texte: '“One school, one telescope” at the Lycée Blaise Pascal, new asteroid campaigns every year, AstroEdu 2025.' },
+      { annee: 'Tomorrow', titre: 'The national observatory', texte: 'A permanent site open to researchers, students and the public: the first stone of a future Ivorian space agency.' },
     ],
-    bureauTitre: 'The board',
-    bureauNote:
-      'Board member portraits are coming soon — this section is fed directly by the team through the back office.',
+    bureauTitre: 'The people behind AIA',
+    bureauLead: 'Researchers and teachers behind every telescope.',
+    glisser: 'Drag to browse the team →',
+    toiTitre: 'And you?',
+    toiTexte: 'AIA grows through its members: pupils, students, teachers, photographers, curious minds. No degree needed, just the will.',
+    toiCta: 'Join the team',
+    rolesTitre: 'The board, role by role',
+    roles: [
+      ['⌖', 'Presidency', 'Carries the association’s vision and represents it before institutions.'],
+      ['☰', 'General secretariat', 'Coordinates association life, memberships and member relations.'],
+      ['◉', 'Observations', 'Plans outings, manages telescopes and trains observers.'],
+      ['✎', 'Education & clubs', 'Designs school tours and supports high-school clubs.'],
+      ['✦', 'Research', 'Runs IASC campaigns and the follow-up of the six asteroids with the Minor Planet Center.'],
+      ['☏', 'Communications', 'Makes AIA known: social media, press, website.'],
+    ],
+    projetLabel: 'The big project',
+    projetTitre: 'A national astronomical observatory.',
+    projetTexte: 'A permanent place with quality instruments to observe, teach and do research in Côte d’Ivoire. Membership fees fund the first equipment.',
+    projetCta: 'Support AIA',
   },
 }[lang];
 ---
 
 <PageIntro eyebrow={C.eyebrow} titre={C.titre} lead={C.lead} />
 
+<section class="container bloc fondation">
+  <div>
+    <h2 class="section-title">{C.fondationTitre}</h2>
+    <p class="lead">{C.fondation}</p>
+  </div>
+  <figure class="photo">
+    <img src="/images/photos/ag-2021.webp" alt={C.legende[0]} loading="lazy" width="959" height="719" />
+    <figcaption><b>{C.legende[0]}</b>{C.legende[1]}</figcaption>
+  </figure>
+</section>
+
 <section class="container bloc">
   <h2 class="section-title">{C.missionTitre}</h2>
-  <div class="grid-3">
+  <div class="missions">
     {
       C.missions.map((m, i) => (
-        <article class="mission">
-          <span class="mission__num">0{i + 1}</span>
+        <article class="mission revele">
+          <b class="mission__num">0{i + 1}</b>
           <h3>{m.t}</h3>
           <p>{m.p}</p>
         </article>
@@ -97,8 +154,9 @@ const C = {
   <ol class="frise">
     {
       C.parcours.map((e) => (
-        <li>
+        <li class="revele">
           <span class="frise__annee">{e.annee}</span>
+          <h3>{e.titre}</h3>
           <p>{e.texte}</p>
         </li>
       ))
@@ -106,21 +164,72 @@ const C = {
   </ol>
 </section>
 
+<section class="bloc">
+  <div class="container">
+    <h2 class="section-title">{C.bureauTitre}</h2>
+    <p class="lead">{C.bureauLead}</p>
+    <p class="glisser">{C.glisser}</p>
+  </div>
+  <div class="equipe" data-glisser>
+    <div class="equipe__piste">
+      {
+        equipe.map((m, i) => {
+          const d = CONSTELLATIONS[i % CONSTELLATIONS.length];
+          return (
+            <article class="carte">
+              <div class="carte__photo">
+                {m.badge && <span class="carte__badge">{m.badge}</span>}
+                {m.photo && !m.photo.endsWith('.svg') ? (
+                  <img src={m.photo} alt={m.nom} loading="lazy" />
+                ) : (
+                  <>
+                    <svg class="carte__cst" viewBox="0 0 300 300" aria-hidden="true">
+                      <path d={d} />
+                      {points(d).map((pt) => <circle cx={pt.x} cy={pt.y} r="4.5" />)}
+                    </svg>
+                    <span class="carte__mono" aria-hidden="true">{initiales(m.nom)}</span>
+                  </>
+                )}
+              </div>
+              <div class="carte__corps">
+                <small>{m.role}</small>
+                <h3>{m.nom}</h3>
+                {m.bio && <p>{m.bio}</p>}
+              </div>
+            </article>
+          );
+        })
+      }
+      <article class="carte carte--toi">
+        <h3>{C.toiTitre}</h3>
+        <p>{C.toiTexte}</p>
+        <a class="btn btn-primaire" href={routes.join[lang]}>{C.toiCta}</a>
+      </article>
+    </div>
+  </div>
+</section>
+
 <section class="container bloc">
-  <h2 class="section-title">{C.bureauTitre}</h2>
-  <p class="lead">{C.bureauNote}</p>
-  <div class="grid-3">
+  <h2 class="section-title">{C.rolesTitre}</h2>
+  <div class="roles">
     {
-      equipe.map((m) => (
-        <article class="membre">
-          <img src={m.photo} alt="" width="72" height="72" loading="lazy" />
-          <div>
-            <h3>{m.role}</h3>
-            <p>{m.bio}</p>
-          </div>
-        </article>
+      C.roles.map(([i, t, p]) => (
+        <div class="role revele">
+          <i aria-hidden="true">{i}</i>
+          <h3>{t}</h3>
+          <p>{p}</p>
+        </div>
       ))
     }
+  </div>
+
+  <div class="projet revele">
+    <div>
+      <p class="eyebrow">{C.projetLabel}</p>
+      <h3>{C.projetTitre}</h3>
+    </div>
+    <p>{C.projetTexte}</p>
+    <a class="btn btn-primaire" href={routes.support[lang]}>{C.projetCta}</a>
   </div>
 </section>
 
@@ -128,97 +237,352 @@ const C = {
 
 <style>
   .bloc {
-    margin-top: clamp(2.5rem, 7vh, 4.5rem);
+    margin-top: clamp(3rem, 9vh, 6rem);
   }
 
-  .mission {
+  /* --- fondation --- */
+  .fondation {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .fondation {
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+  }
+  .photo {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
     border: 1px solid var(--creme-12);
     border-radius: var(--rayon);
-    padding: 1.5rem 1.4rem;
-    background: rgba(248, 247, 248, 0.03);
+    aspect-ratio: 4 / 3;
+  }
+  .photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo figcaption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 3.5rem 1.3rem 1rem;
+    font-size: 0.82rem;
+    color: var(--creme-70);
+    background: linear-gradient(transparent, rgba(18, 10, 18, 0.92));
+  }
+  .photo figcaption b {
+    display: block;
+    font-family: var(--font-titre);
+    color: var(--creme);
   }
 
+  /* --- missions --- */
+  .missions {
+    display: grid;
+    gap: 1.4rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  }
+  .mission {
+    position: relative;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--creme-12);
+  }
+  .mission::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -1px;
+    height: 1px;
+    width: 0;
+    background: var(--ci-vert);
+    transition: width 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .mission.vu::before {
+    width: 100%;
+  }
   .mission__num {
-    font-family: var(--font-hud);
-    color: var(--ci-orange-vif);
-    font-size: 0.8rem;
-    letter-spacing: 0.2em;
+    font: 700 3rem / 1 var(--font-titre);
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ci-vert);
   }
-
   .mission h3 {
-    margin-top: 0.5rem;
+    margin: 0.8rem 0 0.5rem;
   }
-
   .mission p {
     color: var(--creme-70);
     margin: 0;
   }
 
+  /* --- frise --- */
   .frise {
     list-style: none;
     margin: 0;
     padding: 0;
-    border-left: 2px solid var(--creme-12);
+    display: grid;
+    gap: 2rem;
+    position: relative;
   }
-
+  @media (min-width: 980px) {
+    .frise {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+    }
+    .frise::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 19px;
+      height: 1px;
+      background: var(--creme-12);
+    }
+  }
   .frise li {
     position: relative;
-    padding: 0 0 1.8rem 1.8rem;
+    padding: 3rem 1.2rem 0 0;
   }
-
   .frise li::before {
     content: '';
     position: absolute;
-    left: -7px;
-    top: 0.45rem;
-    width: 12px;
-    height: 12px;
+    left: 0;
+    top: 14px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
     background: var(--ci-orange);
-    box-shadow: 0 0 12px rgba(247, 127, 0, 0.6);
+    box-shadow: 0 0 14px var(--ci-orange);
   }
-
   .frise li:last-child::before {
     background: var(--ci-vert);
-    box-shadow: 0 0 12px rgba(0, 158, 96, 0.6);
+    box-shadow: 0 0 14px var(--ci-vert);
   }
-
   .frise__annee {
-    font-family: var(--font-titre);
-    font-weight: 700;
-    color: var(--creme);
-    letter-spacing: 0.06em;
+    display: block;
+    font: 700 2rem var(--font-titre);
+    color: var(--ci-orange-vif);
   }
-
+  .frise h3 {
+    font-size: 1.1rem;
+    margin: 0.4rem 0;
+  }
   .frise p {
-    margin: 0.2rem 0 0;
+    margin: 0;
+    font-size: 0.92rem;
     color: var(--creme-70);
-    max-width: 52rem;
   }
 
-  .membre {
+  /* --- équipe --- */
+  .glisser {
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--creme-45);
+  }
+  .equipe {
+    overflow-x: auto;
+    padding-bottom: 1.4rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ci-orange) transparent;
+    cursor: grab;
+  }
+  .equipe:global(.glisse) {
+    cursor: grabbing;
+  }
+  .equipe:global(.glisse) * {
+    user-select: none;
+    pointer-events: none;
+  }
+  .equipe__piste {
     display: flex;
-    gap: 1rem;
-    align-items: flex-start;
+    gap: 1.4rem;
+    width: max-content;
+    padding: 0.5rem max(1.25rem, calc((100vw - var(--largeur-site)) / 2));
+  }
+  .carte {
+    width: min(340px, 78vw);
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     border: 1px solid var(--creme-12);
     border-radius: var(--rayon);
-    padding: 1.2rem;
-    background: rgba(248, 247, 248, 0.03);
+    background: rgba(34, 20, 34, 0.75);
+    transition: border-color 0.4s, transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
-
-  .membre img {
-    border-radius: 50%;
-    flex-shrink: 0;
+  .carte:hover {
+    border-color: var(--ci-vert);
+    transform: translateY(-8px);
   }
-
-  .membre h3 {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
+  .carte__photo {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: radial-gradient(circle at 70% 20%, var(--aubergine-600), var(--aubergine-950));
   }
-
-  .membre p {
-    font-size: 0.88rem;
+  .carte__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 20%;
+    transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .carte:hover .carte__photo img {
+    transform: scale(1.06);
+  }
+  .carte__badge {
+    position: absolute;
+    z-index: 2;
+    left: 1rem;
+    top: 1rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: var(--ci-orange);
+    color: var(--aubergine-950);
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.2em;
+  }
+  .carte__cst {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.55;
+    fill: var(--ci-orange);
+  }
+  .carte__cst path {
+    fill: none;
+    stroke: var(--ci-orange);
+    stroke-width: 1.2;
+  }
+  .carte__mono {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font: 700 5.5rem var(--font-titre);
+    letter-spacing: -0.04em;
+    color: var(--creme);
+    opacity: 0.9;
+  }
+  .carte__corps {
+    padding: 1.3rem 1.4rem 1.6rem;
+  }
+  .carte__corps small {
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ci-vert-clair);
+  }
+  .carte__corps h3 {
+    margin: 0.5rem 0;
+    font-size: 1.35rem;
+  }
+  .carte__corps p {
+    margin: 0;
+    font-size: 0.9rem;
     color: var(--creme-70);
+  }
+  .carte--toi {
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+    border-style: dashed;
+    border-color: var(--ci-orange);
+    background: linear-gradient(160deg, rgba(247, 127, 0, 0.16), rgba(34, 20, 34, 0.4));
+  }
+  .carte--toi p {
+    color: var(--creme-70);
+    margin-bottom: 1.4rem;
+  }
+
+  /* --- rôles et projet --- */
+  .roles {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  }
+  .role {
+    padding: 1.5rem;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    background: rgba(34, 20, 34, 0.5);
+    transition: border-color 0.4s, transform 0.4s;
+  }
+  .role:hover {
+    border-color: var(--ci-vert);
+    transform: translateY(-5px);
+  }
+  .role i {
+    display: block;
+    margin-bottom: 0.6rem;
+    font: 700 1.8rem var(--font-titre);
+    font-style: normal;
+    color: var(--ci-vert-clair);
+  }
+  .role h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+  }
+  .role p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--creme-70);
+  }
+  .projet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3.5rem;
+    padding: 2.2rem;
+    border: 1px solid var(--ci-orange);
+    border-radius: var(--rayon);
+    background: linear-gradient(120deg, rgba(247, 127, 0, 0.12), transparent);
+  }
+  .projet h3 {
+    font-size: clamp(1.5rem, 3.2vw, 2.3rem);
+    max-width: 20ch;
     margin: 0;
   }
+  .projet > p {
+    max-width: 44ch;
+    margin: 0;
+    color: var(--creme-70);
+  }
+
+  /* --- apparitions --- */
+  :global(html.js) .revele {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  :global(html.js) .revele.vu {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .revele {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .frise li:nth-child(even)::before {
+    background: var(--ci-vert);
+    box-shadow: 0 0 14px var(--ci-vert);
+  }
+  .frise li:nth-child(even) .frise__annee {
+    color: var(--ci-vert-clair);
+  }
 </style>
+
+<script>
+  import { activerGlisser, activerRevele } from '../scripts/interactions';
+  activerRevele();
+  activerGlisser();
+</script>

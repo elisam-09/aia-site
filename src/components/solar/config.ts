@@ -103,7 +103,7 @@ export const PLANETS: CelestialBody[] = [
   },
   {
     id: 'uranus',
-    label: { fr: 'Support', en: 'Support' },
+    label: { fr: 'Nous soutenir', en: 'Support us' },
     route: { fr: routes.support.fr, en: routes.support.en },
     color: '#9AD1D4',
     size: 0.85,

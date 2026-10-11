@@ -10,6 +10,13 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
   standalone). Toutes les pages sont rendues à la volée.
 - **React** uniquement pour l'île 3D (navigation système solaire, `client:visible`,
   three.js chargé en différé avec repli 2D SSR).
+- **Effets de l'accueil** (TypeScript, `src/scripts/`) : `accueil.ts` orchestre GSAP
+  ScrollTrigger + Lenis ; `telescope.ts` (télescope 3D qui se décompose), `globe.ts`,
+  `lune.ts` (phase du jour), `eclipse-teaser.ts` + `eclipse/` (catalogue NASA, fenêtre 3D
+  chargée au clic). three.js chargé à la demande. Classes posées sur `<html>` :
+  `anim` (animations actives), `webgl` (WebGL dispo) — tout doit rester lisible sans elles.
+- **Global** : `Curseur.astro` (curseur fusée), `Starfield.astro` (ciel canvas + barre de
+  progression), `scripts/interactions.ts` (bandes à glisser, apparitions).
 - **SQLite** via `better-sqlite3` (fichier `data/aia.db`). Accès dans `src/server/db/`
   (connexion + schéma `index.ts`, requêtes `repo.ts`, amorçage `seed.ts`). Pas d'ORM.
 - **Auth maison** : `src/server/auth.ts` (scrypt + sessions cookie en table), garde dans
@@ -28,6 +35,21 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
 - **Portail admin** : chaque rubrique = `admin/<type>/index.astro` (liste) +
   `admin/<type>/[id].astro` (id `nouveau` = création ; POST gère save/suppression via
   `_action=supprimer`). Formulaires via les composants de `src/components/admin/`.
+- **Contenu de référence** : `src/lib/seed/*` (réel et sourcé). `seed.ts` remplit les tables
+  vides et, une seule fois par base (table `meta`, clé `contenu`), remplace l'ancienne démo
+  fictive tant qu'elle n'a pas été modifiée. Ne jamais inventer d'événement ou de chiffre.
+- **Réglages** (table `reglages`, clé → valeur) : coordonnées, réseaux, phrase d'accueil,
+  bandeau d'annonce. Lus via `reglagesSite()` (`src/lib/contact.ts`, valeurs par défaut
+  incluses). Édités dans `/admin/reglages`.
+- **Adhésions** : formulaire `AdhesionForm.astro` → `POST /api/adhesion` (piège à robots,
+  5 envois / 10 min / IP) → table `adhesions` → `/admin/adhesions` (statut, note, export
+  CSV réservé au rôle admin). Données personnelles : ne pas les exposer ailleurs.
+- **Colonnes ajoutées** après coup : déclarer dans `COLONNES_AJOUTEES` (`db/index.ts`),
+  elles sont créées au démarrage sur les bases existantes.
+- **Admin** : thème « nuit nuageuse » (`admin.css`), aucune émoticône, icônes SVG au
+  trait dans `AdminLayout.astro`. Après une action, rediriger avec `?ok=enregistre|cree|
+  supprime|duplique` pour afficher la notification.
+- Dates « AAAA-MM-JJ » : toujours formater avec `timeZone: 'UTC'` (sinon décalage d'un jour).
 - Ajout d'un champ de contenu = 4 endroits cohérents : colonne (`db/index.ts` DDL +
   `db/types.ts`), requêtes (`db/repo.ts`), formulaire admin (`admin/<type>/[id].astro`),
   et lecture publique (`lib/content.ts` + le composant de page).
