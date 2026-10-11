@@ -2,6 +2,10 @@
 /**
  * Page d'accueil — la « descente » : espace profond → système solaire → ceinture
  * → orbite → atmosphère → ciel d'Abidjan. Une seule source pour FR et EN.
+ *
+ * Effets (accueil.ts) : télescope 3D qui se décompose au défilement, manifeste révélé mot à mot,
+ * compteurs, globe 3D centré sur Abidjan, Lune du jour, éclipse, accordéon d'activités.
+ * Tout reste lisible sans JavaScript, sans WebGL ou avec « réduire les animations ».
  */
 import HudPanel from './HudPanel.astro';
 import Card from './Card.astro';
@@ -9,7 +13,9 @@ import SolarSystem from './solar/SolarSystem';
 import logo from '../assets/logo-aia-blanc.png';
 import { Image } from 'astro:assets';
 import { useT, routes, formatDate, type Lang } from '../i18n/ui';
-import { getUpcomingEvents, getPosts, getPartners } from '../lib/content';
+import { getUpcomingEvents, getPastEvents, getPosts, getPartners } from '../lib/content';
+import { COPY } from './accueil/copy';
+import '../scripts/eclipse/eclipse-teaser.css';
 
 interface Props {
   lang: Lang;
@@ -17,249 +23,92 @@ interface Props {
 
 const { lang } = Astro.props;
 const t = useT(lang);
+const c = COPY[lang];
 
 const evenements = await getUpcomingEvents(lang, 3);
+const passes = (await getPastEvents(lang)).slice(0, 8);
 const articles = (await getPosts(lang)).slice(0, 3);
 const partenaires = await getPartners(lang);
 
-const COPY = {
-  fr: {
-    hero: {
-      eyebrow: "Association Ivoirienne d'Astronomie · Abidjan",
-      h1: 'Le ciel commence ici.',
-      lead: "Depuis 2021, nous rapprochons la Côte d'Ivoire des étoiles : observations publiques, clubs dans les écoles, recherche d'astéroïdes avec l'Union Astronomique Internationale et la NASA. Prochaine étape : un observatoire national.",
-      hud: {
-        titre: 'Espace profond',
-        lignes: [
-          { label: 'Signal', valeur: 'Fond diffus cosmologique' },
-          { label: 'Température', valeur: '2,7 K' },
-          { label: 'Âge de l’Univers', valeur: '13,8 Mrd d’années' },
-        ],
-      },
-    },
-    sys: {
-      eyebrow: 'Navigation — système solaire',
-      titre: 'Choisis ta destination',
-      hud: {
-        titre: 'Système solaire',
-        lignes: [
-          { label: 'Étoile', valeur: '1 (le Soleil)' },
-          { label: 'Planètes', valeur: '8' },
-          { label: 'Âge', valeur: '4,6 Mrd d’années' },
-        ],
-      },
-    },
-    ceinture: {
-      eyebrow: 'Ceinture d’astéroïdes — 2,2 à 3,2 UA',
-      titre: 'Six cailloux célestes portent notre signature',
-      p1: "En 2022, une équipe de bénévoles de l'AIA a détecté six astéroïdes encore inconnus, en analysant depuis Abidjan les images du télescope Pan-STARRS — dans le cadre des campagnes de l'International Astronomical Search Collaboration, sous l'égide de l'UAI et de la NASA.",
-      p2: 'La preuve que la science se fait aussi depuis chez nous. Et les campagnes continuent : la prochaine détection portera peut-être ton nom.',
-      cta: 'Découvrir la recherche',
-      hud: {
-        titre: 'Ceinture principale',
-        lignes: [
-          { label: 'Objets connus', valeur: '≈ 1,4 million' },
-          { label: 'Détections AIA', valeur: '6 (2022)' },
-          { label: 'Programme', valeur: 'IASC · Pan-STARRS' },
-        ],
-      },
-    },
-    orbite: {
-      eyebrow: 'Orbite basse — 400 km',
-      titreEvents: 'Prochaines missions',
-      titreNews: 'Journal de bord',
-      hud: {
-        titre: 'Orbite terrestre',
-        lignes: [
-          { label: 'Altitude ISS', valeur: '≈ 400 km' },
-          { label: 'Vitesse', valeur: '27 600 km/h' },
-          { label: 'Levers de Soleil', valeur: '16 par jour' },
-        ],
-      },
-    },
-    atmo: {
-      eyebrow: 'Atmosphère — ligne de Kármán, 100 km',
-      titre: 'Sur le terrain',
-      lead: "L'astronomie ne se vit pas que dans les livres : nous la faisons descendre dans les rues, les écoles et les plages de Côte d'Ivoire.",
-      tuiles: [
-        {
-          titre: 'Observations publiques',
-          texte: "Des télescopes en accès libre, au cœur d'Abidjan et au-delà.",
-          icone: '/placeholders/observation.svg',
-        },
-        {
-          titre: 'Écoles & clubs',
-          texte: "Tournées scolaires et clubs d'astronomie durables dans les lycées.",
-          icone: '/placeholders/ecole.svg',
-        },
-        {
-          titre: 'Astrophotographie',
-          texte: 'Capturer le ciel ivoirien, de la Lune à la Voie lactée.',
-          icone: '/placeholders/astrophoto.svg',
-        },
-        {
-          titre: 'Conférences AstroPause',
-          texte: 'La science racontée à toutes et à tous, sans jargon.',
-          icone: '/placeholders/conference.svg',
-        },
-      ],
-      hud: {
-        titre: 'Atmosphère',
-        lignes: [
-          { label: 'Ligne de Kármán', valeur: '100 km' },
-          { label: 'Météores visibles', valeur: '75 – 100 km' },
-          { label: 'Ciel d’Abidjan', valeur: 'saison sèche = velours' },
-        ],
-      },
-    },
-    abidjan: {
-      titre: 'Veux-tu rejoindre l’aventure toi aussi ?',
-      p: "Étudiant·e, lycéen·ne, passionné·e ou simple curieux : il n'y a aucun prérequis pour regarder le ciel avec nous. Les jeunes femmes sont particulièrement bienvenues — l'espace a besoin de tout le monde.",
-      cta1: 'Je rejoins l’AIA',
-      cta2: 'Nous écrire',
-      partenairesTitre: 'Ils nous font confiance',
-      hud: {
-        titre: 'Ciel d’Abidjan',
-        lignes: [
-          { label: 'Base', valeur: '5°21′ N · 4°01′ O' },
-          { label: 'Altitude', valeur: '18 m' },
-          { label: 'Privilège équatorial', valeur: 'les 2 hémisphères célestes' },
-        ],
-      },
-    },
-  },
-  en: {
-    hero: {
-      eyebrow: 'Ivorian Astronomy Association · Abidjan',
-      h1: 'The sky starts here.',
-      lead: 'Since 2021 we have been bringing Côte d’Ivoire closer to the stars: public stargazing, school clubs, and asteroid search campaigns with the International Astronomical Union and NASA. Next step: a national observatory.',
-      hud: {
-        titre: 'Deep space',
-        lignes: [
-          { label: 'Signal', valeur: 'Cosmic microwave background' },
-          { label: 'Temperature', valeur: '2.7 K' },
-          { label: 'Age of Universe', valeur: '13.8 bn years' },
-        ],
-      },
-    },
-    sys: {
-      eyebrow: 'Navigation — solar system',
-      titre: 'Choose your destination',
-      hud: {
-        titre: 'Solar system',
-        lignes: [
-          { label: 'Star', valeur: '1 (the Sun)' },
-          { label: 'Planets', valeur: '8' },
-          { label: 'Age', valeur: '4.6 bn years' },
-        ],
-      },
-    },
-    ceinture: {
-      eyebrow: 'Asteroid belt — 2.2 to 3.2 AU',
-      titre: 'Six celestial rocks bear our signature',
-      p1: 'In 2022, a team of AIA volunteers detected six previously unknown asteroids by analysing Pan-STARRS telescope images from Abidjan — as part of the International Astronomical Search Collaboration campaigns, under the IAU and NASA umbrella.',
-      p2: 'Proof that science is also made from here. Campaigns continue: the next detection might carry your name.',
-      cta: 'Discover the research',
-      hud: {
-        titre: 'Main belt',
-        lignes: [
-          { label: 'Known objects', valeur: '≈ 1.4 million' },
-          { label: 'AIA detections', valeur: '6 (2022)' },
-          { label: 'Programme', valeur: 'IASC · Pan-STARRS' },
-        ],
-      },
-    },
-    orbite: {
-      eyebrow: 'Low orbit — 400 km',
-      titreEvents: 'Upcoming missions',
-      titreNews: 'Logbook',
-      hud: {
-        titre: 'Earth orbit',
-        lignes: [
-          { label: 'ISS altitude', valeur: '≈ 400 km' },
-          { label: 'Speed', valeur: '27,600 km/h' },
-          { label: 'Sunrises', valeur: '16 per day' },
-        ],
-      },
-    },
-    atmo: {
-      eyebrow: 'Atmosphere — Kármán line, 100 km',
-      titre: 'On the ground',
-      lead: 'Astronomy is not only lived in books: we bring it down to the streets, schools and beaches of Côte d’Ivoire.',
-      tuiles: [
-        {
-          titre: 'Public stargazing',
-          texte: 'Telescopes in free access, in the heart of Abidjan and beyond.',
-          icone: '/placeholders/observation.svg',
-        },
-        {
-          titre: 'Schools & clubs',
-          texte: 'School tours and lasting astronomy clubs in high schools.',
-          icone: '/placeholders/ecole.svg',
-        },
-        {
-          titre: 'Astrophotography',
-          texte: 'Capturing the Ivorian sky, from the Moon to the Milky Way.',
-          icone: '/placeholders/astrophoto.svg',
-        },
-        {
-          titre: 'AstroPause lectures',
-          texte: 'Science told to everyone, without jargon.',
-          icone: '/placeholders/conference.svg',
-        },
-      ],
-      hud: {
-        titre: 'Atmosphere',
-        lignes: [
-          { label: 'Kármán line', valeur: '100 km' },
-          { label: 'Visible meteors', valeur: '75 – 100 km' },
-          { label: 'Abidjan sky', valeur: 'dry season = velvet' },
-        ],
-      },
-    },
-    abidjan: {
-      titre: 'Want to join the adventure too?',
-      p: 'Student, high-schooler, enthusiast or simply curious: there is no prerequisite to watch the sky with us. Young women are especially welcome — space needs everyone.',
-      cta1: 'I join AIA',
-      cta2: 'Write to us',
-      partenairesTitre: 'They trust us',
-      hud: {
-        titre: 'Abidjan sky',
-        lignes: [
-          { label: 'Base', valeur: '5°21′ N · 4°01′ W' },
-          { label: 'Elevation', valeur: '18 m' },
-          { label: 'Equatorial privilege', valeur: 'both celestial hemispheres' },
-        ],
-      },
-    },
-  },
-} as const;
-
-const c = COPY[lang];
 const rechercheUrl =
   lang === 'fr'
     ? routes.activities.fr + '#recherche-asteroides'
     : routes.activities.en + '#asteroid-search';
+const fmtStat = (n: number) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB');
 ---
 
-<!-- ═══════════ Couche 1 · Espace profond ═══════════ -->
-<section class="couche couche--espace" id="espace">
-  <div class="container hero">
-    <Image src={logo} alt="" width="132" height="132" class="hero__logo" loading="eager" />
-    <p class="eyebrow">{c.hero.eyebrow}</p>
-    <h1 class="hero__titre">{c.hero.h1}</h1>
-    <p class="lead hero__lead">{c.hero.lead}</p>
-    <div class="hero__actions">
-      <a class="btn btn-primaire" href="#systeme">{t('action.commencer')} ↓</a>
-      <a class="btn btn-contour" href={routes.join[lang]}>{t('nav.join')}</a>
-    </div>
+<!-- Écran d'arrivée : le logo dans le réticule (une fois par session) -->
+<div id="splash" aria-hidden="true">
+  <div class="splash__reticule">
+    <svg viewBox="0 0 180 180">
+      <circle class="splash__anneau splash__anneau--1" cx="90" cy="90" r="86"></circle>
+      <circle class="splash__anneau splash__anneau--2" cx="90" cy="90" r="78"></circle>
+    </svg>
+    <Image src={logo} alt="" width="136" height="136" class="splash__logo" loading="eager" />
+    <div class="splash__txt">{c.splash}</div>
   </div>
-  <HudPanel titre={c.hero.hud.titre} lignes={[...c.hero.hud.lignes]} classe="couche__hud" />
-  <div class="hero__indice" aria-hidden="true">⌄</div>
+</div>
+<script is:inline>
+  // masque le texte du hero avant la première peinture (révélé ensuite par GSAP)
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('anim');
+  try {
+    if (sessionStorage.getItem('aia-splash')) document.getElementById('splash').remove();
+    else sessionStorage.setItem('aia-splash', '1');
+  } catch (e) {}
+</script>
+
+<!-- Altimètre de la descente -->
+<div class="rail" aria-hidden="true">
+  <span>{c.rail}</span><span class="rail__alt" id="rail-alt">∞</span>
+  <div class="rail__barre"><i id="rail-point"></i></div>
+</div>
+
+<!-- ═══════════ Couche 1 · Espace profond : le télescope ═══════════ -->
+<section class="couche couche--espace" id="espace" data-alt="∞">
+  <div class="scene" id="scene">
+    <canvas class="scene__canvas" id="telescope" aria-hidden="true"></canvas>
+    <div class="scene__vignette"></div>
+
+    <div class="hero" id="hero">
+      <Image src={logo} alt="" width="132" height="132" class="hero__logo" loading="eager" />
+      <p class="eyebrow">{c.hero.eyebrow}</p>
+      <h1 class="hero__titre">
+        <span class="masque"><span>{c.hero.h1[0]}</span></span>
+        <span class="masque"><span>{c.hero.h1[1]}</span></span>
+      </h1>
+      <p class="lead hero__lead rv">{c.hero.lead}</p>
+      <div class="hero__actions rv">
+        <a class="btn btn-primaire" href="#systeme">{c.hero.cta} ↓</a>
+        <a class="btn btn-contour" href={routes.join[lang]}>{t('nav.join')}</a>
+      </div>
+    </div>
+
+    <div class="etiqs" aria-hidden="true">
+      {
+        c.hero.pieces.map(([nom, desc], i) => (
+          <div class="etiq" data-i={i}>
+            <i class="etiq__ligne" />
+            <i class="etiq__point" />
+            <small>0{i + 1}</small>
+            <b>{nom}</b>
+            <span>{desc}</span>
+          </div>
+        ))
+      }
+    </div>
+    <div class="scene__final" id="final">
+      <div><h2>{c.hero.final[0]}</h2><p>{c.hero.final[1]}</p></div>
+    </div>
+    <div class="scene__flash" id="flash"></div>
+    <div class="scene__eclate" id="eclate" data-label={c.hero.eclate}>{c.hero.eclate} · 0 %</div>
+    <button class="scene__passer btn btn-contour" id="passer" type="button">{c.hero.passer}</button>
+    <div class="scene__indice" id="indice">{c.hero.defiler}<i></i></div>
+  </div>
+  <HudPanel titre={c.hero.hud.titre} lignes={[...c.hero.hud.lignes]} classe="couche__hud hud-espace" />
 </section>
 
 <!-- ═══════════ Couche 2 · Système solaire (navigation) ═══════════ -->
-<section class="couche couche--systeme apparait" id="systeme">
+<section class="couche couche--systeme apparait" id="systeme" data-alt="150 M km">
   <div class="container">
     <p class="eyebrow">{c.sys.eyebrow}</p>
     <h2 class="section-title">{c.sys.titre}</h2>
@@ -275,8 +124,30 @@ const rechercheUrl =
   <HudPanel titre={c.sys.hud.titre} lignes={[...c.sys.hud.lignes]} classe="couche__hud" />
 </section>
 
+<!-- ═══════════ Manifeste + chiffres ═══════════ -->
+<section class="manifeste" id="manifeste">
+  <div class="container">
+    <p class="manifeste__texte" id="manifeste-texte">
+      {c.manifeste.avant} <b class="fort">{c.manifeste.fort1}</b>
+      {c.manifeste.milieu} <b class="fort">{c.manifeste.fort2}</b>
+    </p>
+    <div class="stats">
+      {
+        c.manifeste.stats.map((s) => (
+          <div class="stat rv">
+            <b data-n={s.n} data-brut={'brut' in s ? '1' : undefined} data-plus={'plus' in s ? '1' : undefined}>
+              {('brut' in s ? String(s.n) : fmtStat(s.n)) + ('plus' in s ? '+' : '')}
+            </b>
+            <span>{s.label}</span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════ Couche 3 · Ceinture d'astéroïdes ═══════════ -->
-<section class="couche couche--ceinture apparait" id="ceinture">
+<section class="couche couche--ceinture apparait" id="ceinture" data-alt="400 M km">
   <div class="container ceinture__grille">
     <div>
       <p class="eyebrow">{c.ceinture.eyebrow}</p>
@@ -285,30 +156,37 @@ const rechercheUrl =
       <p>{c.ceinture.p2}</p>
       <a class="btn btn-primaire" href={rechercheUrl}>{c.ceinture.cta}</a>
     </div>
-    <div class="ceinture__chiffre" aria-hidden="true">
-      <span>6</span>
-      <svg viewBox="0 0 200 200" width="200" height="200">
-        <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(206,201,206,.3)" stroke-width="2" stroke-dasharray="2 9"></circle>
-        <g fill="#F77F00">
-          <circle cx="100" cy="14" r="5"></circle>
-          <circle cx="174" cy="57" r="5"></circle>
-          <circle cx="174" cy="143" r="5"></circle>
-          <circle cx="100" cy="186" r="5"></circle>
-          <circle cx="26" cy="143" r="5"></circle>
-          <circle cx="26" cy="57" r="5"></circle>
-        </g>
-      </svg>
+    <div class="piste" aria-hidden="true">
+      {Array.from({ length: 6 }, () => (
+        <svg class="caillou" viewBox="0 0 40 40"><path d="M6 20 12 8l14-2 10 12-4 14-16 6z" /></svg>
+      ))}
+      <div class="piste__cible"><div>6</div><small>{c.ceinture.cible}</small></div>
     </div>
   </div>
   <HudPanel titre={c.ceinture.hud.titre} lignes={[...c.ceinture.hud.lignes]} classe="couche__hud" />
 </section>
 
 <!-- ═══════════ Couche 4 · Orbite terrestre ═══════════ -->
-<section class="couche couche--orbite apparait" id="orbite">
+<section class="couche couche--orbite apparait" id="orbite" data-alt="400 km">
   <div class="container">
     <p class="eyebrow">{c.orbite.eyebrow}</p>
 
-    <div class="orbite__entete">
+    <div class="globe-grille">
+      <div>
+        <h2 class="section-title">{c.orbite.globeTitre}</h2>
+        <p class="lead">{c.orbite.globeLead}</p>
+        <div class="coords">
+          {c.orbite.coords.map(([l, v]) => <div>{l}<b>{v}</b></div>)}
+        </div>
+      </div>
+      <div class="globe" id="globe">
+        <canvas id="globe-canvas" role="img" aria-label={c.orbite.globeAria}></canvas>
+        <div class="globe__balise" id="globe-balise">ABIDJAN<b>5°21′ N · 4°01′ {lang === 'fr' ? 'O' : 'W'}</b></div>
+        <p class="globe__aide">{c.orbite.globeAide}</p>
+      </div>
+    </div>
+
+    <div class="orbite__entete orbite__entete--second">
       <h2 class="section-title">{c.orbite.titreEvents}</h2>
       <a class="orbite__tout" href={routes.events[lang]}>{t('action.toutVoir')} →</a>
     </div>
@@ -327,7 +205,43 @@ const rechercheUrl =
           ))}
         </div>
       ) : (
-        <p class="lead">{t('events.aucun')}</p>
+        <div class="radar-carte">
+          <div class="radar" aria-hidden="true">
+            <svg viewBox="0 0 190 190">
+              <circle cx="95" cy="95" r="90" /><circle cx="95" cy="95" r="60" /><circle cx="95" cy="95" r="30" />
+              <path d="M95 5v180M5 95h180" />
+              <g class="radar__balayage"><path d="M95 95 L95 5 A90 90 0 0 1 158 31 Z" /></g>
+              <circle class="radar__echo" cx="130" cy="60" r="3" /><circle class="radar__echo" cx="64" cy="120" r="2.5" />
+            </svg>
+          </div>
+          <div>
+            <p>{c.orbite.aucun}</p>
+            <a class="btn btn-primaire" href={routes.contact[lang]}>{c.orbite.prevenu}</a>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      passes.length > 0 && (
+        <>
+          <h3 class="orbite__sous-titre">{c.orbite.archives}</h3>
+          <div class="bande" data-glisser>
+            {passes.map((e) => (
+              <article class="ev">
+                <div class="ev__photo">
+                  {e.image && <img src={e.image} alt="" loading="lazy" />}
+                </div>
+                <div class="ev__texte">
+                  <time datetime={e.date}>{formatDate(e.date, lang)}</time>
+                  <h4>{e.titre}</h4>
+                  <p>{e.description}</p>
+                  <span class="ev__lieu">{e.lieu}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
       )
     }
 
@@ -354,32 +268,82 @@ const rechercheUrl =
   <HudPanel titre={c.orbite.hud.titre} lignes={[...c.orbite.hud.lignes]} classe="couche__hud" />
 </section>
 
+<div class="defile" aria-hidden="true">
+  <div class="defile__piste" id="defile">
+    {[...c.defile, ...c.defile].map((m) => <>{m}<b>✦</b></>)}
+  </div>
+</div>
+
 <!-- ═══════════ Couche 5 · Atmosphère ═══════════ -->
-<section class="couche couche--atmosphere apparait" id="atmosphere">
+<section class="couche couche--atmosphere apparait" id="atmosphere" data-alt="100 km">
   <div class="container">
     <p class="eyebrow">{c.atmo.eyebrow}</p>
     <h2 class="section-title">{c.atmo.titre}</h2>
     <p class="lead">{c.atmo.lead}</p>
-    <div class="grid-2 atmo__tuiles">
+    <div class="accordeon" id="accordeon">
       {
-        c.atmo.tuiles.map((tu) => (
-          <a class="tuile" href={routes.activities[lang]}>
-            <img src={tu.icone} alt="" loading="lazy" width="88" height="50" />
-            <div>
-              <h3>{tu.titre}</h3>
-              <p>{tu.texte}</p>
+        c.atmo.activites.map((a, i) => (
+          <article class:list={['volet', { ouvert: i === 0 }]} tabindex="0" role="button" aria-expanded={i === 0 ? 'true' : 'false'}>
+            <img src={a.image} alt={a.alt} loading="lazy" />
+            <div class="volet__int">
+              <span class="volet__num">0{i + 1}</span>
+              <h3>{a.titre}</h3>
+              <div class="volet__plus">
+                <p>{a.texte}</p>
+                <ul>{a.tags.map((tg) => <li>{tg}</li>)}</ul>
+              </div>
             </div>
-            <span class="tuile__fleche" aria-hidden="true">→</span>
-          </a>
+          </article>
         ))
       }
     </div>
+    <p class="atmo__lien"><a class="orbite__tout" href={routes.activities[lang]}>{c.atmo.toutes} →</a></p>
   </div>
   <HudPanel titre={c.atmo.hud.titre} lignes={[...c.atmo.hud.lignes]} classe="couche__hud" />
 </section>
 
+<!-- ═══════════ Ce soir : Lune, ciel, éclipse ═══════════ -->
+<section class="couche couche--observer apparait" id="observer" data-alt="10 km">
+  <div class="observer__photo" style="background-image:url(/images/photos/abidjan-nuit.webp)"></div>
+  <div class="container">
+    <p class="eyebrow">{c.observer.eyebrow}</p>
+    <h2 class="section-title">{c.observer.titre}</h2>
+    <p class="lead">{c.observer.lead}</p>
+    <div class="observer__grille" id="lune">
+      <div class="lune">
+        <canvas class="lune__disque" width="440" height="440" role="img" aria-label={c.observer.luneAria}></canvas>
+        <p class="lune__resume" data-lune="resume"></p>
+        <button type="button" class="ecl-teaser" id="ecl-teaser" aria-haspopup="dialog" hidden></button>
+      </div>
+      <div class="ciel-grille">
+        {
+          c.observer.cases.map(([titre, cle, sous]) => (
+            <div class="ciel-case">
+              <small>{titre}</small>
+              <b data-lune={cle || undefined}>{cle === 'heure' ? '--:--' : cle ? '…' : '≈ 400 km'}</b>
+              <span data-lune={cle === 'phase' ? 'age' : undefined}>{sous}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+    <div class="conseils">
+      {
+        c.observer.conseils.map(([titre, texte], i) => (
+          <div class="conseil rv">
+            <i>0{i + 1}</i>
+            <h3>{titre}</h3>
+            <p>{texte}</p>
+          </div>
+        ))
+      }
+    </div>
+    <p class="credits">{c.observer.credits}</p>
+  </div>
+</section>
+
 <!-- ═══════════ Couche 6 · Ciel d'Abidjan ═══════════ -->
-<section class="couche couche--abidjan apparait" id="abidjan">
+<section class="couche couche--abidjan apparait" id="abidjan" data-alt="18 m">
   <div class="container abidjan__int">
     <h2 class="abidjan__titre">{c.abidjan.titre}</h2>
     <p class="lead abidjan__p">{c.abidjan.p}</p>
@@ -391,11 +355,17 @@ const rechercheUrl =
     <p class="abidjan__partenaires-titre">{c.abidjan.partenairesTitre}</p>
     <div class="abidjan__partenaires">
       {
-        partenaires.map((pa) => (
-          <a class="partenaire-chip" href={routes.partners[lang]} title={pa.nom}>
-            {pa.sigle ?? pa.nom}
-          </a>
-        ))
+        partenaires.map((pa) =>
+          pa.logo ? (
+            <a class="partenaire-logo" href={pa.site ?? routes.partners[lang]} title={pa.nom} target={pa.site ? '_blank' : undefined} rel="noopener">
+              <img src={pa.logo} alt={pa.nom} loading="lazy" />
+            </a>
+          ) : (
+            <a class="partenaire-chip" href={routes.partners[lang]} title={pa.nom}>
+              {pa.sigle ?? pa.nom}
+            </a>
+          ),
+        )
       }
     </div>
   </div>
@@ -403,20 +373,129 @@ const rechercheUrl =
 </section>
 
 <style>
+  /* ============ Écran d'arrivée ============ */
+  #splash {
+    display: none;
+  }
+  :global(html.js) #splash {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: grid;
+    place-items: center;
+    background: var(--abysse);
+    transition: opacity 0.9s 0.1s, visibility 0.9s 0.1s;
+  }
+  :global(html.js) #splash.parti {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .splash__reticule {
+    position: relative;
+    width: 180px;
+    height: 180px;
+  }
+  .splash__reticule svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .splash__anneau {
+    fill: none;
+    stroke: var(--ci-orange);
+    stroke-width: 1.2;
+    transform-origin: 90px 90px;
+  }
+  .splash__anneau--1 {
+    stroke-dasharray: 4 10;
+    animation: tourner 6s linear infinite;
+  }
+  .splash__anneau--2 {
+    stroke: var(--ci-vert);
+    stroke-dasharray: 30 12;
+    animation: tourner 4s linear infinite reverse;
+  }
+  .splash__reticule :global(.splash__logo) {
+    position: absolute;
+    inset: 22px;
+    width: 136px;
+    height: 136px;
+    border-radius: 50%;
+    animation: pulser 2.4s ease-in-out infinite;
+  }
+  .splash__txt {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 26px);
+    text-align: center;
+    font: 600 0.72rem var(--font-hud);
+    letter-spacing: 0.4em;
+    color: var(--creme-45);
+  }
+  @keyframes pulser {
+    50% {
+      transform: scale(1.08);
+      opacity: 0.7;
+    }
+  }
+
+  /* ============ Altimètre ============ */
+  .rail {
+    display: none;
+  }
+  @media (min-width: 1360px) {
+    .rail {
+      position: fixed;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      font: 600 10px var(--font-hud);
+      letter-spacing: 0.2em;
+      color: var(--creme-45);
+    }
+  }
+  .rail__alt {
+    color: var(--ci-orange-vif);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+  .rail__barre {
+    width: 1px;
+    height: 34vh;
+    background: var(--creme-12);
+    position: relative;
+    margin-left: 4px;
+  }
+  .rail__barre i {
+    position: absolute;
+    left: -3px;
+    top: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ci-orange);
+    box-shadow: 0 0 14px var(--ci-orange);
+  }
+
+  /* ============ Couches ============ */
   .couche {
     position: relative;
     padding-block: var(--espace-section);
     scroll-margin-top: 64px;
   }
-
-  /* HUD : coin haut-droit sur grand écran, sous le contenu sur mobile */
-  :global(.couche__hud) {
+  .couche :global(.couche__hud) {
     margin: 1.8rem auto 0;
     width: min(21rem, calc(100% - 2.5rem));
   }
-
   @media (min-width: 1200px) {
-    :global(.couche__hud) {
+    .couche :global(.couche__hud) {
       position: absolute;
       top: clamp(1rem, 4vh, 3rem);
       right: 1.4rem;
@@ -425,28 +504,62 @@ const rechercheUrl =
     }
   }
 
-  /* --- Couche 1 : hero plein écran --- */
+  /* ============ Couche 1 : scène du télescope ============ */
   .couche--espace {
+    padding: 0;
+  }
+  /* le HUD de l'espace profond est masqué pendant l'intro animée */
+  :global(html.anim) .couche--espace :global(.hud-espace) {
+    display: none;
+  }
+  .scene {
+    position: relative;
     min-height: 100svh;
+    overflow: hidden;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    text-align: center;
   }
-
+  .scene__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+  :global(html.webgl) .scene__canvas {
+    display: block;
+  }
+  .scene__vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 62% 50%, transparent 38%, rgba(11, 6, 12, 0.78));
+  }
   .hero {
+    position: relative;
+    z-index: 4;
+    width: min(var(--largeur-site), 100% - 2.5rem);
+    margin-inline: auto;
+    padding-block: 7rem 5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
+    text-align: center;
+    text-shadow: 0 2px 28px rgba(11, 6, 12, 0.95);
   }
-
-  .hero__logo {
+  /* avec le télescope : texte à gauche, télescope à droite */
+  :global(html.webgl) .hero {
+    align-items: flex-start;
+    text-align: left;
+  }
+  :global(html.webgl) .hero > * {
+    max-width: 38rem;
+  }
+  .hero :global(.hero__logo) {
     border-radius: 50%;
     margin-bottom: 1.6rem;
     filter: drop-shadow(0 0 34px rgba(248, 247, 248, 0.18));
   }
-
   .hero .eyebrow::after {
     content: '';
     width: 1.6rem;
@@ -454,105 +567,403 @@ const rechercheUrl =
     background: var(--ci-vert);
     border-radius: 2px;
   }
-
   .hero__titre {
     font-size: var(--taille-hero);
-    max-width: 16ch;
-    margin-inline: auto;
   }
-
-  .hero__lead {
-    margin-inline: auto;
+  .masque {
+    display: block;
+    overflow: hidden;
+    padding: 0.06em 0 0.14em;
+    margin-bottom: -0.1em;
   }
-
+  .masque > span {
+    display: block;
+  }
+  :global(html.anim) .masque > span {
+    transform: translateY(110%);
+  }
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.9rem;
-    justify-content: center;
     margin-top: 1.9rem;
   }
+  :global(html:not(.webgl)) .hero__actions {
+    justify-content: center;
+  }
 
-  .hero__indice {
+  .etiqs {
     position: absolute;
-    bottom: 1.2rem;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .etiq {
+    position: absolute;
+    width: 176px;
+    transform: translateX(-50%);
+    opacity: 0;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .etiq small {
+    display: block;
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.2em;
+    color: var(--ci-orange-vif);
+  }
+  .etiq b {
+    display: block;
+    font: 700 15px var(--font-titre);
+    color: var(--creme);
+    margin: 2px 0 4px;
+  }
+  .etiq span {
+    display: block;
+    font-size: 12.5px;
+    color: var(--creme-70);
+  }
+  .etiq__ligne {
+    position: absolute;
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(var(--ci-orange), rgba(247, 127, 0, 0.15));
+  }
+  .etiq__point {
+    position: absolute;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    margin-left: -4px;
+    border-radius: 50%;
+    background: var(--ci-orange);
+    box-shadow: 0 0 14px var(--ci-orange);
+  }
+  .scene__final {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .scene__final h2 {
+    font-size: clamp(3rem, 10vw, 9rem);
+    margin: 0;
+  }
+  .scene__final p {
+    color: var(--creme-70);
+    font-size: 1.25rem;
+  }
+  .scene__flash {
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle, #fff 0%, #ffc58a 38%, rgba(247, 127, 0, 0) 72%);
+  }
+  .scene__eclate,
+  .scene__indice {
+    position: absolute;
+    z-index: 5;
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.3em;
+    color: var(--creme-45);
+  }
+  .scene__eclate {
+    left: max(1.25rem, calc((100vw - var(--largeur-site)) / 2));
+    bottom: 30px;
+    opacity: 0;
+  }
+  .scene__indice {
+    bottom: 26px;
     left: 50%;
     transform: translateX(-50%);
-    color: var(--creme-45);
-    font-size: 1.6rem;
-    animation: flotter 2.2s ease-in-out infinite;
+    text-align: center;
+    display: none;
   }
-
-  @keyframes flotter {
-    0%,
-    100% {
-      transform: translate(-50%, 0);
+  :global(html.anim) .scene__indice {
+    display: block;
+  }
+  .scene__indice i {
+    display: block;
+    width: 1px;
+    height: 46px;
+    margin: 10px auto 0;
+    background: linear-gradient(var(--ci-orange), transparent);
+    animation: goutte 2s infinite;
+  }
+  @keyframes goutte {
+    0% {
+      transform: scaleY(0);
+      transform-origin: top;
     }
     50% {
-      transform: translate(-50%, 8px);
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+    51% {
+      transform-origin: bottom;
+    }
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+  .scene__passer {
+    position: absolute;
+    z-index: 8;
+    right: max(1.25rem, calc((100vw - var(--largeur-site)) / 2));
+    bottom: 20px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.8rem;
+    display: none;
+  }
+  :global(html.anim) .scene__passer {
+    display: inline-flex;
+  }
+
+  @media (max-width: 980px) {
+    :global(html.webgl) .hero {
+      align-self: flex-end;
+      padding-block: 6rem 5.5rem;
+    }
+    :global(html.webgl) .hero :global(.hero__logo) {
+      width: 84px;
+      height: 84px;
+      margin-bottom: 1rem;
+    }
+    :global(html.webgl) .hero__lead {
+      font-size: 1rem;
     }
   }
 
-  /* --- Couche 2 : système solaire --- */
+  /* ============ Couche 2 : système solaire ============ */
   .couche--systeme {
     text-align: center;
   }
-
   .couche--systeme .eyebrow {
     justify-content: center;
   }
-
   .couche--systeme .lead {
     margin-inline: auto;
   }
-
   .systeme__scene {
     margin-top: 1.4rem;
   }
 
-  /* --- Couche 3 : ceinture --- */
+  /* ============ Manifeste ============ */
+  .manifeste {
+    padding-block: var(--espace-section);
+  }
+  .manifeste__texte {
+    font: 700 clamp(1.7rem, 4.4vw, 3.6rem) / 1.2 var(--font-titre);
+    letter-spacing: -0.02em;
+    color: var(--creme);
+    max-width: 22em;
+    margin-bottom: 4rem;
+  }
+  .manifeste__texte .fort {
+    color: var(--ci-orange-vif);
+  }
+  .manifeste__texte :global(.mot) {
+    display: inline-block;
+    opacity: 0.14;
+    margin-right: 0.26em;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--creme-12);
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    overflow: hidden;
+  }
+  .stat {
+    background: var(--aubergine-950);
+    padding: 2rem 1.5rem;
+  }
+  .stat b {
+    display: block;
+    font: 700 clamp(2.2rem, 5vw, 3.6rem) / 1 var(--font-titre);
+    color: var(--ci-orange);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat span {
+    font: 500 0.72rem var(--font-hud);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--creme-70);
+  }
+  @media (max-width: 760px) {
+    .stats {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* ============ Couche 3 : ceinture ============ */
   .ceinture__grille {
     display: grid;
     gap: 3rem;
     align-items: center;
-    grid-template-columns: 1fr;
   }
-
   @media (min-width: 900px) {
     .ceinture__grille {
-      grid-template-columns: 1.4fr 1fr;
+      grid-template-columns: 1.2fr 1fr;
     }
   }
-
-  .ceinture__chiffre {
+  .piste {
     position: relative;
-    justify-self: center;
+    height: 360px;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    overflow: hidden;
+    background:
+      linear-gradient(rgba(11, 6, 12, 0.35), rgba(11, 6, 12, 0.6)),
+      url(/images/photos/orion.webp) center / cover;
+  }
+  .caillou {
+    position: absolute;
+    left: -60px;
+    fill: var(--creme-3);
+    animation: survol linear infinite;
+  }
+  .caillou:nth-child(1) { top: 20%; width: 36px; animation-duration: 14s; }
+  .caillou:nth-child(2) { top: 45%; width: 22px; animation-duration: 9s; animation-delay: -3s; }
+  .caillou:nth-child(3) { top: 68%; width: 50px; animation-duration: 20s; animation-delay: -8s; }
+  .caillou:nth-child(4) { top: 32%; width: 16px; animation-duration: 7s; animation-delay: -5s; }
+  .caillou:nth-child(5) { top: 80%; width: 28px; animation-duration: 12s; animation-delay: -1s; }
+  .caillou:nth-child(6) { top: 10%; width: 20px; animation-duration: 16s; animation-delay: -11s; }
+  @keyframes survol {
+    to {
+      transform: translateX(min(100vw, 700px));
+    }
+  }
+  .piste__cible {
+    position: absolute;
+    inset: 0;
     display: grid;
     place-items: center;
+    pointer-events: none;
   }
-
-  .ceinture__chiffre span {
-    position: absolute;
-    font-family: var(--font-titre);
-    font-size: 7rem;
-    font-weight: 700;
+  .piste__cible div {
+    width: 140px;
+    height: 140px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--ci-orange);
+    border-radius: 50%;
+    font: 700 4rem var(--font-titre);
     background: linear-gradient(135deg, var(--ci-orange), var(--creme));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    animation: pulser 3s ease-in-out infinite;
+  }
+  .piste__cible small {
+    position: absolute;
+    bottom: 18px;
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.3em;
+    color: var(--creme-70);
   }
 
-  .ceinture__chiffre svg {
-    animation: tourner 60s linear infinite;
+  /* ============ Couche 4 : orbite ============ */
+  .globe-grille {
+    display: grid;
+    gap: 3rem;
+    align-items: center;
   }
-
-  @keyframes tourner {
-    to {
-      transform: rotate(360deg);
+  @media (min-width: 900px) {
+    .globe-grille {
+      grid-template-columns: 1fr 1fr;
     }
   }
+  .coords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.8rem;
+    margin-top: 2rem;
+    font: 600 11px var(--font-hud);
+    letter-spacing: 0.18em;
+    color: var(--creme-45);
+  }
+  .coords b {
+    display: block;
+    margin-top: 4px;
+    font: 600 15px var(--font-titre);
+    letter-spacing: 0.04em;
+    color: var(--creme);
+  }
+  .globe {
+    position: relative;
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 520px;
+    justify-self: center;
+    cursor: grab;
+    touch-action: pan-y;
+  }
+  .globe:active {
+    cursor: grabbing;
+  }
+  .globe canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .globe__balise {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -135%);
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.24em;
+    color: var(--ci-orange-vif);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    text-shadow: 0 0 12px var(--abysse);
+    transition: opacity 0.3s;
+  }
+  .globe__balise b {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    color: var(--creme);
+    letter-spacing: 0.14em;
+  }
+  .globe__balise::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 1px;
+    height: 16px;
+    background: var(--ci-orange);
+  }
+  .globe__aide {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    margin: 0;
+    text-align: center;
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--creme-45);
+  }
+  :global(html:not(.webgl)) .globe {
+    display: none;
+  }
 
-  /* --- Couche 4 : orbite --- */
   .orbite__entete {
     display: flex;
     align-items: baseline;
@@ -560,81 +971,433 @@ const rechercheUrl =
     gap: 1rem;
     margin-bottom: 1.4rem;
   }
-
   .orbite__entete--second {
-    margin-top: 3.4rem;
+    margin-top: 4.5rem;
   }
-
   .orbite__entete .section-title {
     margin-bottom: 0;
   }
-
   .orbite__tout {
     white-space: nowrap;
     text-decoration: none;
     font-weight: 600;
     color: var(--ci-orange-vif);
   }
-
-  /* --- Couche 5 : atmosphère --- */
-  .atmo__tuiles {
-    margin-top: 2rem;
+  .orbite__sous-titre {
+    margin: 3rem 0 0;
+    font-size: var(--taille-h3);
   }
 
-  .tuile {
+  .radar-carte {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2.5rem;
+    align-items: center;
+    padding: 2rem;
+    border: 1px dashed var(--ci-orange);
+    border-radius: var(--rayon);
+    background: rgba(247, 127, 0, 0.04);
+  }
+  .radar-carte p {
+    color: var(--creme-70);
+    max-width: 52ch;
+  }
+  .radar {
+    width: 160px;
+    height: 160px;
+  }
+  .radar svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--creme-12);
+  }
+  .radar__balayage {
+    transform-origin: 95px 95px;
+    animation: tourner 3.5s linear infinite;
+  }
+  .radar__balayage path {
+    fill: var(--ci-orange);
+    stroke: none;
+    opacity: 0.25;
+  }
+  .radar__echo {
+    fill: var(--ci-orange);
+    stroke: none;
+  }
+  @media (max-width: 640px) {
+    .radar-carte {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+    .radar {
+      width: 120px;
+      height: 120px;
+    }
+  }
+
+  .bande {
     display: flex;
     gap: 1.1rem;
-    align-items: center;
-    padding: 1.15rem 1.3rem;
+    margin-top: 1.4rem;
+    padding-bottom: 1.4rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ci-orange) transparent;
+    cursor: grab;
+  }
+  .bande:global(.glisse) {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+  .bande:global(.glisse) * {
+    user-select: none;
+    pointer-events: none;
+  }
+  .ev {
+    flex: 0 0 min(360px, 82vw);
+    scroll-snap-align: start;
     border: 1px solid var(--creme-12);
     border-radius: var(--rayon);
-    background: rgba(248, 247, 248, 0.04);
-    text-decoration: none;
-    color: inherit;
-    transition: transform var(--transition), border-color var(--transition);
+    overflow: hidden;
+    background: rgba(34, 20, 34, 0.75);
+    transition: border-color 0.4s, transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
-
-  .tuile:hover {
-    transform: translateY(-3px);
-    border-color: var(--creme-25);
+  .ev:hover {
+    border-color: var(--ci-orange);
+    transform: translateY(-6px);
   }
-
-  .tuile img {
-    width: 88px;
-    height: 50px;
+  .ev__photo {
+    height: 200px;
+    overflow: hidden;
+    background: radial-gradient(circle at 30% 30%, var(--aubergine-600), var(--aubergine-950));
+  }
+  .ev__photo img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: var(--rayon-sm);
-    flex-shrink: 0;
+    transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .ev:hover .ev__photo img {
+    transform: scale(1.07);
+  }
+  .ev__texte {
+    padding: 1.3rem 1.4rem 1.5rem;
+  }
+  .ev time {
+    font: 600 11px var(--font-hud);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ci-orange-vif);
+  }
+  .ev h4 {
+    margin: 0.5rem 0;
+    font-size: 1.2rem;
+  }
+  .ev p {
+    font-size: 0.92rem;
+    color: var(--creme-70);
+    margin-bottom: 0.6rem;
+  }
+  .ev__lieu {
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--creme-45);
   }
 
-  .tuile h3 {
-    margin: 0 0 0.15rem;
-    font-size: 1.05rem;
+  /* ============ Bandeau défilant ============ */
+  .defile {
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 2rem 0;
+    border-block: 1px solid var(--creme-12);
+    background: rgba(11, 6, 12, 0.5);
+  }
+  .defile__piste {
+    display: inline-block;
+    padding-left: 4vw;
+    font: 700 clamp(2.4rem, 7vw, 5.6rem) / 1 var(--font-titre);
+    letter-spacing: -0.02em;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--creme-25);
+  }
+  .defile__piste b {
+    color: var(--ci-orange);
+    -webkit-text-stroke: 0;
+    margin: 0 0.3em;
   }
 
-  .tuile p {
+  /* ============ Couche 5 : accordéon d'activités ============ */
+  .accordeon {
+    display: flex;
+    gap: 10px;
+    height: min(70vh, 600px);
+    margin-top: 2.5rem;
+  }
+  .volet {
+    position: relative;
+    flex: 1;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid var(--creme-12);
+    cursor: pointer;
+    background: var(--aubergine-800);
+    transition: flex 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.4s;
+  }
+  .volet.ouvert {
+    flex: 6;
+    border-color: var(--ci-orange);
+  }
+  .volet img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(0.7) brightness(0.6);
+    transform: scale(1.08);
+    transition: filter 0.8s, transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .volet.ouvert img {
+    filter: saturate(1) brightness(0.85);
+    transform: scale(1);
+  }
+  .volet::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(18, 10, 18, 0.15), rgba(18, 10, 18, 0.92));
+  }
+  .volet__int {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1.6rem 1.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .volet__num {
+    font: 700 2.4rem / 1 var(--font-titre);
+    color: var(--ci-orange);
+  }
+  .volet h3 {
     margin: 0;
-    font-size: 0.88rem;
+    font-size: clamp(1.3rem, 2.4vw, 2.1rem);
+    white-space: nowrap;
+  }
+  .volet:not(.ouvert) h3 {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    align-self: flex-start;
+    font-size: 1.3rem;
+  }
+  .volet__plus {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.6s 0.15s;
+  }
+  .volet.ouvert .volet__plus {
+    max-height: 260px;
+    opacity: 1;
+  }
+  .volet__plus p {
+    color: var(--creme);
+    max-width: 52ch;
+    margin: 0.2rem 0 0;
+  }
+  .volet__plus ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0.9rem 0 0;
+    padding: 0;
+  }
+  .volet__plus li {
+    font: 600 10.5px var(--font-hud);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border: 1px solid var(--creme-25);
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .atmo__lien {
+    margin-top: 1.5rem;
+    text-align: right;
+  }
+  @media (max-width: 760px) {
+    .accordeon {
+      flex-direction: column;
+      height: auto;
+      gap: 8px;
+    }
+    .volet,
+    .volet.ouvert {
+      flex: none;
+    }
+    .volet {
+      height: 80px;
+      transition: height 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.4s;
+    }
+    .volet.ouvert {
+      height: 460px;
+    }
+    .volet:not(.ouvert) h3 {
+      writing-mode: horizontal-tb;
+      transform: none;
+      font-size: 1.1rem;
+    }
+    .volet:not(.ouvert) .volet__int {
+      top: 0;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .volet__num {
+      font-size: 1.7rem;
+    }
+    .volet.ouvert h3 {
+      white-space: normal;
+    }
+  }
+
+  /* ============ Ce soir ============ */
+  .couche--observer {
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .observer__photo {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.45;
+  }
+  .observer__photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      var(--aubergine-900),
+      rgba(26, 15, 27, 0.35) 30%,
+      rgba(26, 15, 27, 0.35) 70%,
+      var(--aubergine-900)
+    );
+  }
+  .observer__grille {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 900px) {
+    .observer__grille {
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 3.5rem;
+    }
+  }
+  .lune,
+  .ciel-case,
+  .conseil {
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon);
+    background: rgba(18, 10, 18, 0.62);
+    backdrop-filter: blur(8px);
+  }
+  .lune {
+    padding: 1.8rem;
+    text-align: center;
+  }
+  .lune__disque {
+    display: block;
+    width: min(280px, 80%);
+    height: auto;
+    aspect-ratio: 1;
+    margin: auto;
+    filter: drop-shadow(0 0 28px rgba(248, 220, 190, 0.18));
+  }
+  .lune__resume {
+    margin: 1rem 0 0;
+    font-size: 0.9rem;
     color: var(--creme-70);
   }
-
-  .tuile__fleche {
-    margin-left: auto;
-    color: var(--ci-orange-vif);
-    font-size: 1.2rem;
-    transition: transform var(--transition);
+  .ciel-grille {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  .ciel-case {
+    padding: 1.3rem;
+  }
+  .ciel-case small {
+    display: block;
+    margin-bottom: 0.6rem;
+    font: 600 10px var(--font-hud);
+    letter-spacing: 0.2em;
+    color: var(--creme-45);
+  }
+  .ciel-case b {
+    display: block;
+    font: 700 1.45rem / 1.15 var(--font-titre);
+    color: var(--creme);
+  }
+  .ciel-case span {
+    font-size: 0.85rem;
+    color: var(--creme-70);
+  }
+  .conseils {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    margin-top: 3rem;
+  }
+  .conseil {
+    padding: 1.5rem;
+    transition: border-color 0.4s, transform 0.4s;
+  }
+  .conseil:hover {
+    border-color: var(--ci-orange);
+    transform: translateY(-5px);
+  }
+  .conseil i {
+    display: block;
+    margin-bottom: 0.5rem;
+    font: 700 1.9rem var(--font-titre);
+    font-style: normal;
+    color: var(--ci-orange);
+  }
+  .conseil h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+  }
+  .conseil p {
+    font-size: 0.9rem;
+    color: var(--creme-70);
+    margin: 0;
+  }
+  .credits {
+    margin-top: 1.4rem;
+    font-size: 0.75rem;
+    color: var(--creme-45);
+  }
+  @media (max-width: 420px) {
+    .ciel-grille {
+      grid-template-columns: 1fr;
+    }
   }
 
-  .tuile:hover .tuile__fleche {
-    transform: translateX(4px);
-  }
-
-  /* --- Couche 6 : Abidjan (horizon) --- */
+  /* ============ Couche 6 : Abidjan ============ */
   .couche--abidjan {
     text-align: center;
     padding-bottom: calc(var(--espace-section) * 0.6);
   }
-
   .couche--abidjan::before {
     content: '';
     position: absolute;
@@ -645,21 +1408,17 @@ const rechercheUrl =
       linear-gradient(to top, rgba(0, 158, 96, 0.05), transparent 45%);
     pointer-events: none;
   }
-
   .abidjan__int {
     position: relative;
   }
-
   .abidjan__titre {
     font-size: clamp(1.9rem, 5vw, 3.3rem);
     max-width: 22ch;
     margin-inline: auto;
   }
-
   .abidjan__p {
     margin-inline: auto;
   }
-
   .abidjan__actions {
     display: flex;
     flex-wrap: wrap;
@@ -667,7 +1426,6 @@ const rechercheUrl =
     justify-content: center;
     margin-top: 1.8rem;
   }
-
   .abidjan__partenaires-titre {
     margin-top: 4rem;
     font-family: var(--font-hud);
@@ -676,15 +1434,14 @@ const rechercheUrl =
     text-transform: uppercase;
     color: var(--creme-45);
   }
-
   .abidjan__partenaires {
     display: flex;
     flex-wrap: wrap;
     gap: 0.7rem;
     justify-content: center;
+    align-items: center;
     margin-top: 1rem;
   }
-
   .partenaire-chip {
     font-family: var(--font-titre);
     font-weight: 600;
@@ -695,52 +1452,61 @@ const rechercheUrl =
     border: 1px solid var(--creme-12);
     border-radius: 999px;
     padding: 0.5rem 1.05rem;
-    transition: color var(--transition), border-color var(--transition),
-      transform var(--transition);
+    transition: color var(--transition), border-color var(--transition), transform var(--transition);
   }
-
   .partenaire-chip:hover {
     color: var(--creme);
     border-color: var(--ci-orange);
-    transform: translateY(-2px);
+    transform: translateY(-2px) rotate(-1.5deg);
+  }
+  .partenaire-logo {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    padding: 10px 20px;
+    background: var(--creme);
+    border-radius: 12px;
+    transition: transform var(--transition);
+  }
+  .partenaire-logo:hover {
+    transform: translateY(-4px);
+  }
+  .partenaire-logo img {
+    max-height: 44px;
+    width: auto;
   }
 
-  /* --- Apparition au scroll (uniquement si JS présent) --- */
+  /* ============ Apparitions ============ */
+  @keyframes tourner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
   :global(html.js) .apparait {
     opacity: 0;
     transform: translateY(26px);
     transition: opacity 700ms ease, transform 700ms ease;
   }
-
   :global(html.js) .apparait.vu {
     opacity: 1;
     transform: none;
   }
-
+  :global(html.anim) .rv {
+    opacity: 0;
+    transform: translateY(40px);
+  }
   @media (prefers-reduced-motion: reduce) {
     :global(html.js) .apparait {
       opacity: 1;
       transform: none;
     }
+    .caillou {
+      display: none;
+    }
   }
 </style>
 
 <script>
-  const sections = document.querySelectorAll('.apparait');
-  if ('IntersectionObserver' in window) {
-    const obs = new IntersectionObserver(
-      (entrees) => {
-        for (const e of entrees) {
-          if (e.isIntersecting) {
-            e.target.classList.add('vu');
-            obs.unobserve(e.target);
-          }
-        }
-      },
-      { threshold: 0.12 },
-    );
-    sections.forEach((s) => obs.observe(s));
-  } else {
-    sections.forEach((s) => s.classList.add('vu'));
-  }
+  import { initAccueil } from '../scripts/accueil';
+  initAccueil(document.documentElement.lang === 'en' ? 'en' : 'fr');
 </script>

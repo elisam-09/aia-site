@@ -1,0 +1,16 @@
+.ecl-teaser{margin-top:22px;padding:24px;border:1px solid var(--gold);border-radius:18px;background:linear-gradient(135deg,rgba(247,127,0,.16),rgba(41,25,40,.6));backdrop-filter:blur(8px);position:relative;overflow:hidden;text-align:left;width:100%;color:inherit;cursor:pointer;font:inherit;transition:transform .4s var(--ease),box-shadow .4s}
+.ecl-teaser:hover{transform:translateY(-4px);box-shadow:0 18px 50px rgba(247,127,0,.25)}
+.ecl-teaser::before{content:"";position:absolute;right:-50px;top:-50px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,#0B060C 38%,transparent 39%),radial-gradient(circle,rgba(255,197,138,.9),rgba(247,127,0,.15) 62%,transparent 70%);animation:eclp 5s ease-in-out infinite}
+@keyframes eclp{50%{transform:scale(1.12) rotate(8deg)}}
+.ecl-teaser small{font:700 10px var(--font-d);letter-spacing:.24em;color:var(--gold);text-transform:uppercase;display:block}
+.ecl-teaser strong{display:block;font:900 clamp(20px,2.6vw,28px)/1.15 var(--font-d);margin:8px 0 4px;max-width:78%}
+.ecl-teaser .dt{color:var(--ink-dim);font-size:14.5px}
+.ecl-teaser .cdm{display:flex;gap:8px;margin:14px 0 12px;flex-wrap:wrap}
+.ecl-teaser .cdm span{min-width:62px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:rgba(11,6,12,.5);text-align:center;font:700 9px var(--font-d);letter-spacing:.14em;color:var(--ink-dim)}
+.ecl-teaser .cdm b{display:block;font:900 24px/1 var(--font-d);color:var(--gold);font-variant-numeric:tabular-nums}
+@media (max-width:480px){.ecl-teaser .cdm{flex-wrap:nowrap;gap:6px}.ecl-teaser .cdm span{flex:1 1 0;min-width:0;padding:8px 2px;letter-spacing:.06em;font-size:8px}.ecl-teaser .cdm b{font-size:20px}}
+.ecl-teaser .go{display:inline-flex;align-items:center;gap:10px;font:800 13px var(--font-d);letter-spacing:.06em;color:var(--night);background:var(--gold);padding:0 20px;min-height:46px;border-radius:999px}
+
+@media (max-width:860px){.ecl-teaser strong{max-width:100%}}
+.ecl-teaser[hidden]{display:none}
+.ecl-teaser{--gold:var(--ci-orange);--ink-dim:var(--creme-70);--line:var(--creme-12);--night:var(--aubergine-950);--font-d:var(--font-titre);--ease:cubic-bezier(.2,.7,.2,1)}
