@@ -69,18 +69,6 @@ export interface GalerieRow {
   cree_le: string;
 }
 
-export interface ProduitRow {
-  id: number;
-  nom_fr: string;
-  nom_en: string | null;
-  description_fr: string | null;
-  description_en: string | null;
-  image: string | null;
-  prix: string | null;
-  disponible: number;
-  ordre: number;
-}
-
 export interface PartenaireRow {
   id: number;
   nom: string;

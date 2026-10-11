@@ -68,18 +68,6 @@ CREATE TABLE IF NOT EXISTS galerie (
   cree_le TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS produits (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nom_fr TEXT NOT NULL,
-  nom_en TEXT,
-  description_fr TEXT,
-  description_en TEXT,
-  image TEXT,
-  prix TEXT,
-  disponible INTEGER NOT NULL DEFAULT 1,
-  ordre INTEGER NOT NULL DEFAULT 10
-);
-
 CREATE TABLE IF NOT EXISTS partenaires (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nom TEXT NOT NULL,
@@ -136,6 +124,8 @@ const COLONNES_AJOUTEES: [table: string, colonne: string, definition: string][] 
 ];
 
 function migrer(db: Database.Database): void {
+  // la boutique (produits dérivés) a été retirée du site
+  db.exec('DROP TABLE IF EXISTS produits');
   for (const [table, colonne, def] of COLONNES_AJOUTEES) {
     const existe = (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some(
       (c) => c.name === colonne,

@@ -25,7 +25,6 @@ Le menu de gauche donne accès à chaque type de contenu :
 | **Galerie** | Ajouter des photos (astrophoto, observations, écoles…). |
 | **Équipe** | Le bureau : photo (sinon initiales sur une constellation), fonction, étiquette sur la photo (ex. FONDATEUR) ; flèches ↑ ↓ pour l'ordre d'affichage. |
 | **Partenaires** | Gérer les logos et descriptions des partenaires. |
-| **Produits** | Présenter les produits dérivés (vitrine, sans vente en ligne). |
 | **Réglages** | Téléphone, WhatsApp, e-mail, Facebook, autres réseaux, phrase d'accueil, et **bandeau d'annonce** en haut de toutes les pages. |
 
 Pour chaque type : **la liste** montre ce qui existe, le bouton **« + »** en haut à

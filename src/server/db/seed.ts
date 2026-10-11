@@ -11,7 +11,6 @@ import { renderBlocks } from '../../lib/blocks';
 import { EVENTS } from '../../lib/seed/events';
 import { POSTS } from '../../lib/seed/posts';
 import { PHOTOS } from '../../lib/seed/gallery';
-import { PRODUCTS } from '../../lib/seed/products';
 import { PARTNERS } from '../../lib/seed/partners';
 import { TEAM } from '../../lib/seed/team';
 
@@ -27,7 +26,6 @@ export function seedIfEmpty(db: DB): void {
   if (isEmpty(db, 'evenements')) insererEvenements(db);
   if (isEmpty(db, 'actualites')) insererActualites(db);
   if (isEmpty(db, 'galerie')) insererGalerie(db);
-  if (isEmpty(db, 'produits')) insererProduits(db);
   if (isEmpty(db, 'partenaires')) insererPartenaires(db);
   if (isEmpty(db, 'membres')) insererMembres(db);
   remplacerDemo(db);
@@ -110,30 +108,6 @@ function insererGalerie(db: DB): void {
           t,
         });
       }
-    })();
-  }
-
-}
-
-function insererProduits(db: DB): void {
-  {
-    const stmt = db.prepare(
-      `INSERT INTO produits (nom_fr,nom_en,description_fr,description_en,image,prix,disponible,ordre)
-       VALUES (@nom_fr,@nom_en,@description_fr,@description_en,@image,@prix,@disponible,@ordre)`,
-    );
-    db.transaction(() => {
-      PRODUCTS.forEach((p, i) =>
-        stmt.run({
-          nom_fr: p.nom.fr,
-          nom_en: p.nom.en ?? null,
-          description_fr: p.description.fr,
-          description_en: p.description.en ?? null,
-          image: p.image ?? null,
-          prix: p.prix ?? null,
-          disponible: p.dispo ? 1 : 0,
-          ordre: (i + 1) * 10,
-        }),
-      );
     })();
   }
 

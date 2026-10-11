@@ -49,15 +49,6 @@ export interface GalleryItem {
   date?: string;
 }
 
-export interface Product {
-  id: string;
-  nom: string;
-  description: string;
-  image?: string;
-  prix: string;
-  dispo: boolean;
-}
-
 export interface Partner {
   id: string;
   nom: string;

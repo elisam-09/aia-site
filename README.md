@@ -41,7 +41,7 @@ npm run preview             # lance le serveur de production en local
   (email + mot de passe) enregistré dans la table `admins`.
 - **Deux rôles** : `admin` (gère aussi les comptes) et `editeur` (gère le contenu).
 - **On y gère** : Événements, Actualités (avec éditeur de texte enrichi), Galerie
-  (upload de photos), Produits, Partenaires, Membres du bureau — le tout **bilingue**
+  (upload de photos), Partenaires, Membres du bureau — le tout **bilingue**
   (Français obligatoire, English optionnel, repli automatique sur le FR).
 - **Thème « atmosphère »** : l'admin a volontairement un habillage clair (ciel de jour)
   distinct de l'espace profond du site vitrine.
@@ -68,7 +68,7 @@ aia-site/
 │   │   ├── admin/                  # portail : login, index (tableau de bord),
 │   │   │   ├── evenements/         #   chaque rubrique = index.astro (liste)
 │   │   │   ├── actualites/         #   + [id].astro (créer / modifier / supprimer)
-│   │   │   ├── galerie/ produits/ partenaires/ membres/ comptes/
+│   │   │   ├── galerie/ partenaires/ membres/ comptes/ adhesions/ reglages
 │   │   │   └── logout.ts
 │   │   └── media/[...file].ts      # sert les photos uploadées (dossier uploads/)
 │   ├── middleware.ts               # ★ protège /admin + attache l'admin connecté

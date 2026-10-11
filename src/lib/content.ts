@@ -4,7 +4,7 @@
  * n'ont pas changé — seule la source (base au lieu du seed/Sanity) a changé.
  */
 import type { Lang } from '../i18n/ui';
-import type { EventItem, GalleryItem, Member, Partner, Post, Product } from './types';
+import type { EventItem, GalleryItem, Member, Partner, Post } from './types';
 import * as repo from '../server/db/repo';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -91,17 +91,6 @@ export function getGallery(lang: Lang): GalleryItem[] {
     image: p.image,
     categorie: p.categorie,
     date: p.date ?? undefined,
-  }));
-}
-
-export function getProducts(lang: Lang): Product[] {
-  return repo.listProduits().map((p) => ({
-    id: String(p.id),
-    nom: L(p.nom_fr, p.nom_en, lang),
-    description: L(p.description_fr, p.description_en, lang),
-    image: p.image ?? undefined,
-    prix: p.prix ?? '',
-    dispo: Boolean(p.disponible),
   }));
 }
 

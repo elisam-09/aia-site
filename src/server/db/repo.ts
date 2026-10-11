@@ -11,7 +11,6 @@ import type {
   GalerieRow,
   MembreRow,
   PartenaireRow,
-  ProduitRow,
   Role,
   SessionRow,
   StatutAdhesion,
@@ -300,51 +299,6 @@ export function deleteGalerie(id: number): void {
   getDb().prepare('DELETE FROM galerie WHERE id = ?').run(id);
 }
 
-/* ============================ PRODUITS ============================ */
-
-export interface ProduitInput {
-  nom_fr: string;
-  nom_en: string | null;
-  description_fr: string | null;
-  description_en: string | null;
-  image: string | null;
-  prix: string | null;
-  disponible: number;
-  ordre: number;
-}
-
-export function listProduits(): ProduitRow[] {
-  return getDb().prepare('SELECT * FROM produits ORDER BY ordre ASC, id ASC').all() as ProduitRow[];
-}
-
-export function getProduit(id: number): ProduitRow | undefined {
-  return getDb().prepare('SELECT * FROM produits WHERE id = ?').get(id) as ProduitRow | undefined;
-}
-
-export function createProduit(p: ProduitInput): number {
-  const info = getDb()
-    .prepare(
-      `INSERT INTO produits (nom_fr, nom_en, description_fr, description_en, image, prix, disponible, ordre)
-       VALUES (@nom_fr, @nom_en, @description_fr, @description_en, @image, @prix, @disponible, @ordre)`,
-    )
-    .run(p);
-  return Number(info.lastInsertRowid);
-}
-
-export function updateProduit(id: number, p: ProduitInput): void {
-  getDb()
-    .prepare(
-      `UPDATE produits SET nom_fr=@nom_fr, nom_en=@nom_en, description_fr=@description_fr,
-        description_en=@description_en, image=@image, prix=@prix, disponible=@disponible, ordre=@ordre
-       WHERE id=@id`,
-    )
-    .run({ ...p, id });
-}
-
-export function deleteProduit(id: number): void {
-  getDb().prepare('DELETE FROM produits WHERE id = ?').run(id);
-}
-
 /* ============================ PARTENAIRES ============================ */
 
 export interface PartenaireInput {
@@ -528,7 +482,7 @@ export function deleteAdhesion(id: number): void {
 /** Tout le contenu éditorial (hors comptes, sessions et demandes d'adhésion). */
 export function exporterContenu(): Record<string, unknown> {
   const db = getDb();
-  const tables = ['evenements', 'actualites', 'galerie', 'produits', 'partenaires', 'membres', 'reglages'];
+  const tables = ['evenements', 'actualites', 'galerie', 'partenaires', 'membres', 'reglages'];
   return {
     format: 'aia-sauvegarde',
     version: 1,
