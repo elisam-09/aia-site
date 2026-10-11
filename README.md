@@ -117,3 +117,12 @@ aia-site/
 Cette application a besoin d'un **serveur qui tourne en permanence** + un **disque
 persistant** (pour `data/` et `uploads/`). Étapes détaillées, options d'hébergement
 (Fly.io, VPS…), sauvegardes et domaine dans **[DEPLOIEMENT.md](./DEPLOIEMENT.md)**.
+
+## Crédits
+
+Le télescope 3D, le globe, la Lune du jour, le module éclipse, le curseur fusée, plusieurs
+animations ainsi que le contenu collecté (articles de presse, événements, bureau, photos)
+proviennent du site réalisé par [Jcalixte24](https://github.com/Jcalixte24/aia), intégrés
+et recolorés aux couleurs de l'AIA. Textures Terre et Lune : NASA (via three.js) ; nébuleuse
+d'Orion : NASA/ESA/Hubble ; Voie lactée : NOIRLab/AURA ; Abidjan de nuit : Wikimedia Commons.
+

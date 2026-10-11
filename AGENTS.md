@@ -10,6 +10,13 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
   standalone). Toutes les pages sont rendues à la volée.
 - **React** uniquement pour l'île 3D (navigation système solaire, `client:visible`,
   three.js chargé en différé avec repli 2D SSR).
+- **Effets de l'accueil** (TypeScript, `src/scripts/`) : `accueil.ts` orchestre GSAP
+  ScrollTrigger + Lenis ; `telescope.ts` (télescope 3D qui se décompose), `globe.ts`,
+  `lune.ts` (phase du jour), `eclipse-teaser.ts` + `eclipse/` (catalogue NASA, fenêtre 3D
+  chargée au clic). three.js chargé à la demande. Classes posées sur `<html>` :
+  `anim` (animations actives), `webgl` (WebGL dispo) — tout doit rester lisible sans elles.
+- **Global** : `Curseur.astro` (curseur fusée), `Starfield.astro` (ciel canvas + barre de
+  progression), `scripts/interactions.ts` (bandes à glisser, apparitions).
 - **SQLite** via `better-sqlite3` (fichier `data/aia.db`). Accès dans `src/server/db/`
   (connexion + schéma `index.ts`, requêtes `repo.ts`, amorçage `seed.ts`). Pas d'ORM.
 - **Auth maison** : `src/server/auth.ts` (scrypt + sessions cookie en table), garde dans
@@ -28,6 +35,10 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
 - **Portail admin** : chaque rubrique = `admin/<type>/index.astro` (liste) +
   `admin/<type>/[id].astro` (id `nouveau` = création ; POST gère save/suppression via
   `_action=supprimer`). Formulaires via les composants de `src/components/admin/`.
+- **Contenu de référence** : `src/lib/seed/*` (réel et sourcé). `seed.ts` remplit les tables
+  vides et, une seule fois par base (table `meta`, clé `contenu`), remplace l'ancienne démo
+  fictive tant qu'elle n'a pas été modifiée. Ne jamais inventer d'événement ou de chiffre.
+- Coordonnées publiques (téléphone, WhatsApp, Facebook) : `src/lib/contact.ts`.
 - Ajout d'un champ de contenu = 4 endroits cohérents : colonne (`db/index.ts` DDL +
   `db/types.ts`), requêtes (`db/repo.ts`), formulaire admin (`admin/<type>/[id].astro`),
   et lecture publique (`lib/content.ts` + le composant de page).
