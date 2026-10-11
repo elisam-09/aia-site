@@ -66,13 +66,13 @@ export const PARTNERS: SeedPartner[] = [
   },
   {
     id: 'uranoscope',
-    nom: 'Uranoscope de France',
+    nom: "Uranoscope de l'Île-de-France",
     sigle: 'URANOSCOPE',
     description: {
       fr: 'Observatoire associatif français qui nous accompagne en formation et en partage de matériel et de pratiques.',
       en: 'French association observatory supporting us with training, equipment sharing and best practices.',
     },
-    site: 'https://uranoscope.org',
+    site: 'https://www.afastronomie.fr/uranoscope-de-l-ile-de-france',
   },
   {
     id: 'ird',
