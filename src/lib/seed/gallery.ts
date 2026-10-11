@@ -10,71 +10,64 @@ interface SeedPhoto {
   date?: string;
 }
 
+/** Photos réelles des activités de l'AIA (page Facebook de l'association et presse). */
 export const PHOTOS: SeedPhoto[] = [
   {
-    id: 'lune-t200',
-    titre: { fr: 'Lune gibbeuse au T200', en: 'Gibbous Moon through the T200' },
-    image: '/placeholders/observation.svg',
-    categorie: 'astrophoto',
-    date: '2026-05-30',
-  },
-  {
-    id: 'voie-lactee-assinie',
-    titre: { fr: 'Voie lactée depuis Assinie', en: 'Milky Way from Assinie' },
-    image: '/placeholders/astrophoto.svg',
-    categorie: 'astrophoto',
-    date: '2026-04-18',
-  },
-  {
-    id: 'atelier-lycee-cocody',
-    titre: { fr: 'Atelier au lycée de Cocody', en: 'Workshop at Cocody high school' },
-    image: '/placeholders/ecole.svg',
-    categorie: 'ecole',
-    date: '2026-03-12',
-  },
-  {
-    id: 'file-attente-eclipse',
-    titre: { fr: "File d'attente, éclipse de Lune 2025", en: 'Queue, 2025 lunar eclipse' },
-    image: '/placeholders/conference.svg',
+    id: 'ag-2021',
+    titre: {
+      fr: 'Assemblée générale constitutive, février 2021',
+      en: 'Founding general assembly, February 2021',
+    },
+    image: '/images/photos/ag-2021.webp',
     categorie: 'evenement',
-    date: '2025-09-07',
+    date: '2021-02-13',
   },
   {
-    id: 'saturne-premiere',
-    titre: { fr: 'Saturne, première lumière', en: 'Saturn, first light' },
-    image: '/placeholders/astrophoto.svg',
-    categorie: 'astrophoto',
-    date: '2025-08-21',
-  },
-  {
-    id: 'obs-plateau',
-    titre: { fr: 'Observation publique au Plateau', en: 'Public stargazing at Plateau' },
-    image: '/placeholders/observation.svg',
+    id: 'otma-2021',
+    titre: { fr: 'On The Moon Again, juillet 2021', en: 'On The Moon Again, July 2021' },
+    image: '/images/photos/otma.webp',
     categorie: 'observation',
-    date: '2025-07-19',
+    date: '2021-07-16',
   },
   {
-    id: 'campagne-iasc',
-    titre: { fr: 'Analyse IASC en salle', en: 'IASC analysis session' },
-    image: '/placeholders/recherche.svg',
+    id: 'astropause-public',
+    titre: { fr: 'AstroPause #1 : le public', en: 'AstroPause #1: the audience' },
+    image: '/images/photos/astropause-public.webp',
     categorie: 'evenement',
-    date: '2025-12-06',
+    date: '2023-05-18',
   },
   {
-    id: 'club-abobo',
-    titre: { fr: "Naissance du club d'Abobo", en: 'Birth of the Abobo club' },
-    image: '/placeholders/ecole.svg',
+    id: 'astropause-salle',
+    titre: { fr: 'AstroPause #1 au LASMES', en: 'AstroPause #1 at LASMES' },
+    image: '/images/photos/astropause-salle.webp',
+    categorie: 'evenement',
+    date: '2023-05-18',
+  },
+  {
+    id: 'astrotour-2023',
+    titre: { fr: 'Astro Tour Ivoire 2023', en: 'Astro Tour Ivoire 2023' },
+    image: '/images/photos/fb-1.webp',
     categorie: 'ecole',
-    date: '2025-11-14',
+    date: '2023-11-27',
+  },
+  {
+    id: 'blaise-pascal-2024',
+    titre: {
+      fr: "Journées de l'espace, Lycée Blaise Pascal",
+      en: 'Space days, Lycée Blaise Pascal',
+    },
+    image: '/images/photos/blaise-pascal.webp',
+    categorie: 'ecole',
+    date: '2024-02-01',
   },
 ];
 
 export function seedGallery(lang: Lang): GalleryItem[] {
-  return PHOTOS.map((ph) => ({
-    id: ph.id,
-    titre: pick(ph.titre, lang),
-    image: ph.image,
-    categorie: ph.categorie,
-    date: ph.date,
+  return PHOTOS.map((p) => ({
+    id: p.id,
+    titre: pick(p.titre, lang),
+    image: p.image,
+    categorie: p.categorie,
+    date: p.date,
   }));
 }

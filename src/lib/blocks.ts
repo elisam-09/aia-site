@@ -47,6 +47,14 @@ export function ul(items: string[]): Block {
   return { type: 'ul', items: items.map(esc) };
 }
 
+/** Paragraphe « Source : » avec un ou plusieurs liens externes. */
+export function sources(liens: [label: string, href: string][], prefixe = 'Source :'): Block {
+  const html = liens
+    .map(([l, h]) => `<a href="${esc(h)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`)
+    .join(' · ');
+  return { type: 'p', html: `<em>${esc(prefixe)}</em> ${html}` };
+}
+
 /* ---------- Conversion Portable Text (Sanity) → Block[] ---------- */
 
 interface PtSpan {

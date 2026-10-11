@@ -10,95 +10,109 @@ interface SeedEvent {
   lieu: string;
   description: Localized;
   image?: string;
+  lien?: string;
 }
 
+/**
+ * Événements réels de l'AIA (sources : page Facebook de l'AIA, IRD, L'Astronomie Afrique,
+ * AfricaPSS). Aucun événement à venir n'est inventé : le bureau les annonce via /admin.
+ */
 export const EVENTS: SeedEvent[] = [
   {
-    id: 'obs-lune-juillet',
-    titre: {
-      fr: 'Observation publique : la Lune au télescope',
-      en: 'Public stargazing: the Moon through the telescope',
-    },
-    date: '2026-07-25',
-    heure: '19:00',
-    lieu: 'Esplanade du Plateau, Abidjan',
+    id: 'campagne-asteroides-2026',
+    titre: { fr: "Campagne d'astéroïdes 2026/2027", en: '2026/2027 asteroid campaign' },
+    date: '2026-09-07',
+    lieu: 'En ligne · Science citoyenne',
     description: {
-      fr: "Cratères, mers et terminateur : viens voir la Lune gibbeuse comme tu ne l'as jamais vue. Télescopes fournis, entrée libre, en famille.",
-      en: 'Craters, maria and the terminator: come see the gibbous Moon like never before. Telescopes provided, free entry, family friendly.',
+      fr: "Du 7 septembre au 2 octobre : une nouvelle campagne de recherche avec des élèves et bénévoles. Résultats préliminaires publiés début octobre, dont une découverte préliminaire au Lycée français Blaise Pascal.",
+      en: '7 September to 2 October: a new search campaign with students and volunteers. Preliminary results published in early October, including a preliminary discovery at the Lycée français Blaise Pascal.',
     },
-    image: '/placeholders/observation.svg',
+    image: '/images/photos/orion.webp',
   },
   {
-    id: 'perseides-2026',
-    titre: {
-      fr: 'Nuit des étoiles filantes — Perséides 2026',
-      en: 'Shooting-star night — Perseids 2026',
-    },
-    date: '2026-08-12',
-    heure: '21:00',
-    lieu: 'Plage de Grand-Bassam',
+    id: 'asteroid-day-2024',
+    titre: { fr: 'Asteroid Day', en: 'Asteroid Day' },
+    date: '2024-06-30',
+    lieu: 'LASMES · Université Félix Houphouët-Boigny',
     description: {
-      fr: 'Le pic des Perséides sur la plage, loin des lumières de la ville. Prévois une natte, on s’occupe du ciel.',
-      en: 'The Perseid peak on the beach, far from city lights. Bring a mat — we take care of the sky.',
-    },
-    image: '/placeholders/astrophoto.svg',
-  },
-  {
-    id: 'astropause-7',
-    titre: {
-      fr: 'AstroPause #7 : « Vivre et travailler dans l’espace »',
-      en: 'AstroPause #7: “Living and working in space”',
-    },
-    date: '2026-09-18',
-    heure: '15:00',
-    lieu: 'Amphithéâtre, UFR SSMT, Université Félix Houphouët-Boigny',
-    description: {
-      fr: 'Notre cycle de conférences reprend : stations spatiales, missions longues et corps humain en apesanteur, avec session de questions ouvertes.',
-      en: 'Our lecture series is back: space stations, long missions and the human body in weightlessness, with an open Q&A.',
-    },
-    image: '/placeholders/conference.svg',
-  },
-  {
-    id: 'tournee-yopougon',
-    titre: {
-      fr: 'Tournée scolaire : lycées de Yopougon',
-      en: 'School tour: Yopougon high schools',
-    },
-    date: '2026-03-14',
-    lieu: 'Yopougon, Abidjan',
-    description: {
-      fr: 'Trois établissements, six classes, un planétarium mobile et beaucoup de vocations : retour sur une semaine intense.',
-      en: 'Three schools, six classes, one mobile planetarium and plenty of new vocations: recap of an intense week.',
-    },
-    image: '/placeholders/ecole.svg',
-  },
-  {
-    id: 'campagne-iasc-2025',
-    titre: {
-      fr: "Campagne de recherche d'astéroïdes (IASC) — hiver 2025",
-      en: 'Asteroid search campaign (IASC) — winter 2025',
-    },
-    date: '2025-12-06',
-    lieu: 'En ligne + UFHB, Abidjan',
-    description: {
-      fr: "Quatre semaines d'analyse d'images du télescope Pan-STARRS avec l'International Astronomical Search Collaboration, sous l'égide de l'UAI et de la NASA.",
-      en: 'Four weeks analysing Pan-STARRS telescope images with the International Astronomical Search Collaboration, under the IAU and NASA umbrella.',
+      fr: 'Conférences au LASMES à l’occasion de la journée mondiale des astéroïdes.',
+      en: 'Lectures at LASMES for the international day of asteroids.',
     },
     image: '/placeholders/recherche.svg',
   },
   {
-    id: 'eclipse-lune-2025',
+    id: 'journees-espace-blaise-pascal',
     titre: {
-      fr: 'Éclipse totale de Lune du 7 septembre 2025',
-      en: 'Total lunar eclipse of 7 September 2025',
+      fr: "Journées de l'espace · Lycée Blaise Pascal",
+      en: 'Space days · Lycée Blaise Pascal',
     },
-    date: '2025-09-07',
-    lieu: 'Campus UFHB, Abidjan',
+    date: '2024-02-01',
+    lieu: 'Abidjan · Lycée français Blaise Pascal',
     description: {
-      fr: 'Observation publique de la Lune rousse avec plus de 200 visiteurs — notre plus grosse affluence à ce jour.',
-      en: 'Public observation of the blood Moon with 200+ visitors — our biggest turnout to date.',
+      fr: "Initiation à l'astronomie et observation du ciel avec les télescopes de l'AIA, lors de l'inauguration du club d'astronomie du lycée.",
+      en: 'An introduction to astronomy and stargazing with AIA’s telescopes, at the opening of the school’s astronomy club.',
     },
-    image: '/placeholders/observation.svg',
+    image: '/images/photos/blaise-pascal.webp',
+  },
+  {
+    id: 'astro-tour-ivoire-2023',
+    titre: { fr: 'Astro Tour Ivoire', en: 'Astro Tour Ivoire' },
+    date: '2023-11-27',
+    lieu: 'Abidjan · Yamoussoukro · Korhogo · Bouaké',
+    description: {
+      fr: "Du 27 novembre au 8 décembre : quatre villes, neuf dates. Ateliers, formations d'enseignants, observations et conférences gratuits pour tous, avec SpaceBus France et l'IRD. Quinze scientifiques, dix Ivoiriens et cinq Français.",
+      en: '27 November to 8 December: four cities, nine dates. Free workshops, teacher training, stargazing and lectures for all, with SpaceBus France and IRD. Fifteen scientists, ten Ivorian and five French.',
+    },
+    image: '/images/photos/fb-1.webp',
+    lien: 'https://www.ird.fr/astrotour-lastronomie-pour-toutes-en-cote-divoire',
+  },
+  {
+    id: 'astropause-1',
+    titre: { fr: 'AstroPause #1', en: 'AstroPause #1' },
+    date: '2023-05-18',
+    lieu: 'LASMES · Université Félix Houphouët-Boigny',
+    description: {
+      fr: "« Communication satellite, Terre et reconquête de l'espace » : présentation de l'AIA et conférences sur l'agence spatiale ivoirienne et les satellites. Une cinquantaine de participants.",
+      en: '“Satellite communication, Earth and the reconquest of space”: AIA presentation and talks on the Ivorian space agency and satellites. Some fifty participants.',
+    },
+    image: '/images/photos/astropause-public.webp',
+    lien: 'https://lastronomieafrique.com/lastropause-de-lassociation-ivoirienne-dastronomie-aia-la-cote-divoire-et-le-defi-de-la-conquete-spatiale/',
+  },
+  {
+    id: 'cafe-des-savoirs-2023',
+    titre: {
+      fr: 'Café des Savoirs · « Il n’y a pas de planète B »',
+      en: 'Café des Savoirs · “There is no planet B”',
+    },
+    date: '2023-01-26',
+    lieu: 'Institut Français de Côte d’Ivoire',
+    description: {
+      fr: "Invitée de l'Institut Français de Côte d'Ivoire, l'AIA a animé un débat sur l'avenir de la Terre.",
+      en: 'As guest of the Institut Français de Côte d’Ivoire, AIA led a debate on the future of the Earth.',
+    },
+    image: '/placeholders/conference.svg',
+  },
+  {
+    id: 'on-the-moon-again-2021',
+    titre: { fr: 'On The Moon Again', en: 'On The Moon Again' },
+    date: '2021-07-16',
+    lieu: 'Abidjan · Université Félix Houphouët-Boigny',
+    description: {
+      fr: "Du 16 au 18 juillet : trois jours d'observation de la Lune à l'Université Félix Houphouët-Boigny, avec l'opération internationale On The Moon Again.",
+      en: '16 to 18 July: three days of Moon observation at Félix Houphouët-Boigny University, as part of the international On The Moon Again operation.',
+    },
+    image: '/images/photos/otma.webp',
+  },
+  {
+    id: 'naissance-aia-2021',
+    titre: { fr: "Naissance de l'AIA", en: 'AIA is born' },
+    date: '2021-02-13',
+    lieu: 'Abidjan-Cocody',
+    description: {
+      fr: "Assemblée générale constitutive à l'Université Félix Houphouët-Boigny : le Dr Aziz Diaby est élu premier président.",
+      en: 'Founding general assembly at Félix Houphouët-Boigny University: Dr Aziz Diaby is elected first president.',
+    },
+    image: '/images/photos/ag-2021.webp',
   },
 ];
 
@@ -112,6 +126,7 @@ export function seedEvents(lang: Lang): EventItem[] {
     lieu: e.lieu,
     description: pick(e.description, lang),
     image: e.image,
+    lien: e.lien,
     passe: e.date < aujourdhui,
   }));
 }

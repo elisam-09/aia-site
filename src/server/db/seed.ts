@@ -1,7 +1,10 @@
 /**
- * Amorçage : remplit la base avec le contenu de démonstration si (et seulement si)
- * une table est vide. Ainsi le site n'est jamais vide au premier lancement, et on ne
- * réécrase jamais le contenu réel saisi par le bureau.
+ * Amorçage : remplit la base avec le contenu de référence si (et seulement si) une table
+ * est vide. Ainsi le site n'est jamais vide au premier lancement, et on ne réécrase
+ * jamais le contenu saisi par le bureau.
+ *
+ * `remplacerDemo` (une seule fois par base) remplace l'ancien contenu de démonstration
+ * fictif par le contenu réel, uniquement pour les tables encore 100 % « démo ».
  */
 import type BetterSqlite3 from 'better-sqlite3';
 import { renderBlocks } from '../../lib/blocks';
@@ -18,9 +21,18 @@ const isEmpty = (db: DB, table: string): boolean =>
   (db.prepare(`SELECT COUNT(*) n FROM ${table}`).get() as { n: number }).n === 0;
 
 export function seedIfEmpty(db: DB): void {
-  const t = new Date().toISOString();
+  if (isEmpty(db, 'evenements')) insererEvenements(db);
+  if (isEmpty(db, 'actualites')) insererActualites(db);
+  if (isEmpty(db, 'galerie')) insererGalerie(db);
+  if (isEmpty(db, 'produits')) insererProduits(db);
+  if (isEmpty(db, 'partenaires')) insererPartenaires(db);
+  if (isEmpty(db, 'membres')) insererMembres(db);
+  remplacerDemo(db);
+}
 
-  if (isEmpty(db, 'evenements')) {
+function insererEvenements(db: DB): void {
+  const t = new Date().toISOString();
+  {
     const stmt = db.prepare(
       `INSERT INTO evenements (titre_fr,titre_en,date,heure,lieu,description_fr,description_en,image,lien,publie,cree_le,maj_le)
        VALUES (@titre_fr,@titre_en,@date,@heure,@lieu,@description_fr,@description_en,@image,@lien,1,@t,@t)`,
@@ -36,16 +48,20 @@ export function seedIfEmpty(db: DB): void {
           description_fr: e.description.fr,
           description_en: e.description.en ?? null,
           image: e.image ?? null,
-          lien: null,
+          lien: e.lien ?? null,
           t,
         });
       }
     })();
   }
 
-  if (isEmpty(db, 'actualites')) {
+}
+
+function insererActualites(db: DB): void {
+  const t = new Date().toISOString();
+  {
     const stmt = db.prepare(
-      `INSERT INTO actualites (slug,titre_fr,titre_en,date,auteur,extrait_fr,extrait_en,corps_fr,corps_en,image,publie,cree_le,maj_le)
+      `INSERT OR IGNORE INTO actualites (slug,titre_fr,titre_en,date,auteur,extrait_fr,extrait_en,corps_fr,corps_en,image,publie,cree_le,maj_le)
        VALUES (@slug,@titre_fr,@titre_en,@date,@auteur,@extrait_fr,@extrait_en,@corps_fr,@corps_en,@image,1,@t,@t)`,
     );
     db.transaction(() => {
@@ -67,7 +83,11 @@ export function seedIfEmpty(db: DB): void {
     })();
   }
 
-  if (isEmpty(db, 'galerie')) {
+}
+
+function insererGalerie(db: DB): void {
+  const t = new Date().toISOString();
+  {
     const stmt = db.prepare(
       `INSERT INTO galerie (titre_fr,titre_en,image,categorie,date,cree_le)
        VALUES (@titre_fr,@titre_en,@image,@categorie,@date,@t)`,
@@ -86,7 +106,10 @@ export function seedIfEmpty(db: DB): void {
     })();
   }
 
-  if (isEmpty(db, 'produits')) {
+}
+
+function insererProduits(db: DB): void {
+  {
     const stmt = db.prepare(
       `INSERT INTO produits (nom_fr,nom_en,description_fr,description_en,image,prix,disponible,ordre)
        VALUES (@nom_fr,@nom_en,@description_fr,@description_en,@image,@prix,@disponible,@ordre)`,
@@ -107,7 +130,10 @@ export function seedIfEmpty(db: DB): void {
     })();
   }
 
-  if (isEmpty(db, 'partenaires')) {
+}
+
+function insererPartenaires(db: DB): void {
+  {
     const stmt = db.prepare(
       `INSERT INTO partenaires (nom,sigle,description_fr,description_en,logo,site,ordre)
        VALUES (@nom,@sigle,@description_fr,@description_en,@logo,@site,@ordre)`,
@@ -119,7 +145,7 @@ export function seedIfEmpty(db: DB): void {
           sigle: p.sigle ?? null,
           description_fr: p.description.fr,
           description_en: p.description.en ?? null,
-          logo: null,
+          logo: p.logo ?? null,
           site: p.site ?? null,
           ordre: (i + 1) * 10,
         }),
@@ -127,7 +153,10 @@ export function seedIfEmpty(db: DB): void {
     })();
   }
 
-  if (isEmpty(db, 'membres')) {
+}
+
+function insererMembres(db: DB): void {
+  {
     const stmt = db.prepare(
       `INSERT INTO membres (nom,role_fr,role_en,bio_fr,bio_en,photo,ordre)
        VALUES (@nom,@role_fr,@role_en,@bio_fr,@bio_en,@photo,@ordre)`,
@@ -135,15 +164,95 @@ export function seedIfEmpty(db: DB): void {
     db.transaction(() => {
       TEAM.forEach((m, i) =>
         stmt.run({
-          nom: 'Membre du bureau',
+          nom: m.nom,
           role_fr: m.role.fr,
           role_en: m.role.en ?? null,
           bio_fr: m.bio.fr,
           bio_en: m.bio.en ?? null,
-          photo: '/placeholders/avatar.svg',
+          photo: m.photo ?? null,
           ordre: (i + 1) * 10,
         }),
       );
     })();
   }
+}
+
+/* ---------- Migration unique : contenu de démonstration → contenu réel ---------- */
+
+const DEMO_EVENEMENTS = [
+  'Observation publique : la Lune au télescope',
+  'Nuit des étoiles filantes — Perséides 2026',
+  'AstroPause #7 : « Vivre et travailler dans l’espace »',
+  'Tournée scolaire : lycées de Yopougon',
+  "Campagne de recherche d'astéroïdes (IASC) — hiver 2025",
+  'Éclipse totale de Lune du 7 septembre 2025',
+];
+const DEMO_GALERIE = [
+  'Lune gibbeuse au T200',
+  'Voie lactée depuis Assinie',
+  'Atelier au lycée de Cocody',
+  "File d'attente, éclipse de Lune 2025",
+  'Saturne, première lumière',
+  'Observation publique au Plateau',
+  'Analyse IASC en salle',
+  "Naissance du club d'Abobo",
+];
+const DEMO_PARTENAIRES = ['UAI', 'NASA', 'IASC', 'AfAS', 'UFHB', 'URANOSCOPE'];
+const VERSION_CONTENU = 'reel-2026-10';
+
+/** Vrai si toutes les valeurs de la colonne appartiennent à l'ensemble « démo ». */
+function toutDemo(db: DB, sql: string, demo: string[]): boolean {
+  const vals = (db.prepare(sql).all() as { v: string | null }[]).map((r) => r.v ?? '');
+  return vals.length > 0 && vals.every((v) => demo.includes(v));
+}
+
+export function remplacerDemo(db: DB): void {
+  db.exec('CREATE TABLE IF NOT EXISTS meta (cle TEXT PRIMARY KEY, valeur TEXT)');
+  const fait = db.prepare("SELECT valeur FROM meta WHERE cle = 'contenu'").get() as
+    | { valeur: string }
+    | undefined;
+  if (fait?.valeur === VERSION_CONTENU) return;
+
+  db.transaction(() => {
+    if (toutDemo(db, 'SELECT titre_fr v FROM evenements', DEMO_EVENEMENTS)) {
+      db.exec('DELETE FROM evenements');
+      insererEvenements(db);
+    }
+    if (toutDemo(db, 'SELECT titre_fr v FROM galerie', DEMO_GALERIE)) {
+      db.exec('DELETE FROM galerie');
+      insererGalerie(db);
+    }
+    if (toutDemo(db, 'SELECT nom v FROM membres', ['Membre du bureau'])) {
+      db.exec('DELETE FROM membres');
+      insererMembres(db);
+    }
+    if (
+      toutDemo(db, 'SELECT sigle v FROM partenaires', DEMO_PARTENAIRES) &&
+      (db.prepare('SELECT COUNT(*) n FROM partenaires WHERE logo IS NOT NULL').get() as { n: number }).n === 0
+    ) {
+      db.exec('DELETE FROM partenaires');
+      insererPartenaires(db);
+    }
+    // Articles : la démo jamais retouchée (maj_le = cree_le) reçoit sa version réelle,
+    // puis les nouveaux articles sont ajoutés (les slugs existants sont ignorés).
+    const maj = db.prepare(
+      `UPDATE actualites SET titre_fr=@titre_fr, titre_en=@titre_en, extrait_fr=@extrait_fr,
+         extrait_en=@extrait_en, corps_fr=@corps_fr, corps_en=@corps_en, image=@image
+       WHERE slug=@slug AND maj_le = cree_le`,
+    );
+    for (const a of POSTS) {
+      maj.run({
+        slug: a.slug,
+        titre_fr: a.titre.fr,
+        titre_en: a.titre.en ?? null,
+        extrait_fr: a.extrait.fr,
+        extrait_en: a.extrait.en ?? null,
+        corps_fr: renderBlocks(a.corps.fr),
+        corps_en: a.corps.en ? renderBlocks(a.corps.en) : null,
+        image: a.image ?? null,
+      });
+    }
+    insererActualites(db);
+    db.prepare("INSERT OR REPLACE INTO meta (cle, valeur) VALUES ('contenu', ?)").run(VERSION_CONTENU);
+  })();
 }
