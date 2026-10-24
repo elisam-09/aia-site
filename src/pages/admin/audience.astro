@@ -1,0 +1,175 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { lireMesures } from '../../server/db/repo';
+import { PLAGES, calculer, duree, ilYa, jours, nombre, pct, variation, type Classement } from '../../lib/audience';
+
+const demande = Number(Astro.url.searchParams.get('jours'));
+const plage = (PLAGES as readonly number[]).includes(demande) ? demande : 30;
+const a = calculer(lireMesures(jours(plage * 2)[0]), plage);
+
+// Au-delà de 31 jours, les barres sont regroupées par semaine pour rester lisibles.
+const semaines = plage > 31;
+const valeurs: number[] = [];
+const etiquettes: string[] = [];
+const court = (j: string) => `${j.slice(8)}/${j.slice(5, 7)}`;
+if (semaines) {
+  for (let i = 0; i < a.jours.length; i += 7) {
+    valeurs.push(a.parJour.slice(i, i + 7).reduce((s, n) => s + n, 0));
+    etiquettes.push(court(a.jours[i]));
+  }
+} else {
+  a.jours.forEach((j, i) => {
+    valeurs.push(a.parJour[i]);
+    etiquettes.push(plage > 14 && i % 3 ? '' : court(j));
+  });
+}
+const max = (xs: number[]) => Math.max(1, ...xs);
+const maxJour = max(valeurs);
+const maxHeure = max(a.heures);
+const maxSemaine = max(a.semaine);
+const JOURS_SEMAINE = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+const ordreSemaine = [1, 2, 3, 4, 5, 6, 0];
+
+const vAuj = variation(a.visitesAujourdhui, a.visitesHier);
+const vPer = variation(a.visites, a.visitesPrecedentes);
+const engagement = a.visites ? Math.round((a.engagees / a.visites) * 100) : 0;
+
+interface Carte { n: string; l: string; note?: string; delta?: ReturnType<typeof variation>; grand?: boolean }
+const cartes: Carte[] = [
+  { n: nombre(a.visitesAujourdhui), l: 'Visites aujourd’hui', delta: vAuj, note: `hier : ${nombre(a.visitesHier)}`, grand: true },
+  { n: nombre(a.visites), l: `Visites (${plage} jours)`, delta: vPer, note: `période précédente : ${nombre(a.visitesPrecedentes)}` },
+  { n: nombre(a.total), l: 'Visites depuis le début', note: `${nombre(a.appareilsDistincts)} appareils distincts` },
+  { n: nombre(a.uniques), l: `Visiteurs uniques (${plage} j)`, note: 'une personne revenue un autre jour compte à nouveau' },
+  { n: pct(a.nouveaux, a.nouveaux + a.revenants), l: 'Nouveaux visiteurs', note: `${nombre(a.revenants)} visite(s) de personnes déjà venues` },
+  { n: a.visites ? `${engagement} %` : '–', l: 'Visites engagées', note: `défilé, cliqué ou resté 15 s · rebond : ${a.visites ? 100 - engagement : '–'} %` },
+  { n: duree(a.dureeMoyenne), l: 'Durée moyenne', note: `${a.visites ? (a.vues / a.visites).toFixed(1).replace('.', ',') : '–'} page(s) vue(s) par visite` },
+  { n: a.visites ? `${Math.round(a.mobile * 100)} %` : '–', l: 'Depuis un mobile' },
+];
+
+interface Bloc { titre: string; aide?: string; liste: Classement[]; total?: number }
+const blocsHaut: Bloc[] = [
+  { titre: 'Sections vues', aide: 'Parmi les visiteurs, qui est allé jusqu’où dans l’accueil.', liste: a.sections, total: a.visites },
+  { titre: 'Actions des visiteurs', aide: 'Fenêtre éclipse, clics vers WhatsApp, réseaux, téléphone, demandes d’adhésion.', liste: a.actions },
+];
+const blocsBas: Bloc[] = [
+  { titre: 'Pages les plus vues', liste: a.pages, total: a.vues },
+  { titre: 'D’où viennent les visiteurs', liste: a.origines, total: a.visites },
+  { titre: 'Pays', aide: 'Selon le pays indiqué par l’hébergeur ; vide si non disponible.', liste: a.pays, total: a.visites },
+  { titre: 'Fuseau horaire', aide: 'Estimation du lieu à partir de l’heure du navigateur.', liste: a.fuseaux, total: a.visites },
+  { titre: 'Appareils', liste: a.appareils, total: a.visites },
+  { titre: 'Navigateurs', liste: a.navigateurs, total: a.visites },
+  { titre: 'Systèmes', liste: a.systemes, total: a.visites },
+  { titre: 'Langue du navigateur', liste: a.langues, total: a.visites },
+];
+const vide = a.total === 0 && a.visites === 0;
+---
+
+<AdminLayout title="Audience" description="Combien de personnes visitent le site, quand, d’où, et ce qui les intéresse.">
+  <Fragment slot="actions">
+    <a class="bouton bouton--contour" href={`/admin/audience.csv?jours=${plage}`} download>Exporter (CSV)</a>
+  </Fragment>
+
+  <div class="filtres" role="group" aria-label="Période">
+    {PLAGES.map((p) => <a href={`/admin/audience?jours=${p}`} class:list={[{ actif: p === plage }]}>{p} jours</a>)}
+  </div>
+  <p class="aud-pouls"><i aria-hidden="true"></i>Dernière visite : {ilYa(a.derniereVisite)}</p>
+
+  {
+    vide ? (
+      <section class="panneau">
+        <h2>Pas encore de visite enregistrée</h2>
+        <p>
+          Le compteur démarre dès qu’un visiteur ouvre le site. Tes propres visites ne sont pas comptées tant que tu es
+          connecté à l’administration, et les robots sont ignorés. Ouvre le site depuis un navigateur où tu n’es pas
+          connecté (navigation privée), puis reviens actualiser cette page.
+        </p>
+      </section>
+    ) : (
+      <>
+        <div class="grille-stats">
+          {cartes.map((c) => (
+            <div class:list={['stat', 'stat--statique', { 'stat--grand': c.grand }]}>
+              <span class="stat__n">{c.n}</span>
+              <span class="stat__l">
+                {c.l}
+                {c.delta && <em class={`aud-delta aud-delta--${c.delta.sens}`}>{c.delta.texte}</em>}
+              </span>
+              {c.note && <small class="stat__note">{c.note}</small>}
+            </div>
+          ))}
+        </div>
+
+        <section class="panneau">
+          <h2>Visites {semaines ? 'par semaine' : 'par jour'}</h2>
+          <div class:list={['aud-barres', { 'aud-barres--dense': plage > 14 }]} role="img" aria-label={`Visites ${semaines ? 'par semaine' : 'par jour'} sur ${plage} jours`}>
+            {valeurs.map((n, i) => (
+              <div class="aud-barre" title={`${etiquettes[i] || a.jours[i]} : ${nombre(n)}`}>
+                <em>{n ? nombre(n) : ''}</em>
+                <i style={`height:${Math.max(2, Math.round((n / maxJour) * 150))}px;animation-delay:${i * 18}ms`}></i>
+                <span>{etiquettes[i]}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div class="grille-2 aud-gap">
+          <section class="panneau">
+            <h2>Heures de visite</h2>
+            <p class="aud-aide">Heure locale du visiteur.</p>
+            <div class="aud-barres aud-barres--dense">
+              {a.heures.map((n, h) => (
+                <div class="aud-barre" title={`${h} h : ${nombre(n)}`}>
+                  <em></em>
+                  <i style={`height:${Math.max(2, Math.round((n / maxHeure) * 150))}px`}></i>
+                  <span>{h % 3 ? '' : `${h}h`}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section class="panneau">
+            <h2>Jours de la semaine</h2>
+            <p class="aud-aide">Quand le public vient le plus.</p>
+            <div class="aud-barres">
+              {ordreSemaine.map((d) => (
+                <div class="aud-barre" title={`${JOURS_SEMAINE[d]} : ${nombre(a.semaine[d])}`}>
+                  <em>{a.semaine[d] ? nombre(a.semaine[d]) : ''}</em>
+                  <i style={`height:${Math.max(2, Math.round((a.semaine[d] / maxSemaine) * 150))}px`}></i>
+                  <span>{JOURS_SEMAINE[d]}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {[blocsHaut, blocsBas].map((groupe) => (
+          <div class="grille-2 aud-gap">
+            {groupe.map((b) => (
+              <section class="panneau">
+                <h2>{b.titre}</h2>
+                {b.aide && <p class="aud-aide">{b.aide}</p>}
+                {b.liste.length === 0 ? (
+                  <p class="aud-vide">Aucune donnée pour le moment.</p>
+                ) : (
+                  <div class="aud-liste">
+                    {b.liste.map((l) => (
+                      <div class="aud-ligne">
+                        <b title={l.nom}>{l.nom}</b>
+                        <span class="aud-piste"><i style={`width:${Math.max(3, (l.n / b.liste[0].n) * 100)}%`}></i></span>
+                        <u>{nombre(l.n)}{b.total ? ` · ${pct(l.n, b.total)}` : ''}</u>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ))}
+          </div>
+        ))}
+
+        <p class="aud-aide" style="margin-top:1.4rem">
+          Statistiques anonymes : ni adresse IP, ni nom, ni cookie. Les visites des administrateurs connectés, les robots
+          et les navigateurs en « Ne pas suivre » ne sont pas comptés.
+        </p>
+      </>
+    )
+  }
+</AdminLayout>

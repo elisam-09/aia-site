@@ -44,6 +44,10 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
 - **Adhésions** : formulaire `AdhesionForm.astro` → `POST /api/adhesion` (piège à robots,
   5 envois / 10 min / IP) → table `adhesions` → `/admin/adhesions` (statut, note, export
   CSV réservé au rôle admin). Données personnelles : ne pas les exposer ailleurs.
+- **Audience** : `scripts/mesure.ts` (chargé par `Base.astro`) → `POST /api/mesure` (ignore robots, admins
+  connectés, limite 240 msg / 10 min / IP) → compteurs anonymes par jour dans `mesure_jour` (clés « préfixe:valeur »,
+  jours spéciaux `total` et `meta`) → `/admin/audience` (calculs dans `lib/audience.ts`) + export `audience.csv`.
+  Ne jamais y stocker d'IP ni d'identifiant ; les clés libres (page/section/action) sont plafonnées par jour.
 - **Colonnes ajoutées** après coup : déclarer dans `COLONNES_AJOUTEES` (`db/index.ts`),
   elles sont créées au démarrage sur les bases existantes.
 - **Admin** : thème « nuit nuageuse » (`admin.css`), aucune émoticône, icônes SVG au

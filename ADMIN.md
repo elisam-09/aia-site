@@ -56,6 +56,20 @@ le menu **Adhésions** (le nombre de nouvelles demandes s'affiche en orange dans
 
 Ce sont des données personnelles : supprime les demandes dont tu n'as plus besoin.
 
+## Audience (compteur de visites)
+
+Le menu **Audience** montre combien de personnes visitent le site, de façon **anonyme**
+(ni adresse IP, ni nom, ni cookie) :
+
+- visites aujourd’hui, sur 7 / 30 / 90 jours et depuis le début, avec la comparaison à la période précédente ;
+- nouveaux visiteurs ou revenants, durée moyenne, part de visites « engagées » (défilé, cliqué ou resté 15 s) ;
+- heures et jours de pointe, provenance (Facebook, Google, WhatsApp…), pays, appareils, navigateurs ;
+- sections de l’accueil réellement vues, pages les plus lues, et actions (fenêtre éclipse ouverte, clics WhatsApp /
+  réseaux / téléphone, demandes d’adhésion envoyées).
+
+Le bouton **Exporter (CSV)** télécharge les chiffres pour Excel. Tes propres visites ne sont pas comptées tant que tu es
+connecté à l’administration ; les robots et les navigateurs réglés sur « Ne pas suivre » non plus.
+
 ## Sauvegarde
 
 Tableau de bord → **Télécharger la sauvegarde (JSON)** : une copie de tout le contenu

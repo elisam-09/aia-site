@@ -112,6 +112,15 @@ CREATE TABLE IF NOT EXISTS adhesions (
   maj_le TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS adhesions_statut ON adhesions (statut, cree_le);
+
+-- Audience : compteurs anonymes agrégés par jour (aucune IP, aucun identifiant personnel).
+-- jour = AAAA-MM-JJ (UTC), ou « total » (depuis le début) / « meta » (dernière visite).
+CREATE TABLE IF NOT EXISTS mesure_jour (
+  jour TEXT NOT NULL,
+  cle TEXT NOT NULL,
+  valeur INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (jour, cle)
+);
 `;
 
 /** Colonnes ajoutées après la première mise en ligne : créées si absentes (bases existantes). */

@@ -490,3 +490,49 @@ export function exporterContenu(): Record<string, unknown> {
     ...Object.fromEntries(tables.map((t) => [t, db.prepare(`SELECT * FROM ${t}`).all()])),
   };
 }
+
+/* ============================ AUDIENCE ============================ */
+
+export interface MesureRow {
+  jour: string;
+  cle: string;
+  valeur: number;
+}
+
+/** Clés « libres » (pages, sections, actions) : plafonnées par jour pour éviter qu'un robot remplisse la base. */
+const MAX_CLES_LIBRES_PAR_JOUR = 80;
+
+/** Ajoute des compteurs pour un jour (une transaction). `cle` = « préfixe:valeur ». */
+export function ajouterMesures(jour: string, increments: Record<string, number>): void {
+  const db = getDb();
+  const ajoute = db.prepare(
+    'INSERT INTO mesure_jour (jour, cle, valeur) VALUES (?, ?, ?) ON CONFLICT(jour, cle) DO UPDATE SET valeur = valeur + excluded.valeur',
+  );
+  const existe = db.prepare('SELECT 1 FROM mesure_jour WHERE jour = ? AND cle = ?');
+  const nombre = db.prepare('SELECT COUNT(*) n FROM mesure_jour WHERE jour = ? AND cle LIKE ?');
+  db.transaction(() => {
+    for (const [cle, n] of Object.entries(increments)) {
+      const prefixe = cle.split(':')[0];
+      const libre = prefixe === 'page' || prefixe === 'section' || prefixe === 'action';
+      if (libre && !existe.get(jour, cle)) {
+        const { n: deja } = nombre.get(jour, `${prefixe}:%`) as { n: number };
+        if (deja >= MAX_CLES_LIBRES_PAR_JOUR) continue;
+      }
+      ajoute.run(jour, cle, n);
+    }
+  })();
+}
+
+/** Remplace une valeur (ex. horodatage de la dernière visite). */
+export function fixerMesure(jour: string, cle: string, valeur: number): void {
+  getDb()
+    .prepare('INSERT INTO mesure_jour (jour, cle, valeur) VALUES (?, ?, ?) ON CONFLICT(jour, cle) DO UPDATE SET valeur = excluded.valeur')
+    .run(jour, cle, valeur);
+}
+
+/** Compteurs des jours à partir de `depuis` (AAAA-MM-JJ), plus les cumuls « total » et « meta ». */
+export function lireMesures(depuis: string): MesureRow[] {
+  return getDb()
+    .prepare("SELECT jour, cle, valeur FROM mesure_jour WHERE jour >= ? OR jour IN ('total', 'meta')")
+    .all(depuis) as MesureRow[];
+}
