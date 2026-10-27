@@ -7,14 +7,14 @@ export const COPY = {
     splash: 'ALIGNEMENT…',
     rail: 'ALTITUDE',
     hero: {
-      eyebrow: "Association Ivoirienne d'Astronomie · Abidjan",
+      eyebrow: "Association Ivoirienne d'Astronomie · Côte d'Ivoire",
       h1: ['Le ciel', 'commence ici.'],
       lead: "Depuis 2021, nous emmenons la Côte d'Ivoire lever les yeux : télescopes ouverts à tous, clubs dans les lycées, conférences et chasse aux astéroïdes avec l'Union Astronomique Internationale et la NASA. Prochaine étape : un observatoire national.",
       cta: 'Commencer la descente',
       passer: "Passer l'intro ↓",
       defiler: 'DÉFILER',
       eclate: 'VUE ÉCLATÉE',
-      final: ['Regarde.', "Le ciel d'Abidjan est à toi."],
+      final: ['Regarde.', 'Le ciel ivoirien est à toi.'],
       pieces: [
         ['Pare-buée', "Protège l'objectif de la rosée et des lumières parasites."],
         ['Objectif', 'La lentille qui capte la lumière des astres lointains.'],
@@ -49,7 +49,7 @@ export const COPY = {
     manifeste: {
       avant: "Le 13 février 2021, à l'Université Félix Houphouët-Boigny, des passionnés ont décidé de",
       fort1: 'réconcilier les Ivoiriens avec les sciences.',
-      milieu: "Depuis, nous emmenons élèves, étudiants et curieux sous le ciel d'Abidjan, avec un rêve :",
+      milieu: 'Depuis, nous emmenons élèves, étudiants et curieux sous le ciel ivoirien, avec un rêve :',
       fort2: "bâtir l'observatoire national.",
       stats: [
         { n: 2021, brut: true, label: 'Année de fondation' },
@@ -60,7 +60,7 @@ export const COPY = {
     },
     ceinture: {
       eyebrow: 'Ceinture d’astéroïdes — 2,2 à 3,2 UA',
-      titre: 'Six astéroïdes découverts depuis Abidjan',
+      titre: 'Six astéroïdes découverts depuis la Côte d’Ivoire',
       p1: "En 2022, une équipe de bénévoles de l'AIA a détecté six astéroïdes inconnus dans les images du télescope Pan-STARRS, avec l'International Astronomical Search Collaboration, sous l'égide de l'UAI et de la NASA.",
       p2: 'La campagne 2026/2027 s’est tenue du 7 septembre au 2 octobre : ses résultats préliminaires comptent une nouvelle découverte, signée par le club du Lycée français Blaise Pascal.',
       cta: 'Découvrir la recherche',
@@ -78,7 +78,7 @@ export const COPY = {
       eyebrow: 'Orbite basse — 400 km',
       globeTitre: 'Un point orange sur la Terre.',
       globeLead:
-        "À 5° de latitude nord, Abidjan voit presque tout le ciel : les étoiles du nord comme celles du sud. C'est d'ici que l'AIA observe, forme et cherche des astéroïdes.",
+        "Entre 4° et 10° de latitude nord, la Côte d'Ivoire voit presque tout le ciel : les étoiles du nord comme celles du sud. C'est d'ici que l'AIA observe, forme et cherche des astéroïdes.",
       coords: [
         ['LATITUDE', '5°21′ N'],
         ['LONGITUDE', '4°01′ O'],
@@ -111,7 +111,7 @@ export const COPY = {
           image: '/images/photos/otma.webp',
           alt: "Participants à une soirée d'observation de l'AIA",
           texte: "Des télescopes en accès libre pour que chacun voie la Lune, les planètes et les étoiles de ses propres yeux, notamment sur le campus de Cocody.",
-          tags: ['Gratuit', 'Tout public', 'Abidjan et au-delà'],
+          tags: ['Gratuit', 'Tout public', 'Partout en Côte d’Ivoire'],
         },
         {
           titre: 'Écoles & clubs',
@@ -155,17 +155,17 @@ export const COPY = {
         lignes: [
           { label: 'Ligne de Kármán', valeur: '100 km' },
           { label: 'Météores visibles', valeur: '75 – 100 km' },
-          { label: 'Ciel d’Abidjan', valeur: 'saison sèche = velours' },
+          { label: 'Ciel ivoirien', valeur: 'saison sèche = velours' },
         ],
       },
     },
     observer: {
       eyebrow: 'Observer soi-même',
       titre: 'Ce soir, au-dessus de nous.',
-      lead: "Pas besoin de télescope pour commencer : la Lune, les planètes brillantes et les grandes constellations se voient à l'œil nu depuis Abidjan.",
-      luneAria: "La Lune telle qu'elle est visible aujourd'hui depuis Abidjan",
+      lead: "Pas besoin de télescope pour commencer : la Lune, les planètes brillantes et les grandes constellations se voient à l'œil nu depuis la Côte d'Ivoire.",
+      luneAria: "La Lune telle qu'elle est visible aujourd'hui depuis la Côte d'Ivoire",
       cases: [
-        ['HEURE LOCALE (GMT)', 'heure', 'Abidjan, 5°21′ N · 4°01′ O'],
+        ['HEURE LOCALE (GMT)', 'heure', 'Côte d’Ivoire · GMT toute l’année'],
         ['PHASE DE LA LUNE', 'phase', ''],
         ['ÉCLAIRAGE LUNAIRE', 'eclairage', 'de la face visible'],
         ['ISS · ORBITE', '', '16 levers de Soleil par jour'],
@@ -186,7 +186,7 @@ export const COPY = {
       cta2: 'Nous écrire',
       partenairesTitre: 'Un réseau qui dépasse l’atmosphère',
       hud: {
-        titre: 'Ciel d’Abidjan',
+        titre: 'Ciel ivoirien',
         lignes: [
           { label: 'Base', valeur: '5°21′ N · 4°01′ O' },
           { label: 'Altitude', valeur: '18 m' },
@@ -199,14 +199,14 @@ export const COPY = {
     splash: 'ALIGNING…',
     rail: 'ALTITUDE',
     hero: {
-      eyebrow: 'Ivorian Astronomy Association · Abidjan',
+      eyebrow: 'Ivorian Astronomy Association · Côte d’Ivoire',
       h1: ['The sky', 'starts here.'],
       lead: 'Since 2021 we have been getting Côte d’Ivoire to look up: telescopes open to all, high-school clubs, lectures and asteroid hunting with the International Astronomical Union and NASA. Next step: a national observatory.',
       cta: 'Start the descent',
       passer: 'Skip intro ↓',
       defiler: 'SCROLL',
       eclate: 'EXPLODED VIEW',
-      final: ['Look up.', 'The Abidjan sky is yours.'],
+      final: ['Look up.', 'The Ivorian sky is yours.'],
       pieces: [
         ['Dew shield', 'Protects the lens from dew and stray light.'],
         ['Objective', 'The lens that gathers light from distant stars.'],
@@ -241,7 +241,7 @@ export const COPY = {
     manifeste: {
       avant: 'On 13 February 2021, at Félix Houphouët-Boigny University, a group of enthusiasts set out to',
       fort1: 'reconcile Ivorians with science.',
-      milieu: 'Since then we have been taking pupils, students and the curious under the Abidjan sky, with one dream:',
+      milieu: 'Since then we have been taking pupils, students and the curious under the Ivorian sky, with one dream:',
       fort2: 'to build the national observatory.',
       stats: [
         { n: 2021, brut: true, label: 'Founded' },
@@ -252,7 +252,7 @@ export const COPY = {
     },
     ceinture: {
       eyebrow: 'Asteroid belt — 2.2 to 3.2 AU',
-      titre: 'Six asteroids discovered from Abidjan',
+      titre: 'Six asteroids discovered from Côte d’Ivoire',
       p1: 'In 2022, a team of AIA volunteers detected six unknown asteroids in Pan-STARRS telescope images, with the International Astronomical Search Collaboration, under the IAU and NASA umbrella.',
       p2: 'The 2026/2027 campaign ran from 7 September to 2 October: its preliminary results include a new discovery by the Lycée français Blaise Pascal club.',
       cta: 'Discover the research',
@@ -270,7 +270,7 @@ export const COPY = {
       eyebrow: 'Low orbit — 400 km',
       globeTitre: 'An orange dot on Earth.',
       globeLead:
-        'At 5° north, Abidjan sees almost the whole sky: northern and southern stars alike. This is where AIA observes, teaches and hunts asteroids.',
+        'Between 4° and 10° north, Côte d’Ivoire sees almost the whole sky: northern and southern stars alike. This is where AIA observes, teaches and hunts asteroids.',
       coords: [
         ['LATITUDE', '5°21′ N'],
         ['LONGITUDE', '4°01′ W'],
@@ -303,7 +303,7 @@ export const COPY = {
           image: '/images/photos/otma.webp',
           alt: 'Participants at an AIA observing night',
           texte: 'Free-access telescopes so that everyone can see the Moon, planets and stars with their own eyes, especially on the Cocody campus.',
-          tags: ['Free', 'All ages', 'Abidjan and beyond'],
+          tags: ['Free', 'All ages', 'All over Côte d’Ivoire'],
         },
         {
           titre: 'Schools & clubs',
@@ -347,17 +347,17 @@ export const COPY = {
         lignes: [
           { label: 'Kármán line', valeur: '100 km' },
           { label: 'Visible meteors', valeur: '75 – 100 km' },
-          { label: 'Abidjan sky', valeur: 'dry season = velvet' },
+          { label: 'Ivorian sky', valeur: 'dry season = velvet' },
         ],
       },
     },
     observer: {
       eyebrow: 'Observe for yourself',
       titre: 'Tonight, above us.',
-      lead: 'No telescope needed to begin: the Moon, bright planets and major constellations are visible to the naked eye from Abidjan.',
-      luneAria: 'The Moon as seen today from Abidjan',
+      lead: 'No telescope needed to begin: the Moon, bright planets and major constellations are visible to the naked eye from Côte d’Ivoire.',
+      luneAria: 'The Moon as seen today from Côte d’Ivoire',
       cases: [
-        ['LOCAL TIME (GMT)', 'heure', 'Abidjan, 5°21′ N · 4°01′ W'],
+        ['LOCAL TIME (GMT)', 'heure', 'Côte d’Ivoire · GMT all year round'],
         ['MOON PHASE', 'phase', ''],
         ['ILLUMINATION', 'eclairage', 'of the visible face'],
         ['ISS · ORBIT', '', '16 sunrises a day'],
@@ -378,7 +378,7 @@ export const COPY = {
       cta2: 'Write to us',
       partenairesTitre: 'A network beyond the atmosphere',
       hud: {
-        titre: 'Abidjan sky',
+        titre: 'Ivorian sky',
         lignes: [
           { label: 'Base', valeur: '5°21′ N · 4°01′ W' },
           { label: 'Elevation', valeur: '18 m' },

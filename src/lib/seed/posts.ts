@@ -219,7 +219,7 @@ export const POSTS: SeedPost[] = [
           "L'Afrique de l'Ouest compte peu d'infrastructures d'astronomie. Pourtant, des observatoires modestes, bien placés et bien gérés produisent des données utiles : suivi d'astéroïdes, étude d'étoiles variables.",
         ),
         p(
-          "C'est le sens de notre projet : un site permanent, équipé d'instruments de qualité, ouvert aux chercheurs, aux étudiants et au public. Un lieu où un lycéen d'Abidjan peut faire sa première vraie mesure scientifique.",
+          "C'est le sens de notre projet : un site permanent, équipé d'instruments de qualité, ouvert aux chercheurs, aux étudiants et au public. Un lieu où un lycéen ivoirien peut faire sa première vraie mesure scientifique.",
         ),
         h2("De l'observatoire à l'agence spatiale"),
         p(
@@ -232,7 +232,7 @@ export const POSTS: SeedPost[] = [
           'West Africa has few astronomy facilities. Yet modest, well-located, well-run observatories produce useful data: asteroid follow-up, variable-star studies.',
         ),
         p(
-          'That is the point of our project: a permanent site with quality instruments, open to researchers, students and the public. A place where a high-schooler from Abidjan can make their first real scientific measurement.',
+          'That is the point of our project: a permanent site with quality instruments, open to researchers, students and the public. A place where an Ivorian high-schooler can make their first real scientific measurement.',
         ),
         h2('From observatory to space agency'),
         p(

@@ -8,7 +8,7 @@ import type { APIRoute } from 'astro';
 import { createAdhesion } from '../../server/db/repo';
 import { str } from '../../server/formutil';
 import { routes } from '../../i18n/ui';
-import { PROFILS } from '../../lib/adhesion';
+import { PROFILS, INTERETS } from '../../lib/adhesion';
 
 const FENETRE_MS = 10 * 60_000;
 const MAX = 5;
@@ -55,6 +55,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const ville = str(fd, 'ville').slice(0, 80);
   const profil = str(fd, 'profil');
   const motivation = str(fd, 'motivation').slice(0, 2000);
+  // cases à cocher : on ne garde que les clés connues, sans doublon
+  const interets = [...new Set(fd.getAll('interets').map(String))].filter((k) => k in INTERETS);
 
   const emailOk = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const telOk = !telephone || /^[+\d][\d\s().-]{5,}$/.test(telephone);
@@ -67,6 +69,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     ville: ville || null,
     profil: profil in PROFILS ? profil : null,
     motivation: motivation || null,
+    interets: interets.length ? interets.join(',') : null,
     langue,
   });
   return repondre(true);

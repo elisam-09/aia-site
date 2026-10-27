@@ -5,7 +5,7 @@
  * Fonctionne sans JavaScript (redirection) ; avec JS, envoi sans recharger la page.
  */
 import { useT, type Lang } from '../i18n/ui';
-import { PROFILS } from '../lib/adhesion';
+import { PROFILS, INTERETS } from '../lib/adhesion';
 
 interface Props {
   lang: Lang;
@@ -17,6 +17,8 @@ const retour = Astro.url.searchParams.get('adhesion');
 const C = {
   fr: {
     profil: 'Je suis',
+    interets: 'Ce qui m’intéresse',
+    interetsAide: 'Facultatif, plusieurs choix possibles.',
     contactNote: 'Indique au moins un e-mail ou un numéro de téléphone pour qu’on puisse te répondre.',
     confidentialite:
       "Tes informations servent uniquement au bureau de l'AIA pour te recontacter. Elles ne sont ni publiées ni transmises.",
@@ -29,6 +31,8 @@ const C = {
   },
   en: {
     profil: 'I am',
+    interets: 'What interests me',
+    interetsAide: 'Optional, tick as many as you like.',
     contactNote: 'Give at least an email or a phone number so we can get back to you.',
     confidentialite:
       'Your details are only used by the AIA board to get back to you. They are never published or shared.',
@@ -73,6 +77,17 @@ const erreurInitiale =
     <span>{t('form.ville')}</span>
     <input name="ville" autocomplete="address-level2" maxlength="80" />
   </label>
+  <fieldset class="adhesion__interets">
+    <legend>{C.interets} <small>{C.interetsAide}</small></legend>
+    {
+      Object.entries(INTERETS).map(([v, l]) => (
+        <label class="adhesion__case">
+          <input type="checkbox" name="interets" value={v} />
+          <span>{l[lang]}</span>
+        </label>
+      ))
+    }
+  </fieldset>
   <label class="adhesion__champ">
     <span>{t('form.motivation')}</span>
     <textarea name="motivation" rows="5" maxlength="2000"></textarea>
@@ -170,6 +185,54 @@ const erreurInitiale =
     outline: none;
     border-color: var(--ci-orange);
     background: rgba(248, 247, 248, 0.08);
+  }
+  .adhesion__interets {
+    display: grid;
+    gap: 0.55rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .adhesion__interets legend {
+    grid-column: 1 / -1;
+    margin-bottom: 0.5rem;
+    padding: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--creme-2);
+  }
+  .adhesion__interets legend small {
+    margin-left: 0.4rem;
+    font-weight: 400;
+    color: var(--creme-45);
+  }
+  .adhesion__case {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon-sm);
+    background: rgba(248, 247, 248, 0.03);
+    font-size: 0.92rem;
+    color: var(--creme-2);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .adhesion__case:hover {
+    border-color: var(--creme-25);
+  }
+  .adhesion__case:has(input:checked) {
+    border-color: var(--ci-vert);
+    background: rgba(0, 158, 96, 0.1);
+  }
+  .adhesion__case input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    flex: none;
+    accent-color: var(--ci-vert);
   }
   .adhesion__piege {
     position: absolute;

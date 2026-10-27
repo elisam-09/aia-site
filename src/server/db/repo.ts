@@ -430,6 +430,7 @@ export interface AdhesionInput {
   ville: string | null;
   profil: string | null;
   motivation: string | null;
+  interets: string | null;
   langue: string;
 }
 
@@ -437,20 +438,38 @@ export function createAdhesion(a: AdhesionInput): number {
   const t = now();
   const info = getDb()
     .prepare(
-      `INSERT INTO adhesions (nom, email, telephone, ville, profil, motivation, langue, statut, cree_le, maj_le)
-       VALUES (@nom, @email, @telephone, @ville, @profil, @motivation, @langue, 'nouvelle', @t, @t)`,
+      `INSERT INTO adhesions (nom, email, telephone, ville, profil, motivation, interets, langue, statut, cree_le, maj_le)
+       VALUES (@nom, @email, @telephone, @ville, @profil, @motivation, @interets, @langue, 'nouvelle', @t, @t)`,
     )
     .run({ ...a, t });
   return Number(info.lastInsertRowid);
 }
 
-export function listAdhesions(statut?: StatutAdhesion): AdhesionRow[] {
-  const db = getDb();
-  return (
-    statut
-      ? db.prepare('SELECT * FROM adhesions WHERE statut = ? ORDER BY cree_le DESC').all(statut)
-      : db.prepare('SELECT * FROM adhesions ORDER BY cree_le DESC').all()
-  ) as AdhesionRow[];
+/** Liste les demandes, filtrées par statut et/ou par centre d'intérêt (clé exacte). */
+export function listAdhesions(statut?: StatutAdhesion, interet?: string): AdhesionRow[] {
+  const conditions: string[] = [];
+  const params: string[] = [];
+  if (statut) {
+    conditions.push('statut = ?');
+    params.push(statut);
+  }
+  if (interet) {
+    // « ,evenements,gestion, » contient « ,gestion, » : correspondance exacte d'une clé
+    conditions.push("(',' || IFNULL(interets, '') || ',') LIKE ?");
+    params.push(`%,${interet},%`);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  return getDb()
+    .prepare(`SELECT * FROM adhesions ${where} ORDER BY cree_le DESC`)
+    .all(...params) as AdhesionRow[];
+}
+
+/** Nombre de demandes par centre d'intérêt. */
+export function countAdhesionsParInteret(): Record<string, number> {
+  const c: Record<string, number> = {};
+  for (const r of getDb().prepare('SELECT interets FROM adhesions').all() as { interets: string | null }[])
+    for (const k of (r.interets ?? '').split(',').filter(Boolean)) c[k] = (c[k] ?? 0) + 1;
+  return c;
 }
 
 export function getAdhesion(id: number): AdhesionRow | undefined {

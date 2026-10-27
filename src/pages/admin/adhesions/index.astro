@@ -1,13 +1,24 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import * as repo from '../../../server/db/repo';
-import { PROFILS, STATUTS } from '../../../lib/adhesion';
+import { PROFILS, STATUTS, INTERETS, lireInterets } from '../../../lib/adhesion';
 import type { StatutAdhesion } from '../../../server/db/types';
 
 const filtre = Astro.url.searchParams.get('statut') as StatutAdhesion | null;
 const statut = filtre && filtre in STATUTS ? filtre : undefined;
-const demandes = repo.listAdhesions(statut);
+const filtreInteret = Astro.url.searchParams.get('interet');
+const interet = filtreInteret && filtreInteret in INTERETS ? filtreInteret : undefined;
+const demandes = repo.listAdhesions(statut, interet);
 const compte = repo.countAdhesionsParStatut();
+const parInteret = repo.countAdhesionsParInteret();
+/** Lien de filtre qui conserve l'autre critère (statut / centre d'intérêt). */
+const lien = (s?: string, i?: string) => {
+  const q = new URLSearchParams();
+  if (s) q.set('statut', s);
+  if (i) q.set('interet', i);
+  const t = q.toString();
+  return '/admin/adhesions' + (t ? `?${t}` : '');
+};
 const total = Object.values(compte).reduce((a, b) => a + b, 0);
 const estAdmin = Astro.locals.admin?.role === 'admin';
 const fmt = (iso: string) =>
@@ -25,11 +36,21 @@ const initiales = (n: string) =>
   </Fragment>
 
   <nav class="filtres" aria-label="Filtrer par statut">
-    <a href="/admin/adhesions" class:list={{ actif: !statut }}>Toutes<span>{total}</span></a>
+    <a href={lien(undefined, interet)} class:list={{ actif: !statut }}>Toutes<span>{total}</span></a>
     {
       (Object.keys(STATUTS) as StatutAdhesion[]).map((s) => (
-        <a href={`/admin/adhesions?statut=${s}`} class:list={{ actif: statut === s }}>
+        <a href={lien(s, interet)} class:list={{ actif: statut === s }}>
           {STATUTS[s]}s<span>{compte[s]}</span>
+        </a>
+      ))
+    }
+  </nav>
+  <nav class="filtres" aria-label="Filtrer par centre d’intérêt">
+    <a href={lien(statut)} class:list={{ actif: !interet }}>Tous les intérêts</a>
+    {
+      Object.entries(INTERETS).map(([k, l]) => (
+        <a href={lien(statut, k)} class:list={{ actif: interet === k }}>
+          {l.fr}<span>{parInteret[k] ?? 0}</span>
         </a>
       ))
     }
@@ -39,7 +60,7 @@ const initiales = (n: string) =>
     demandes.length === 0 ? (
       <div class="lignes">
         <p class="vide">
-          <b>Aucune demande{statut ? ` « ${STATUTS[statut].toLowerCase()} »` : ''}</b>
+          <b>Aucune demande{statut ? ` « ${STATUTS[statut].toLowerCase()} »` : ''}{interet ? ` intéressée par « ${INTERETS[interet as keyof typeof INTERETS].fr} »` : ''}</b>
           Elles arrivent ici dès que quelqu’un remplit le formulaire de la page « Rejoindre l’AIA ».
         </p>
       </div>
@@ -56,6 +77,7 @@ const initiales = (n: string) =>
                 {d.ville && <span>{d.ville}</span>}
                 <span>{d.email ?? d.telephone}</span>
                 <span>reçue le {fmt(d.cree_le)}</span>
+                {lireInterets(d.interets).map((k) => <span class="pastille">{INTERETS[k].fr}</span>)}
               </div>
             </div>
             <div class="ac">
