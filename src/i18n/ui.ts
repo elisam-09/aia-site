@@ -89,7 +89,7 @@ export const ui = {
     'form.mailto':
       'Le formulaire ouvrira ton application e-mail avec le message pré-rempli.',
 
-    'footer.baseline': 'Depuis Abidjan, nous regardons plus loin.',
+    'footer.baseline': 'Depuis la Côte d’Ivoire, nous regardons plus loin.',
     'footer.droits': 'Tous droits réservés.',
     'footer.explorer': 'Explorer',
     'footer.association': "L'association",
@@ -156,7 +156,7 @@ export const ui = {
     'form.erreur': 'Sending failed. Try again, or email us directly.',
     'form.mailto': 'The form will open your email app with a pre-filled message.',
 
-    'footer.baseline': 'From Abidjan, we look further.',
+    'footer.baseline': 'From Côte d’Ivoire, we look further.',
     'footer.droits': 'All rights reserved.',
     'footer.explorer': 'Explore',
     'footer.association': 'The association',

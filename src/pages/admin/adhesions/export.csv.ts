@@ -4,7 +4,7 @@
  */
 import type { APIRoute } from 'astro';
 import { listAdhesions } from '../../../server/db/repo';
-import { PROFILS, STATUTS } from '../../../lib/adhesion';
+import { PROFILS, STATUTS, INTERETS, lireInterets } from '../../../lib/adhesion';
 
 export const GET: APIRoute = ({ locals }) => {
   if (locals.admin?.role !== 'admin') return new Response('Réservé aux administrateurs', { status: 403 });
@@ -15,7 +15,7 @@ export const GET: APIRoute = ({ locals }) => {
     return `"${s.replace(/"/g, '""')}"`;
   };
   const lignes = [
-    ['Date', 'Nom', 'E-mail', 'Téléphone', 'Ville', 'Profil', 'Motivation', 'Statut', 'Note'].map(cel).join(';'),
+    ['Date', 'Nom', 'E-mail', 'Téléphone', 'Ville', 'Profil', 'Centres d’intérêt', 'Motivation', 'Statut', 'Note'].map(cel).join(';'),
     ...listAdhesions().map((a) =>
       [
         a.cree_le.slice(0, 10),
@@ -24,6 +24,7 @@ export const GET: APIRoute = ({ locals }) => {
         a.telephone,
         a.ville,
         a.profil ? PROFILS[a.profil as keyof typeof PROFILS]?.fr ?? a.profil : '',
+        lireInterets(a.interets).map((k) => INTERETS[k].fr).join(', '),
         a.motivation,
         STATUTS[a.statut],
         a.note,

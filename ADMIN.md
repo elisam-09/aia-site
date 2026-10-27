@@ -47,11 +47,12 @@ peux aussi le **Supprimer**, tout en bas).
 Chaque personne qui remplit le formulaire de la page **Rejoindre l'AIA** apparaît dans
 le menu **Adhésions** (le nombre de nouvelles demandes s'affiche en orange dans le menu).
 
-1. Ouvre une demande : nom, profil, e-mail, téléphone, ville, motivation.
+1. Ouvre une demande : nom, profil, e-mail, téléphone, ville, centres d'intérêt, motivation.
 2. Contacte la personne avec **Écrire un e-mail** ou **WhatsApp** (message pré-rempli).
 3. Change le **statut** : *Nouvelle → Contactée → Acceptée* (ou *Refusée*) et ajoute une
    **note interne** (visible seulement par le bureau).
-4. Les filtres en haut de la liste trient par statut. Un administrateur peut **exporter**
+4. Les filtres en haut de la liste trient par statut et par centre d'intérêt (organisation
+   d'événements, communication, nouvelles technologies, gestion) ; ils se combinent. Un administrateur peut **exporter**
    toutes les demandes en CSV (Excel).
 
 Ce sont des données personnelles : supprime les demandes dont tu n'as plus besoin.

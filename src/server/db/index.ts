@@ -130,6 +130,7 @@ const COLONNES_AJOUTEES: [table: string, colonne: string, definition: string][] 
   ['actualites', 'origine', "TEXT NOT NULL DEFAULT 'AIA'"],
   ['actualites', 'liens', 'TEXT'],
   ['membres', 'badge', 'TEXT'],
+  ['adhesions', 'interets', 'TEXT'],
 ];
 
 function migrer(db: Database.Database): void {

@@ -102,6 +102,7 @@ export interface AdhesionRow {
   ville: string | null;
   profil: string | null;
   motivation: string | null;
+  interets: string | null; // clés séparées par des virgules (voir lib/adhesion.ts)
   langue: string;
   statut: StatutAdhesion;
   note: string | null;

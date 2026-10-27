@@ -2,7 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import * as repo from '../../../server/db/repo';
 import { str } from '../../../server/formutil';
-import { PROFILS, STATUTS } from '../../../lib/adhesion';
+import { PROFILS, STATUTS, INTERETS, lireInterets } from '../../../lib/adhesion';
 import type { StatutAdhesion } from '../../../server/db/types';
 
 const id = Number(Astro.params.id);
@@ -46,6 +46,16 @@ const salut = d.langue === 'en' ? `Hello ${d.nom}, this is the Ivorian Astronomy
         <dd>{d.email ? <a href={`mailto:${d.email}`}>{d.email}</a> : '—'}</dd>
         <dt>Téléphone</dt>
         <dd>{d.telephone ? <a href={`tel:${d.telephone.replace(/[^\d+]/g, '')}`}>{d.telephone}</a> : '—'}</dd>
+        <dt>Centres d’intérêt</dt>
+        <dd>
+          {lireInterets(d.interets).length ? (
+            <span style="display:flex;flex-wrap:wrap;gap:.4rem">
+              {lireInterets(d.interets).map((k) => <span class="pastille">{INTERETS[k].fr}</span>)}
+            </span>
+          ) : (
+            '—'
+          )}
+        </dd>
         <dt>Ville</dt>
         <dd>{d.ville ?? '—'}</dd>
         <dt>Langue du site</dt>

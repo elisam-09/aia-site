@@ -42,8 +42,9 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
   bandeau d'annonce. Lus via `reglagesSite()` (`src/lib/contact.ts`, valeurs par défaut
   incluses). Édités dans `/admin/reglages`.
 - **Adhésions** : formulaire `AdhesionForm.astro` → `POST /api/adhesion` (piège à robots,
-  5 envois / 10 min / IP) → table `adhesions` → `/admin/adhesions` (statut, note, export
-  CSV réservé au rôle admin). Données personnelles : ne pas les exposer ailleurs.
+  5 envois / 10 min / IP) → table `adhesions` → `/admin/adhesions` (statut, note, filtres
+  statut + centre d'intérêt, export CSV réservé au rôle admin). Profils et centres d'intérêt
+  (stockés « cle1,cle2 ») : `src/lib/adhesion.ts`. Données personnelles : ne pas les exposer ailleurs.
 - **Audience** : `scripts/mesure.ts` (chargé par `Base.astro`) → `POST /api/mesure` (ignore robots, admins
   connectés, limite 240 msg / 10 min / IP) → compteurs anonymes par jour dans `mesure_jour` (clés « préfixe:valeur »,
   jours spéciaux `total` et `meta`) → `/admin/audience` (calculs dans `lib/audience.ts`) + export `audience.csv`.
