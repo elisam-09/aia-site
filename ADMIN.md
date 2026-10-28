@@ -74,7 +74,7 @@ Ce sont des données personnelles : supprime les demandes dont tu n'as plus beso
 4. Le menu **Paiements** liste tout ce qui a été encaissé (total de l'année, par mode de paiement).
 5. **Espace membre** : la personne va sur `/membre`, saisit sa clé d'accès et voit l'état de son adhésion :
    en attente de paiement (avec le montant et comment payer), active (validité) ou expirée. Une fois membre,
-   elle **télécharge son certificat d'adhésion en PDF** (modèle « Nuit étoilée », avec son nom, son numéro,
+   elle **télécharge son certificat d'adhésion en PDF** (modèle « Anneau de feu », avec son nom, son numéro,
    sa période de validité et un QR code). Le QR code mène à une page publique de vérification (`/verifier/AIA-…`)
    qui confirme l'authenticité sans révéler de donnée personnelle (nom abrégé). Le bureau peut aussi
    télécharger le certificat depuis la fiche d'un membre. Régénérer une clé ferme les sessions ouvertes avec l'ancienne.

@@ -57,7 +57,7 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
   modèle par défaut). Ne jamais journaliser ni stocker la clé en clair.
 - **Espace membre** : `/membre` (FR) et `/en/member/` ; session par cookie `aia_membre` (jeton aléatoire, empreinte en
   table `membre_sessions`, `server/membre-session.ts`), essais de clé limités par IP. Certificat PDF généré à la demande
-  par `server/certificat.ts` (pdfkit + qrcode, modèle « Nuit étoilée ») : `/membre/certificat.pdf` (membre) et
+  par `server/certificat.ts` (pdfkit + qrcode, modèle « Anneau de feu ») : `/membre/certificat.pdf` (membre) et
   `/admin/adhesions/certificat/[id].pdf` (bureau), seulement si l'adhésion est valide. `/verifier/AIA-AAAA-NNNN` est la page
   publique du QR code (nom abrégé uniquement). pdfkit doit rester dans `vite.ssr.external` (fichiers de polices).
 - **Colonnes ajoutées** après coup : déclarer dans `COLONNES_AJOUTEES` (`db/index.ts`),
