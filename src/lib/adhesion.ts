@@ -62,10 +62,16 @@ export interface Tarifs {
   cotisationTravailleur: number | null;
 }
 
-/** Montants en francs CFA à partir des réglages (champ vide = non renseigné). */
+/** Tarifs de l'AIA (francs CFA), appliqués d'office. Le bureau peut les changer dans Réglages ; un champ vide revient à ces valeurs. */
+export const TARIFS_DEFAUT = { droit: 5000, cotisationEtudiant: 5000, cotisationTravailleur: 10000 } as const;
+
 export function tarifsDepuis(r: Record<string, string>): Tarifs {
-  const n = (v: string | undefined) => (v && /^\d+$/.test(v.replace(/\s/g, '')) ? Number(v.replace(/\s/g, '')) : null);
-  return { droit: n(r.droit_adhesion) ?? 0, cotisationEtudiant: n(r.cotisation_etudiant), cotisationTravailleur: n(r.cotisation_travailleur) };
+  const n = (v: string | undefined, defaut: number) => (v && /^\d+$/.test(v.replace(/\s/g, '')) ? Number(v.replace(/\s/g, '')) : defaut);
+  return {
+    droit: n(r.droit_adhesion, TARIFS_DEFAUT.droit),
+    cotisationEtudiant: n(r.cotisation_etudiant, TARIFS_DEFAUT.cotisationEtudiant),
+    cotisationTravailleur: n(r.cotisation_travailleur, TARIFS_DEFAUT.cotisationTravailleur),
+  };
 }
 
 export const francs = (n: number) => n.toLocaleString('fr-FR').replace(/[  ]/g, ' ');
