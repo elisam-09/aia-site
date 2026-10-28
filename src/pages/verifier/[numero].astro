@@ -1,0 +1,92 @@
+---
+/**
+ * Page publique de vérification d'un certificat (atteinte par le QR code) : dit si le numéro correspond à
+ * une adhésion valide, sans révéler de donnée personnelle (nom abrégé, pas de contact).
+ */
+import Base from '../../layouts/Base.astro';
+import PageIntro from '../../components/PageIntro.astro';
+import * as repo from '../../server/db/repo';
+import { noterEchec, tropDeTentatives } from '../../server/ratelimit';
+import { adhesionActive } from '../../server/membre-session';
+
+const numero = (Astro.params.numero ?? '').toUpperCase();
+let ip = Astro.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
+if (!ip) {
+  try {
+    ip = Astro.clientAddress;
+  } catch {
+    ip = 'inconnue';
+  }
+}
+const cle = `verifier|${ip}`;
+const limite = tropDeTentatives(cle);
+const a = !limite && /^AIA-\d{4}-\d{4}$/.test(numero) ? repo.getAdhesionParNumero(numero) : undefined;
+if (!limite && !a) noterEchec(cle);
+const valide = !!a && adhesionActive(a);
+const mots = (a?.nom ?? '').trim().split(/\s+/);
+const nomAbrege = mots.length > 1 ? `${mots[0]} ${mots[mots.length - 1][0]?.toUpperCase()}.` : (mots[0] ?? '');
+const fin = a?.expire_le ? new Date(`${a.expire_le}T00:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : '';
+---
+
+<Base lang="fr" pageId="member" title="Vérification d'un certificat" description="Vérifier l'authenticité d'un certificat d'adhésion de l'AIA." noindex>
+  <PageIntro eyebrow="Vérification" titre="Certificat d’adhésion" />
+  <section class="container zone">
+    {
+      limite ? (
+        <p class="verdict ko">Trop de vérifications depuis cette connexion. Réessaie dans une quinzaine de minutes.</p>
+      ) : valide ? (
+        <div class="verdict ok">
+          <strong>Certificat valide</strong>
+          <p>{nomAbrege} est membre de l’Association Ivoirienne d’Astronomie.</p>
+          <p class="detail">N° {numero} · adhésion valable jusqu’au {fin}</p>
+        </div>
+      ) : a ? (
+        <div class="verdict ko">
+          <strong>Adhésion non valide</strong>
+          <p>Ce numéro existe, mais l’adhésion n’est pas en cours de validité.</p>
+        </div>
+      ) : (
+        <div class="verdict ko">
+          <strong>Numéro introuvable</strong>
+          <p>Aucun certificat ne correspond à ce numéro. Vérifie-le, ou contacte l’AIA.</p>
+        </div>
+      )
+    }
+  </section>
+</Base>
+
+<style>
+  .zone {
+    padding-bottom: clamp(3rem, 8vh, 5rem);
+  }
+  .verdict {
+    max-width: 36rem;
+    padding: 1.6rem 1.8rem;
+    border-radius: 18px;
+    border: 1px solid var(--creme-25);
+    background: rgba(248, 247, 248, 0.04);
+  }
+  .verdict strong {
+    font-size: 1.5rem;
+  }
+  .verdict p {
+    margin: 0.5rem 0 0;
+  }
+  .verdict .detail {
+    color: var(--creme-45);
+    font-size: 0.9rem;
+  }
+  .verdict.ok {
+    border-color: var(--ci-vert);
+    background: rgba(0, 158, 96, 0.1);
+  }
+  .verdict.ok strong {
+    color: var(--ci-vert-clair);
+  }
+  .verdict.ko {
+    border-color: #ff9b8a;
+  }
+  .verdict.ko strong {
+    color: #ff9b8a;
+  }
+</style>

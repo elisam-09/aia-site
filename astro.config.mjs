@@ -24,7 +24,7 @@ export default defineConfig({
         locales: { fr: 'fr', en: 'en' },
       },
       // On n'expose pas le portail d'administration aux moteurs de recherche
-      filter: (page) => !page.includes('/admin'),
+      filter: (page) => !/\/(admin|membre|member|verifier)(\/|$)/.test(page),
     }),
   ],
   i18n: {
@@ -41,7 +41,7 @@ export default defineConfig({
     },
     ssr: {
       // Modules natifs : à ne pas empaqueter par Vite, on les charge tels quels côté Node
-      external: ['better-sqlite3', 'sharp'],
+      external: ['better-sqlite3', 'sharp', 'pdfkit', 'qrcode'],
     },
   },
 });

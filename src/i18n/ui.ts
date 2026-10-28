@@ -17,7 +17,8 @@ export type PageId =
   | 'join'
   | 'support'
   | 'partners'
-  | 'contact';
+  | 'contact'
+  | 'member';
 
 /** Table des routes par langue — source de vérité pour la nav, le footer et le sélecteur de langue. */
 export const routes: Record<PageId, Record<Lang, string>> = {
@@ -31,6 +32,7 @@ export const routes: Record<PageId, Record<Lang, string>> = {
   support: { fr: '/support/', en: '/en/support/' },
   partners: { fr: '/partenaires/', en: '/en/partners/' },
   contact: { fr: '/contact/', en: '/en/contact/' },
+  member: { fr: '/membre/', en: '/en/member/' },
 };
 
 export const ui = {

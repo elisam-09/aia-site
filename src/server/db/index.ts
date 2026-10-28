@@ -127,6 +127,13 @@ CREATE TABLE IF NOT EXISTS paiements (
 );
 CREATE INDEX IF NOT EXISTS paiements_adhesion ON paiements (adhesion_id, date);
 
+-- Sessions de l'espace membre (ouvertes avec la clé d'accès) : on ne stocke que l'empreinte du jeton
+CREATE TABLE IF NOT EXISTS membre_sessions (
+  token_hash TEXT PRIMARY KEY,
+  adhesion_id INTEGER NOT NULL REFERENCES adhesions(id) ON DELETE CASCADE,
+  expire_le TEXT NOT NULL
+);
+
 -- Audience : compteurs anonymes agrégés par jour (aucune IP, aucun identifiant personnel).
 -- jour = AAAA-MM-JJ (UTC), ou « total » (depuis le début) / « meta » (dernière visite).
 CREATE TABLE IF NOT EXISTS mesure_jour (

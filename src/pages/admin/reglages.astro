@@ -5,7 +5,7 @@ import BiField from '../../components/admin/BiField.astro';
 import * as repo from '../../server/db/repo';
 import { str } from '../../server/formutil';
 import { DEFAUTS, TYPES_RESEAUX, type CleReglage, type TypeReseau } from '../../lib/contact';
-import { MSG_BIENVENUE_DEFAUT } from '../../lib/adhesion';
+import { MSG_BIENVENUE_DEFAUT, CONDITIONS_DEFAUT } from '../../lib/adhesion';
 
 let erreur = '';
 const urlOk = (u: string) => !u || /^https?:\/\//i.test(u);
@@ -13,12 +13,14 @@ const urlOk = (u: string) => !u || /^https?:\/\//i.test(u);
 if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   const v: Partial<Record<CleReglage, string>> = {};
-  for (const k of Object.keys(DEFAUTS) as CleReglage[]) if (k !== 'reseaux') v[k] = str(fd, k).slice(0, k.startsWith('msg_') ? 3000 : 600);
+  for (const k of Object.keys(DEFAUTS) as CleReglage[]) if (k !== 'reseaux') v[k] = str(fd, k).slice(0, k.startsWith('msg_') || k.startsWith('conditions_') ? 3000 : 600);
   // montants : chiffres seulement ; message identique au modèle par défaut = on enregistre « vide » (il suivra les mises à jour)
   for (const k of ['droit_adhesion', 'cotisation_etudiant', 'cotisation_travailleur', 'validite_mois'] as const) v[k] = (v[k] ?? '').replace(/\s/g, '');
   const sansCR = (t: string | undefined) => (t ?? '').split(String.fromCharCode(13)).join('').trim();
   if (sansCR(v.msg_bienvenue_fr) === MSG_BIENVENUE_DEFAUT.fr.trim()) v.msg_bienvenue_fr = '';
   if (sansCR(v.msg_bienvenue_en) === MSG_BIENVENUE_DEFAUT.en.trim()) v.msg_bienvenue_en = '';
+  if (sansCR(v.conditions_fr) === CONDITIONS_DEFAUT.fr.trim()) v.conditions_fr = '';
+  if (sansCR(v.conditions_en) === CONDITIONS_DEFAUT.en.trim()) v.conditions_en = '';
   // réseaux : listes parallèles reseau_type[] / reseau_url[]
   const types = fd.getAll('reseau_type').map(String);
   const urls = fd.getAll('reseau_url').map((u) => String(u).trim());
@@ -108,7 +110,13 @@ if (!reseaux.length) reseaux = [{ type: 'instagram', url: '' }];
       <textarea id="paiement_modes" name="paiement_modes" rows="4" placeholder="Ex. Orange Money / Wave au 07 00 00 00 00 (au nom de …), ou espèces au bureau.">{r.paiement_modes}</textarea>
       <p class="champ__help">Ce texte remplace {'{'}paiement{'}'} dans le message. Indique les numéros et le nom du bénéficiaire.</p>
     </div>
-    <BiField label="Message de bienvenue (demande retenue)" name="msg_bienvenue" type="textarea" rows={16} fr={r.msg_bienvenue_fr || MSG_BIENVENUE_DEFAUT.fr} en={r.msg_bienvenue_en || MSG_BIENVENUE_DEFAUT.en} help="Variables : {nom} {numero} {cle} {droit} {cotisation} {total} {paiement}. Elles sont remplies automatiquement pour chaque personne." />
+    <BiField label="Conditions d’adhésion (insérées dans le message)" name="conditions" type="textarea" rows={7} fr={r.conditions_fr || CONDITIONS_DEFAUT.fr} en={r.conditions_en || CONDITIONS_DEFAUT.en} help="Une condition par ligne, commençant par un tiret. Ajoute ici le règlement de l’AIA (engagements, remboursement, etc.). {duree} est remplacé par la durée d’adhésion." />
+    <BiField label="Message de bienvenue (demande retenue)" name="msg_bienvenue" type="textarea" rows={16} fr={r.msg_bienvenue_fr || MSG_BIENVENUE_DEFAUT.fr} en={r.msg_bienvenue_en || MSG_BIENVENUE_DEFAUT.en} help="Variables : {nom} {numero} {cle} {droit} {cotisation} {profil_tarif} {total} {duree} {conditions} {paiement} {lien}. Elles sont remplies automatiquement pour chaque personne." />
+
+    <div class="ligne-champs">
+      <AdminField label="Signataire du certificat : nom" name="signataire_nom" value={r.signataire_nom} help="Facultatif. Imprimé sous la ligne de signature." />
+      <AdminField label="Signataire du certificat : fonction" name="signataire_titre" value={r.signataire_titre} placeholder="Le Président" />
+    </div>
 
     <div class="form-actions">
       <button class="bouton bouton--primaire" type="submit">Enregistrer les réglages</button>

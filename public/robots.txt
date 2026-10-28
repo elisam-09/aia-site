@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /membre
+Disallow: /en/member
+Disallow: /verifier
 
 Sitemap: https://aia-ci.cloud/sitemap-index.xml
 Sitemap: https://aia-ci.cloud/sitemap-articles.xml

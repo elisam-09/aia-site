@@ -1,0 +1,307 @@
+---
+/**
+ * Espace membre : connexion avec la clé d'accès personnelle (reçue quand la demande est retenue),
+ * puis état de l'adhésion, paiement restant, téléchargement du certificat.
+ */
+import PageIntro from './PageIntro.astro';
+import { reglagesSite } from '../lib/contact';
+import { francs, tarifDe, tarifsDepuis, totalAPayer } from '../lib/adhesion';
+import { adhesionActive } from '../server/membre-session';
+import type { AdhesionRow } from '../server/db/types';
+import type { ErreurMembre } from '../server/membre-page';
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  membre: AdhesionRow | null;
+  erreur: ErreurMembre;
+}
+const { lang, membre, erreur } = Astro.props;
+const R = reglagesSite();
+const tarifs = tarifsDepuis(R);
+const total = membre ? totalAPayer(tarifs, membre.profil) : null;
+const cotisation = membre ? (tarifDe(membre.profil) === 'etudiant' ? tarifs.cotisationEtudiant : tarifs.cotisationTravailleur) : null;
+const active = membre ? adhesionActive(membre) : false;
+const aujourdhui = new Date().toISOString().slice(0, 10);
+const expiree = !!membre && membre.statut === 'membre' && !active;
+const dans60 = new Date(Date.now() + 60 * 86_400_000).toISOString().slice(0, 10);
+const bientot = active && !!membre?.expire_le && membre.expire_le <= dans60;
+const jour = (j: string) => new Date(`${j}T00:00:00Z`).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const prenom = membre ? membre.nom.split(/\s+/)[0] : '';
+
+const C = {
+  fr: {
+    eyebrow: 'Espace membre',
+    titreDeco: 'Retrouve ton adhésion',
+    lead: 'Entre la clé d’accès personnelle que le bureau t’a envoyée pour suivre ton adhésion et télécharger ton certificat.',
+    cle: 'Ta clé d’accès',
+    entrer: 'Entrer',
+    aide: 'Tu as reçu ta clé quand ta demande a été retenue. Clé perdue ? Écris au bureau : il peut t’en envoyer une nouvelle.',
+    erreurs: { cle: 'Clé introuvable. Vérifie-la (12 caractères après « AIA ») ou contacte le bureau.', limite: 'Trop d’essais. Réessaie dans une quinzaine de minutes.' },
+    bonjour: `Bonjour ${prenom}`,
+    numero: 'Numéro de membre',
+    statut: 'Statut',
+    attente: 'En attente de paiement',
+    actif: 'Adhésion active',
+    expire: 'Adhésion expirée',
+    attenteTitre: 'Plus qu’une étape : le paiement',
+    attenteTexte: 'Ta demande est retenue. Dès que ton paiement est validé par le bureau, tu deviens membre et ton certificat apparaît ici.',
+    aPayer: 'À régler',
+    aPayerDetail: (d: string, c: string) => `droit d’adhésion ${d} F + cotisation annuelle ${c} F`,
+    comment: 'Comment payer',
+    envoyer: 'Envoie ensuite la référence ou une capture d’écran au bureau sur WhatsApp.',
+    valable: 'Valable jusqu’au',
+    certificat: 'Télécharger mon certificat (PDF)',
+    verifier: 'Page de vérification du certificat',
+    bientot: 'Ton adhésion expire bientôt : contacte le bureau pour la renouveler.',
+    expireTexte: 'Ton adhésion a pris fin. Pour la renouveler, règle la cotisation annuelle et préviens le bureau.',
+    renouveler: 'Cotisation annuelle',
+    quitter: 'Quitter l’espace membre',
+    whatsapp: 'Écrire au bureau',
+    precis: 'à préciser',
+  },
+  en: {
+    eyebrow: 'Member area',
+    titreDeco: 'Find your membership',
+    lead: 'Enter the personal access key the board sent you to follow your membership and download your certificate.',
+    cle: 'Your access key',
+    entrer: 'Enter',
+    aide: 'You received your key when your request was accepted. Lost it? Write to the board: they can send you a new one.',
+    erreurs: { cle: 'Key not found. Check it (12 characters after “AIA”) or contact the board.', limite: 'Too many attempts. Try again in about fifteen minutes.' },
+    bonjour: `Hello ${prenom}`,
+    numero: 'Member number',
+    statut: 'Status',
+    attente: 'Waiting for payment',
+    actif: 'Active membership',
+    expire: 'Membership expired',
+    attenteTitre: 'One last step: payment',
+    attenteTexte: 'Your request is accepted. As soon as the board validates your payment, you become a member and your certificate appears here.',
+    aPayer: 'To pay',
+    aPayerDetail: (d: string, c: string) => `joining fee ${d} F + yearly fee ${c} F`,
+    comment: 'How to pay',
+    envoyer: 'Then send the reference or a screenshot to the board on WhatsApp.',
+    valable: 'Valid until',
+    certificat: 'Download my certificate (PDF)',
+    verifier: 'Certificate verification page',
+    bientot: 'Your membership expires soon: contact the board to renew it.',
+    expireTexte: 'Your membership has ended. To renew it, pay the yearly fee and let the board know.',
+    renouveler: 'Yearly fee',
+    quitter: 'Leave the member area',
+    whatsapp: 'Write to the board',
+    precis: 'to be confirmed',
+  },
+}[lang];
+const erreurTexte = erreur ? C.erreurs[erreur] : '';
+const paiement = R.paiement_modes.trim();
+---
+
+{
+  !membre ? (
+    <>
+      <PageIntro eyebrow={C.eyebrow} titre={C.titreDeco} lead={C.lead} />
+      <section class="container zone">
+        <form class="cle-form" method="POST" autocomplete="off">
+          <input type="hidden" name="_action" value="connexion" />
+          <label class="cle-form__champ">
+            <span>{C.cle}</span>
+            <input name="cle" required placeholder="AIA-XXXX-XXXX-XXXX" autocapitalize="characters" spellcheck="false" maxlength="40" />
+          </label>
+          {erreurTexte && <p class="cle-form__erreur" role="alert">{erreurTexte}</p>}
+          <button class="btn btn-primaire" type="submit">{C.entrer}</button>
+          <p class="cle-form__aide">{C.aide}</p>
+          {R.whatsappLien && <a class="btn btn-contour" href={R.whatsappLien} target="_blank" rel="noopener">{C.whatsapp}</a>}
+        </form>
+      </section>
+    </>
+  ) : (
+    <>
+      <PageIntro eyebrow={C.eyebrow} titre={C.bonjour} />
+      <section class="container zone">
+        <article class="carte">
+          <dl class="carte__infos">
+            <div><dt>{C.numero}</dt><dd>{membre.numero_membre}</dd></div>
+            <div>
+              <dt>{C.statut}</dt>
+              <dd><span class:list={['badge', active ? 'ok' : expiree ? 'ko' : 'att']}>{active ? C.actif : expiree ? C.expire : C.attente}</span></dd>
+            </div>
+            {active && membre.expire_le && <div><dt>{C.valable}</dt><dd>{jour(membre.expire_le)}</dd></div>}
+          </dl>
+
+          {
+            membre.statut === 'retenue' && (
+              <div class="carte__bloc">
+                <h2>{C.attenteTitre}</h2>
+                <p>{C.attenteTexte}</p>
+                <p class="montant">
+                  {C.aPayer} : <strong>{total === null ? C.precis : `${francs(total)} F`}</strong>
+                  {total !== null && cotisation !== null && <small>{C.aPayerDetail(francs(tarifs.droit), francs(cotisation))}</small>}
+                </p>
+                <h3>{C.comment}</h3>
+                <p class="paiement">{paiement || C.precis}</p>
+                <p>{C.envoyer}</p>
+                {R.whatsappLien && <a class="btn btn-vert" href={R.whatsappLien} target="_blank" rel="noopener">{C.whatsapp}</a>}
+              </div>
+            )
+          }
+
+          {
+            active && (
+              <div class="carte__bloc">
+                <a class="btn btn-primaire" href="/membre/certificat.pdf" download>{C.certificat}</a>
+                <p><a href={`/verifier/${membre.numero_membre}`}>{C.verifier}</a></p>
+                {bientot && <p class="alerte-douce">{C.bientot}</p>}
+              </div>
+            )
+          }
+
+          {
+            expiree && (
+              <div class="carte__bloc">
+                <p>{C.expireTexte}</p>
+                <p class="montant">
+                  {C.renouveler} : <strong>{cotisation === null ? C.precis : `${francs(cotisation)} F`}</strong>
+                </p>
+                <p class="paiement">{paiement || C.precis}</p>
+                {R.whatsappLien && <a class="btn btn-vert" href={R.whatsappLien} target="_blank" rel="noopener">{C.whatsapp}</a>}
+              </div>
+            )
+          }
+        </article>
+
+        <form method="POST" class="quitter">
+          <input type="hidden" name="_action" value="quitter" />
+          <button class="btn btn-contour" type="submit">{C.quitter}</button>
+        </form>
+      </section>
+    </>
+  )
+}
+
+<style>
+  .zone {
+    padding-bottom: clamp(3rem, 8vh, 5rem);
+  }
+  .cle-form {
+    display: grid;
+    gap: 1.1rem;
+    max-width: 30rem;
+  }
+  .cle-form__champ {
+    display: grid;
+    gap: 0.45rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--creme-2);
+  }
+  .cle-form input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--creme-25);
+    border-radius: var(--rayon-sm);
+    background: rgba(248, 247, 248, 0.05);
+    color: var(--creme);
+    font: inherit;
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .cle-form input:focus {
+    outline: none;
+    border-color: var(--ci-orange);
+  }
+  .cle-form__erreur {
+    margin: 0;
+    color: #ff9b8a;
+    font-size: 0.92rem;
+  }
+  .cle-form__aide {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--creme-45);
+  }
+  .cle-form button,
+  .cle-form a {
+    justify-self: start;
+  }
+  .carte {
+    max-width: 44rem;
+    padding: clamp(1.4rem, 4vw, 2.2rem);
+    border: 1px solid var(--creme-12);
+    border-radius: var(--rayon-lg, 18px);
+    background: rgba(248, 247, 248, 0.04);
+  }
+  .carte__infos {
+    display: grid;
+    gap: 1.2rem 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    margin: 0 0 1.6rem;
+  }
+  .carte__infos dt {
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--creme-45);
+  }
+  .carte__infos dd {
+    margin: 0.3rem 0 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--creme-25);
+    font-size: 0.85rem;
+  }
+  .badge.ok {
+    border-color: var(--ci-vert);
+    color: var(--ci-vert-clair);
+  }
+  .badge.att {
+    border-color: var(--ci-orange);
+    color: var(--ci-orange-vif);
+  }
+  .badge.ko {
+    border-color: #ff9b8a;
+    color: #ff9b8a;
+  }
+  .carte__bloc {
+    display: grid;
+    gap: 0.9rem;
+    justify-items: start;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--creme-12);
+  }
+  .carte__bloc h2 {
+    font-size: 1.3rem;
+    margin: 0;
+  }
+  .carte__bloc h3 {
+    font-size: 1rem;
+    margin: 0.4rem 0 0;
+  }
+  .carte__bloc p {
+    margin: 0;
+  }
+  .montant strong {
+    font-size: 1.4rem;
+    color: var(--ci-orange-vif);
+  }
+  .montant small {
+    display: block;
+    color: var(--creme-45);
+  }
+  .paiement {
+    white-space: pre-line;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--ci-vert);
+    background: rgba(0, 158, 96, 0.08);
+  }
+  .alerte-douce {
+    color: var(--ci-orange-vif);
+  }
+  .quitter {
+    margin-top: 1.4rem;
+  }
+</style>

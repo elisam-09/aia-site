@@ -527,6 +527,7 @@ export function retenirAdhesion(id: number): { numero: string; cle: string } | n
     db.prepare(
       "UPDATE adhesions SET statut = CASE WHEN statut = 'membre' THEN 'membre' ELSE 'retenue' END, numero_membre = ?, cle_hash = ?, retenue_le = COALESCE(retenue_le, ?), maj_le = ? WHERE id = ?",
     ).run(numero, hashCle(cle), t, t, id);
+    db.prepare('DELETE FROM membre_sessions WHERE adhesion_id = ?').run(id);
     return { numero, cle };
   })();
 }
@@ -599,6 +600,36 @@ export function listPaiements(): PaiementAvecMembre[] {
       'SELECT p.*, a.nom, a.numero_membre FROM paiements p JOIN adhesions a ON a.id = p.adhesion_id ORDER BY p.date DESC, p.id DESC',
     )
     .all() as PaiementAvecMembre[];
+}
+
+/** Retrouve une demande par l'empreinte de sa clé d'accès (connexion à l'espace membre). */
+export function getAdhesionParCle(cleHash: string): AdhesionRow | undefined {
+  return getDb().prepare('SELECT * FROM adhesions WHERE cle_hash = ?').get(cleHash) as AdhesionRow | undefined;
+}
+
+export function getAdhesionParNumero(numero: string): AdhesionRow | undefined {
+  return getDb().prepare('SELECT * FROM adhesions WHERE numero_membre = ?').get(numero) as AdhesionRow | undefined;
+}
+
+export function creerSessionMembre(tokenHash: string, adhesionId: number, expire: string): void {
+  const db = getDb();
+  db.prepare('DELETE FROM membre_sessions WHERE expire_le < ?').run(now()); // ménage des sessions périmées
+  db.prepare('INSERT INTO membre_sessions (token_hash, adhesion_id, expire_le) VALUES (?, ?, ?)').run(tokenHash, adhesionId, expire);
+}
+
+export function getSessionMembre(tokenHash: string): AdhesionRow | undefined {
+  return getDb()
+    .prepare('SELECT a.* FROM membre_sessions s JOIN adhesions a ON a.id = s.adhesion_id WHERE s.token_hash = ? AND s.expire_le > ?')
+    .get(tokenHash, now()) as AdhesionRow | undefined;
+}
+
+export function supprimerSessionMembre(tokenHash: string): void {
+  getDb().prepare('DELETE FROM membre_sessions WHERE token_hash = ?').run(tokenHash);
+}
+
+/** Ferme toutes les sessions d'un membre (clé régénérée). */
+export function supprimerSessionsDe(adhesionId: number): void {
+  getDb().prepare('DELETE FROM membre_sessions WHERE adhesion_id = ?').run(adhesionId);
 }
 
 export function deleteAdhesion(id: number): void {

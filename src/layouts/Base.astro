@@ -16,9 +16,11 @@ interface Props {
   description?: string;
   /** Cache le footer standard (l'accueil intègre le sien dans la dernière couche) */
   bareFooter?: boolean;
+  /** Page privée ou technique : demande aux moteurs de recherche de ne pas l'indexer */
+  noindex?: boolean;
 }
 
-const { lang, pageId, title, description, bareFooter = false } = Astro.props;
+const { lang, pageId, title, description, bareFooter = false, noindex = false } = Astro.props;
 const t = useT(lang);
 const desc = description ?? t('site.description');
 const site = Astro.site ?? new URL('https://aia-astronomie.vercel.app');
@@ -37,6 +39,7 @@ const ogImage = new URL('/logo-aia-blanc.png', site);
     <title>{title} · {t('site.sigle')}</title>
     <meta name="description" content={desc} />
     <meta name="theme-color" content="#120A12" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />

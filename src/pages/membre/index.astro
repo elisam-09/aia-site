@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import MembreContent from '../../components/MembreContent.astro';
+import { traiterMembre } from '../../server/membre-page';
+import { membreCourant } from '../../server/membre-session';
+
+const r = await traiterMembre(Astro);
+if (r.redirection) return Astro.redirect(r.redirection);
+const membre = membreCourant(Astro.cookies);
+---
+
+<Base lang="fr" pageId="member" title="Espace membre" description="Retrouve ton adhésion à l'AIA et télécharge ton certificat avec ta clé d'accès personnelle." noindex>
+  <MembreContent lang="fr" membre={membre} erreur={r.erreur} />
+</Base>

@@ -72,10 +72,18 @@ Ce sont des données personnelles : supprime les demandes dont tu n'as plus beso
    pendant la durée réglée (12 mois par défaut) à partir de la date du paiement. Un paiement saisi par erreur
    s'annule ; sans autre paiement, la demande redevient « Retenue ». Un renouvellement s'ajoute de la même façon.
 4. Le menu **Paiements** liste tout ce qui a été encaissé (total de l'année, par mode de paiement).
+5. **Espace membre** : la personne va sur `/membre`, saisit sa clé d'accès et voit l'état de son adhésion :
+   en attente de paiement (avec le montant et comment payer), active (validité) ou expirée. Une fois membre,
+   elle **télécharge son certificat d'adhésion en PDF** (modèle « Nuit étoilée », avec son nom, son numéro,
+   sa période de validité et un QR code). Le QR code mène à une page publique de vérification (`/verifier/AIA-…`)
+   qui confirme l'authenticité sans révéler de donnée personnelle (nom abrégé). Le bureau peut aussi
+   télécharger le certificat depuis la fiche d'un membre. Régénérer une clé ferme les sessions ouvertes avec l'ancienne.
 
 Les montants, la durée, les modes de paiement et le texte du message se règlent dans
 **Réglages → Adhésion et paiement** (variables : `{nom}` `{numero}` `{cle}` `{droit}` `{cotisation}`
-`{total}` `{paiement}`). Renseigne la cotisation des élèves et étudiants avant de retenir leurs demandes.
+`{profil_tarif}` `{total}` `{duree}` `{conditions}` `{paiement}` `{lien}`). Le message contient d'office les prix détaillés, les
+conditions d'adhésion (modifiables : ajoute-y le règlement de l'AIA), comment payer, le numéro de membre et la clé.
+Le nom et la fonction du signataire du certificat se règlent au même endroit. Renseigne la cotisation des élèves et étudiants avant de retenir leurs demandes.
 
 ## Audience (compteur de visites)
 

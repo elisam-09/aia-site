@@ -27,6 +27,10 @@ export const DEFAUTS = {
   validite_mois: '12',
   msg_bienvenue_fr: '',
   msg_bienvenue_en: '',
+  conditions_fr: '',
+  conditions_en: '',
+  signataire_nom: '',
+  signataire_titre: 'Le Président',
 };
 export type CleReglage = keyof typeof DEFAUTS;
 

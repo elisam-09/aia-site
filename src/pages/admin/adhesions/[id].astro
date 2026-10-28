@@ -4,8 +4,8 @@ import * as repo from '../../../server/db/repo';
 import { str } from '../../../server/formutil';
 import { DEFAUTS } from '../../../lib/contact';
 import {
-  PROFILS, STATUTS, STATUTS_MANUELS, INTERETS, MODES_PAIEMENT, MSG_BIENVENUE_DEFAUT,
-  lireInterets, tarifsDepuis, tarifDe, totalAPayer, francs, remplir,
+  PROFILS, STATUTS, STATUTS_MANUELS, INTERETS, MODES_PAIEMENT,
+  lireInterets, tarifsDepuis, tarifDe, totalAPayer, francs, messageBienvenue,
 } from '../../../lib/adhesion';
 import type { ModePaiement, StatutAdhesion } from '../../../server/db/types';
 
@@ -79,18 +79,12 @@ const wa = chiffres ? (chiffres.length === 10 && chiffres.startsWith('0') ? '225
 const en = d.langue === 'en';
 const salut = en ? `Hello ${d.nom}, this is the Ivorian Astronomy Association (AIA) about your membership request.` : `Bonjour ${d.nom}, c'est l'Association Ivoirienne d'Astronomie (AIA) au sujet de ta demande d'adhésion.`;
 
-// message de bienvenue : modèle des réglages (ou modèle par défaut), rempli pour cette personne
-const modele = (en ? reglages.msg_bienvenue_en : reglages.msg_bienvenue_fr) || (en ? MSG_BIENVENUE_DEFAUT.en : MSG_BIENVENUE_DEFAUT.fr);
-const aPreciser = en ? '(to be confirmed)' : '(à préciser)';
-const message = remplir(modele, {
-  nom: d.nom,
-  numero: d.numero_membre ?? aPreciser,
-  cle: nouvelleCle ?? (en ? '(shown once: regenerate it)' : '(affichée une seule fois : régénère-la)'),
-  droit: francs(tarifs.droit),
-  cotisation: cotisation === null ? aPreciser : francs(cotisation),
-  total: total === null ? aPreciser : francs(total),
-  paiement: reglages.paiement_modes.trim() || aPreciser,
-});
+// message de bienvenue : prix détaillés, conditions, paiement, numéro et clé (voir lib/adhesion.ts)
+const lienMembre = new URL('/membre', Astro.site ?? Astro.url.origin).toString();
+const message = messageBienvenue(
+  { nom: d.nom, profil: d.profil, langue: d.langue, numero: d.numero_membre, cle: nouvelleCle, lien: lienMembre },
+  reglages,
+);
 const lienWa = wa && nouvelleCle ? `https://wa.me/${wa}?text=${encodeURIComponent(message)}` : '';
 const lienMail = d.email && nouvelleCle ? `mailto:${d.email}?subject=${encodeURIComponent(en ? 'Your AIA membership request' : 'Ta demande d’adhésion à l’AIA')}&body=${encodeURIComponent(message)}` : '';
 ---
@@ -205,6 +199,9 @@ const lienMail = d.email && nouvelleCle ? `mailto:${d.email}?subject=${encodeURI
             La clé d’accès n’est jamais stockée en clair : pour renvoyer le message avec une clé, utilise « Régénérer la clé d’accès ».
           </p>
         )}
+        {!reglages.paiement_modes.trim() && (
+          <div class="alerte alerte--erreur">Les modes de paiement ne sont pas renseignés : ouvre Réglages → Adhésion et paiement, sinon le message dira « à préciser ».</div>
+        )}
         {cotisation === null && (
           <div class="alerte alerte--erreur">La cotisation de ce profil n’est pas renseignée : ouvre Réglages → Adhésion et paiement.</div>
         )}
@@ -223,7 +220,10 @@ const lienMail = d.email && nouvelleCle ? `mailto:${d.email}?subject=${encodeURI
       <section class="panneau" id="paiement" style="margin-top:1.2rem">
         <h2>Paiement</h2>
         {d.statut === 'membre' && d.expire_le && (
-          <div class="alerte alerte--ok">Membre depuis le {fmtJour(d.membre_le ?? aujourdhui)} · adhésion valable jusqu’au <strong>{fmtJour(d.expire_le)}</strong>.</div>
+          <div class="alerte alerte--ok">
+            Membre depuis le {fmtJour(d.membre_le ?? aujourdhui)} · adhésion valable jusqu’au <strong>{fmtJour(d.expire_le)}</strong>.
+            {d.expire_le >= aujourdhui && <a class="bouton bouton--contour bouton--sm" style="margin-left:.8rem" href={`/admin/adhesions/certificat/${d.id}.pdf`}>Certificat (PDF)</a>}
+          </div>
         )}
         <p class="champ__help" style="margin-bottom:.8rem">
           {total !== null
