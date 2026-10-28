@@ -58,12 +58,12 @@ export async function genererCertificat(d: DonneesCertificat): Promise<Buffer> {
 
   doc.rect(0, 0, L, H).fill(FOND);
 
-  // l'anneau : halo, anneau orange, disque sombre portant l'emblème
-  const cx = 186, cy = 297;
-  doc.lineWidth(50).strokeOpacity(0.18).strokeColor(ORANGE).circle(cx, cy, 235).stroke();
-  doc.strokeOpacity(1).lineWidth(12).strokeColor(ORANGE_VIF).circle(cx, cy, 186).stroke();
-  doc.circle(cx, cy, 171).fill(DISQUE);
-  if (embleme) doc.image(embleme, cx - 112, cy - 112, { width: 224 });
+  // l'anneau : halo, anneau orange, disque sombre portant l'emblème. Tout reste dans la page : rien n'est coupé.
+  const cx = 216, cy = 297;
+  doc.lineWidth(26).strokeOpacity(0.18).strokeColor(ORANGE).circle(cx, cy, 192).stroke();
+  doc.strokeOpacity(1).lineWidth(11).strokeColor(ORANGE_VIF).circle(cx, cy, 162).stroke();
+  doc.circle(cx, cy, 150).fill(DISQUE);
+  if (embleme) doc.image(embleme, cx - 108, cy - 108, { width: 216 });
 
   doc.rect(426, 59, 5, 477).fill(VERT);
 
