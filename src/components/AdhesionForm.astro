@@ -272,12 +272,55 @@ const erreurInitiale =
     border-color: var(--ci-vert);
     background: rgba(0, 158, 96, 0.1);
   }
+  /* case à cocher aux couleurs de l'AIA : fond nuit, contour crème, coche blanche sur vert */
   .adhesion__case input {
-    width: 18px;
-    height: 18px;
+    appearance: none;
+    -webkit-appearance: none;
+    display: grid;
+    place-content: center;
+    width: 22px;
+    height: 22px;
     padding: 0;
     flex: none;
-    accent-color: var(--ci-vert);
+    border: 1.5px solid var(--creme-45);
+    border-radius: 7px;
+    background: rgba(18, 10, 18, 0.7);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition), transform var(--transition);
+  }
+  .adhesion__case:hover input {
+    border-color: var(--ci-orange-vif);
+  }
+  .adhesion__case input::before {
+    content: '';
+    width: 11px;
+    height: 6px;
+    margin-top: -2px;
+    border-left: 2.5px solid #fff;
+    border-bottom: 2.5px solid #fff;
+    transform: rotate(-45deg) scale(0);
+    transition: transform 0.16s ease-out;
+  }
+  .adhesion__case input:checked {
+    border-color: var(--ci-vert-clair);
+    background: var(--ci-vert);
+    box-shadow: 0 0 14px rgba(0, 158, 96, 0.45);
+  }
+  .adhesion__case input:checked::before {
+    transform: rotate(-45deg) scale(1);
+  }
+  .adhesion__case input:focus-visible {
+    outline: 2px solid var(--ci-orange);
+    outline-offset: 3px;
+  }
+  .adhesion__case input:active {
+    transform: scale(0.92);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .adhesion__case input,
+    .adhesion__case input::before {
+      transition: none;
+    }
   }
   .adhesion__etudes {
     display: grid;

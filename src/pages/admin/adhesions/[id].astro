@@ -30,9 +30,23 @@ if (Astro.request.method === 'POST') {
     repo.deleteAdhesion(id);
     return Astro.redirect('/admin/adhesions?ok=supprime');
   }
-  if (action === 'retenir' || action === 'regenerer') {
+  if (action === 'tarif') {
+    // fixer les tarifs depuis la fiche : le droit d'adhésion (tous) et la cotisation du profil de cette personne
+    const nombre = (k: string) => str(fd, k).replace(/\s/g, '');
+    const droitSaisi = nombre('droit_adhesion');
+    const cotSaisie = nombre('cotisation');
+    if (!/^\d{1,8}$/.test(droitSaisi) || !/^\d{1,8}$/.test(cotSaisie)) {
+      erreur = 'Les tarifs sont des nombres entiers de francs (par exemple 5000 ou 2000). Mets 0 si c’est gratuit.';
+    } else {
+      repo.setReglages({
+        droit_adhesion: droitSaisi,
+        [tarifDe(d.profil) === 'etudiant' ? 'cotisation_etudiant' : 'cotisation_travailleur']: cotSaisie,
+      });
+      return Astro.redirect(`/admin/adhesions/${id}?ok=enregistre`);
+    }
+  } else if (action === 'retenir' || action === 'regenerer') {
     if (action === 'retenir' && total === null) {
-      erreur = 'Renseigne d’abord la cotisation de ce profil dans Réglages → Adhésion et paiement.';
+      erreur = 'Fixe d’abord le prix de l’adhésion pour ce profil (bloc « Tarifs » ci-dessous), puis retiens la demande.';
     } else {
       const r = repo.retenirAdhesion(id);
       if (r) nouvelleCle = r.cle;
@@ -165,6 +179,34 @@ const lienMail = d.email && nouvelleCle ? `mailto:${d.email}?subject=${encodeURI
           <a class="bouton bouton--contour" href="/admin/adhesions">Retour à la liste</a>
         </div>
       </form>
+
+      {
+        d.statut !== 'refusee' && (
+          <form method="POST" id="tarifs" class="formulaire" style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--adm-bord)">
+            <input type="hidden" name="_action" value="tarif" />
+            <h3 style="margin:0">Tarifs</h3>
+            <p class="champ__help" style="margin:0">
+              {cotisation === null
+                ? 'Fixe le prix de l’adhésion pour ce profil : il sert au message de bienvenue et au paiement. Il s’applique ensuite à toutes les demandes du même type.'
+                : `Profil « ${tarifDe(d.profil) === 'etudiant' ? 'élèves et étudiants' : 'travailleurs et autres'} ». Modifier un tarif s’applique aux prochains messages, pas aux paiements déjà enregistrés.`}
+            </p>
+            <div class="ligne-champs">
+              <div class="champ">
+                <label class="champ__label" for="droit_adhesion">Droit d’adhésion (F, tous)</label>
+                <input id="droit_adhesion" name="droit_adhesion" inputmode="numeric" required value={tarifs.droit} />
+              </div>
+              <div class="champ">
+                <label class="champ__label" for="cotisation">Cotisation annuelle · {tarifDe(d.profil) === 'etudiant' ? 'élèves et étudiants' : 'ce profil'} (F)</label>
+                <input id="cotisation" name="cotisation" inputmode="numeric" required value={cotisation ?? ''} placeholder="Ex. 2000" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="bouton bouton--contour" type="submit">Enregistrer les tarifs</button>
+              <a class="bouton bouton--contour bouton--sm" href="/admin/reglages#adhesion">Tous les réglages d’adhésion</a>
+            </div>
+          </form>
+        )
+      }
 
       {
         d.statut !== 'refusee' && (
