@@ -15,7 +15,7 @@ export const GET: APIRoute = ({ locals }) => {
     return `"${s.replace(/"/g, '""')}"`;
   };
   const lignes = [
-    ['Date', 'Nom', 'E-mail', 'Téléphone', 'Ville', 'Profil', 'Centres d’intérêt', 'Motivation', 'Statut', 'Note'].map(cel).join(';'),
+    ['Date', 'Nom', 'E-mail', 'Téléphone', 'Ville', 'Profil', 'Niveau d’études', 'Filière', 'Établissement', 'Centres d’intérêt', 'Motivation', 'Statut', 'N° de membre', 'Valable jusqu’au', 'Note'].map(cel).join(';'),
     ...listAdhesions().map((a) =>
       [
         a.cree_le.slice(0, 10),
@@ -24,9 +24,14 @@ export const GET: APIRoute = ({ locals }) => {
         a.telephone,
         a.ville,
         a.profil ? PROFILS[a.profil as keyof typeof PROFILS]?.fr ?? a.profil : '',
+        a.niveau,
+        a.specialite,
+        a.etablissement,
         lireInterets(a.interets).map((k) => INTERETS[k].fr).join(', '),
         a.motivation,
         STATUTS[a.statut],
+        a.numero_membre,
+        a.expire_le,
         a.note,
       ]
         .map(cel)

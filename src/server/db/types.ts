@@ -92,7 +92,7 @@ export interface MembreRow {
   badge: string | null; // étiquette sur la photo (ex. FONDATEUR)
 }
 
-export type StatutAdhesion = 'nouvelle' | 'contactee' | 'acceptee' | 'refusee';
+export type StatutAdhesion = 'nouvelle' | 'contactee' | 'retenue' | 'membre' | 'refusee';
 
 export interface AdhesionRow {
   id: number;
@@ -103,9 +103,37 @@ export interface AdhesionRow {
   profil: string | null;
   motivation: string | null;
   interets: string | null; // clés séparées par des virgules (voir lib/adhesion.ts)
+  niveau: string | null; // élèves et étudiants : classe ou année d'études
+  specialite: string | null; // filière ou spécialité
+  etablissement: string | null;
+  consentement: number; // 1 = accepte d'être contacté·e (WhatsApp, e-mail)
   langue: string;
   statut: StatutAdhesion;
   note: string | null;
+  numero_membre: string | null; // AIA-AAAA-NNNN, créé quand la demande est retenue
+  cle_hash: string | null; // empreinte SHA-256 de la clé d'accès (la clé n'est jamais stockée)
+  retenue_le: string | null;
+  membre_le: string | null; // date du premier paiement validé
+  expire_le: string | null; // fin de validité de l'adhésion (AAAA-MM-JJ)
   cree_le: string;
   maj_le: string;
+}
+
+export type ModePaiement = 'orange_money' | 'mtn_money' | 'moov_money' | 'wave' | 'especes' | 'virement' | 'autre';
+
+export interface PaiementRow {
+  id: number;
+  adhesion_id: number;
+  montant: number; // en francs CFA
+  mode: ModePaiement;
+  reference: string | null;
+  date: string; // AAAA-MM-JJ
+  note: string | null;
+  valide_par: number | null; // id de l'admin qui a validé
+  cree_le: string;
+}
+
+export interface PaiementAvecMembre extends PaiementRow {
+  nom: string;
+  numero_membre: string | null;
 }

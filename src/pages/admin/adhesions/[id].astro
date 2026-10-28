@@ -2,30 +2,97 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import * as repo from '../../../server/db/repo';
 import { str } from '../../../server/formutil';
-import { PROFILS, STATUTS, INTERETS, lireInterets } from '../../../lib/adhesion';
-import type { StatutAdhesion } from '../../../server/db/types';
+import { DEFAUTS } from '../../../lib/contact';
+import {
+  PROFILS, STATUTS, STATUTS_MANUELS, INTERETS, MODES_PAIEMENT, MSG_BIENVENUE_DEFAUT,
+  lireInterets, tarifsDepuis, tarifDe, totalAPayer, francs, remplir,
+} from '../../../lib/adhesion';
+import type { ModePaiement, StatutAdhesion } from '../../../server/db/types';
 
 const id = Number(Astro.params.id);
-const d = repo.getAdhesion(id);
+let d = repo.getAdhesion(id);
 if (!d) return Astro.redirect('/admin/adhesions');
+
+const reglages = { ...DEFAUTS, ...repo.getReglages() } as Record<string, string>;
+const tarifs = tarifsDepuis(reglages);
+const validite = Math.max(1, Number(reglages.validite_mois) || 12);
+const aujourdhui = new Date().toISOString().slice(0, 10);
+const cotisation = tarifDe(d.profil) === 'etudiant' ? tarifs.cotisationEtudiant : tarifs.cotisationTravailleur;
+const total = totalAPayer(tarifs, d.profil);
+
+let erreur = '';
+let nouvelleCle: string | null = null; // clé en clair : affichée une seule fois, juste après sa création
 
 if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
-  if (fd.get('_action') === 'supprimer') {
+  const action = str(fd, '_action');
+  if (action === 'supprimer') {
     repo.deleteAdhesion(id);
     return Astro.redirect('/admin/adhesions?ok=supprime');
   }
-  const s = str(fd, 'statut') as StatutAdhesion;
-  repo.updateAdhesion(id, s in STATUTS ? s : d.statut, str(fd, 'note').slice(0, 2000) || null);
-  return Astro.redirect(`/admin/adhesions/${id}?ok=enregistre`);
+  if (action === 'retenir' || action === 'regenerer') {
+    if (action === 'retenir' && total === null) {
+      erreur = 'Renseigne d’abord la cotisation de ce profil dans Réglages → Adhésion et paiement.';
+    } else {
+      const r = repo.retenirAdhesion(id);
+      if (r) nouvelleCle = r.cle;
+      else erreur = 'Cette demande est refusée : remets-la en « Contactée » pour la retenir.';
+    }
+  } else if (action === 'paiement') {
+    const montant = Number(str(fd, 'montant').replace(/\s/g, ''));
+    const mode = str(fd, 'mode') as ModePaiement;
+    const date = str(fd, 'date');
+    if (d.statut !== 'retenue' && d.statut !== 'membre') erreur = 'Retiens d’abord la demande avant d’enregistrer un paiement.';
+    else if (!Number.isInteger(montant) || montant <= 0 || montant > 10_000_000) erreur = 'Le montant doit être un nombre entier de francs, supérieur à 0.';
+    else if (!(mode in MODES_PAIEMENT)) erreur = 'Choisis le mode de paiement.';
+    else if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > aujourdhui) erreur = 'La date du paiement est invalide (elle ne peut pas être dans le futur).';
+    else {
+      repo.enregistrerPaiement(
+        id,
+        { montant, mode, date, reference: str(fd, 'reference').slice(0, 80) || null, note: str(fd, 'note_paiement').slice(0, 300) || null, valide_par: Astro.locals.admin?.id ?? null },
+        validite,
+      );
+      return Astro.redirect(`/admin/adhesions/${id}?ok=enregistre`);
+    }
+  } else if (action === 'annuler_paiement') {
+    const pid = Number(str(fd, 'paiement_id'));
+    if (repo.listPaiementsDe(id).some((p) => p.id === pid)) repo.annulerPaiement(pid, validite);
+    return Astro.redirect(`/admin/adhesions/${id}?ok=enregistre`);
+  } else {
+    // statut manuel (nouvelle / contactée / refusée) et note ; « retenue » et « membre » passent par leurs boutons
+    const s = str(fd, 'statut') as StatutAdhesion;
+    const manuel = d.statut !== 'retenue' && d.statut !== 'membre' && STATUTS_MANUELS.includes(s);
+    repo.updateAdhesion(id, manuel ? s : d.statut, str(fd, 'note').slice(0, 2000) || null);
+    return Astro.redirect(`/admin/adhesions/${id}?ok=enregistre`);
+  }
+  d = repo.getAdhesion(id)!;
 }
 
+const paiements = repo.listPaiementsDe(id);
+const retenue = d.statut === 'retenue' || d.statut === 'membre';
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Abidjan' });
+const fmtJour = (j: string) => new Date(`${j}T00:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const chiffres = (d.telephone ?? '').replace(/\D/g, '');
 // numéro ivoirien saisi sans indicatif (10 chiffres commençant par 0) → +225
 const wa = chiffres ? (chiffres.length === 10 && chiffres.startsWith('0') ? '225' + chiffres : chiffres) : '';
-const salut = d.langue === 'en' ? `Hello ${d.nom}, this is the Ivorian Astronomy Association (AIA) about your membership request.` : `Bonjour ${d.nom}, c'est l'Association Ivoirienne d'Astronomie (AIA) au sujet de ta demande d'adhésion.`;
+const en = d.langue === 'en';
+const salut = en ? `Hello ${d.nom}, this is the Ivorian Astronomy Association (AIA) about your membership request.` : `Bonjour ${d.nom}, c'est l'Association Ivoirienne d'Astronomie (AIA) au sujet de ta demande d'adhésion.`;
+
+// message de bienvenue : modèle des réglages (ou modèle par défaut), rempli pour cette personne
+const modele = (en ? reglages.msg_bienvenue_en : reglages.msg_bienvenue_fr) || (en ? MSG_BIENVENUE_DEFAUT.en : MSG_BIENVENUE_DEFAUT.fr);
+const aPreciser = en ? '(to be confirmed)' : '(à préciser)';
+const message = remplir(modele, {
+  nom: d.nom,
+  numero: d.numero_membre ?? aPreciser,
+  cle: nouvelleCle ?? (en ? '(shown once: regenerate it)' : '(affichée une seule fois : régénère-la)'),
+  droit: francs(tarifs.droit),
+  cotisation: cotisation === null ? aPreciser : francs(cotisation),
+  total: total === null ? aPreciser : francs(total),
+  paiement: reglages.paiement_modes.trim() || aPreciser,
+});
+const lienWa = wa && nouvelleCle ? `https://wa.me/${wa}?text=${encodeURIComponent(message)}` : '';
+const lienMail = d.email && nouvelleCle ? `mailto:${d.email}?subject=${encodeURIComponent(en ? 'Your AIA membership request' : 'Ta demande d’adhésion à l’AIA')}&body=${encodeURIComponent(message)}` : '';
 ---
 
 <AdminLayout title={d.nom} description={`Demande reçue le ${fmt(d.cree_le)}.`}>
@@ -34,18 +101,30 @@ const salut = d.langue === 'en' ? `Hello ${d.nom}, this is the Ivorian Astronomy
     {wa && <a class="bouton bouton--vert" href={`https://wa.me/${wa}?text=${encodeURIComponent(salut)}`} target="_blank" rel="noopener">WhatsApp</a>}
   </Fragment>
 
+  {erreur && <div class="alerte alerte--erreur">{erreur}</div>}
+
   <div class="grille-2">
     <section class="panneau">
       <h2>Informations</h2>
       <dl class="fiche">
         <dt>Statut</dt>
         <dd><span class:list={['pastille', d.statut]}>{STATUTS[d.statut]}</span></dd>
+        {d.numero_membre && <><dt>N° de membre</dt><dd><strong>{d.numero_membre}</strong></dd></>}
+        {d.statut === 'membre' && d.expire_le && <><dt>Adhésion valable jusqu’au</dt><dd>{fmtJour(d.expire_le)}</dd></>}
         <dt>Profil</dt>
         <dd>{d.profil ? PROFILS[d.profil as keyof typeof PROFILS]?.fr : '—'}</dd>
+        {(d.niveau || d.specialite || d.etablissement) && (
+          <>
+            <dt>Études</dt>
+            <dd>{[d.niveau, d.specialite, d.etablissement].filter(Boolean).join(' · ')}</dd>
+          </>
+        )}
         <dt>E-mail</dt>
         <dd>{d.email ? <a href={`mailto:${d.email}`}>{d.email}</a> : '—'}</dd>
         <dt>Téléphone</dt>
         <dd>{d.telephone ? <a href={`tel:${d.telephone.replace(/[^\d+]/g, '')}`}>{d.telephone}</a> : '—'}</dd>
+        <dt>Contact autorisé</dt>
+        <dd>{d.consentement ? 'Oui (case cochée dans le formulaire)' : 'Non enregistré : ancienne demande, demande l’accord avant d’écrire'}</dd>
         <dt>Centres d’intérêt</dt>
         <dd>
           {lireInterets(d.interets).length ? (
@@ -68,15 +147,23 @@ const salut = d.langue === 'en' ? `Hello ${d.nom}, this is the Ivorian Astronomy
     <section class="panneau">
       <h2>Suivi</h2>
       <form class="formulaire" method="POST">
-        <div class="champ">
-          <label class="champ__label" for="statut">Statut</label>
-          <select id="statut" name="statut">
-            {(Object.keys(STATUTS) as StatutAdhesion[]).map((s) => <option value={s} selected={s === d.statut}>{STATUTS[s]}</option>)}
-          </select>
-        </div>
+        {
+          retenue ? (
+            <p class="champ__help">
+              Cette demande est <strong>{STATUTS[d.statut].toLowerCase()}</strong> : son statut évolue avec le paiement (boutons ci-dessous).
+            </p>
+          ) : (
+            <div class="champ">
+              <label class="champ__label" for="statut">Statut</label>
+              <select id="statut" name="statut">
+                {STATUTS_MANUELS.map((s) => <option value={s} selected={s === d.statut}>{STATUTS[s]}</option>)}
+              </select>
+            </div>
+          )
+        }
         <div class="champ">
           <label class="champ__label" for="note">Note interne</label>
-          <textarea id="note" name="note" rows="5" placeholder="Ex. appelé le 12/10, vient à la prochaine observation.">{d.note ?? ''}</textarea>
+          <textarea id="note" name="note" rows="4" placeholder="Ex. appelé le 12/10, vient à la prochaine observation.">{d.note ?? ''}</textarea>
           <p class="champ__help">Visible seulement par le bureau.</p>
         </div>
         <div class="form-actions">
@@ -84,11 +171,154 @@ const salut = d.langue === 'en' ? `Hello ${d.nom}, this is the Ivorian Astronomy
           <a class="bouton bouton--contour" href="/admin/adhesions">Retour à la liste</a>
         </div>
       </form>
+
+      {
+        d.statut !== 'refusee' && (
+          <form method="POST" style="margin-top:1.2rem" onsubmit={retenue ? "return confirm('Régénérer la clé ? L’ancienne clé ne marchera plus.')" : undefined}>
+            <input type="hidden" name="_action" value={retenue ? 'regenerer' : 'retenir'} />
+            {retenue ? (
+              <button class="bouton bouton--contour" type="submit">Régénérer la clé d’accès</button>
+            ) : (
+              <>
+                <button class="bouton bouton--vert" type="submit">Retenir cette demande et préparer le message</button>
+                <p class="champ__help" style="margin-top:.5rem">
+                  Crée le numéro de membre et la clé d’accès, puis prépare le message avec les conditions et le paiement. La personne n’est membre qu’après son paiement.
+                </p>
+              </>
+            )}
+          </form>
+        )
+      }
     </section>
   </div>
+
+  {
+    retenue && (
+      <section class="panneau" id="message" style="margin-top:1.2rem">
+        <h2>Message de bienvenue</h2>
+        {nouvelleCle ? (
+          <div class="alerte alerte--ok">
+            La clé d’accès vient d’être créée : <strong>{nouvelleCle}</strong>. Elle n’est affichée qu’ici : envoie le message maintenant (ou régénère une clé plus tard).
+          </div>
+        ) : (
+          <p class="champ__help">
+            La clé d’accès n’est jamais stockée en clair : pour renvoyer le message avec une clé, utilise « Régénérer la clé d’accès ».
+          </p>
+        )}
+        {cotisation === null && (
+          <div class="alerte alerte--erreur">La cotisation de ce profil n’est pas renseignée : ouvre Réglages → Adhésion et paiement.</div>
+        )}
+        <div class="champ">
+          <label class="champ__label" for="msg">Message (modifiable avant l’envoi)</label>
+          <textarea id="msg" rows="16" data-msg>{message}</textarea>
+        </div>
+        <div class="actions">
+          <button class="bouton bouton--contour" type="button" id="copier" disabled={!nouvelleCle}>Copier le message</button>
+          {lienWa && <a class="bouton bouton--vert" id="envoyer-wa" href={lienWa} data-wa={wa} target="_blank" rel="noopener">Envoyer par WhatsApp</a>}
+          {lienMail && <a class="bouton bouton--contour" id="envoyer-mail" href={lienMail} data-mail={d.email} data-sujet={en ? 'Your AIA membership request' : 'Ta demande d’adhésion à l’AIA'}>Envoyer par e-mail</a>}
+          <a class="bouton bouton--contour" href="/admin/reglages#adhesion">Modifier le modèle</a>
+        </div>
+      </section>
+
+      <section class="panneau" id="paiement" style="margin-top:1.2rem">
+        <h2>Paiement</h2>
+        {d.statut === 'membre' && d.expire_le && (
+          <div class="alerte alerte--ok">Membre depuis le {fmtJour(d.membre_le ?? aujourdhui)} · adhésion valable jusqu’au <strong>{fmtJour(d.expire_le)}</strong>.</div>
+        )}
+        <p class="champ__help" style="margin-bottom:.8rem">
+          {total !== null
+            ? `Attendu à l’entrée : ${francs(total)} F (droit d’adhésion ${francs(tarifs.droit)} F + cotisation ${francs(cotisation ?? 0)} F).`
+            : 'La cotisation de ce profil n’est pas renseignée (Réglages → Adhésion et paiement).'}
+          {' '}Enregistre le paiement une fois reçu et vérifié : la personne devient membre.
+        </p>
+        <form class="formulaire" method="POST">
+          <input type="hidden" name="_action" value="paiement" />
+          <div class="ligne-champs">
+            <div class="champ">
+              <label class="champ__label" for="montant">Montant reçu (F)</label>
+              <input id="montant" name="montant" inputmode="numeric" required value={total ?? ''} />
+            </div>
+            <div class="champ">
+              <label class="champ__label" for="mode">Mode de paiement</label>
+              <select id="mode" name="mode" required>
+                {Object.entries(MODES_PAIEMENT).map(([k, l]) => <option value={k}>{l}</option>)}
+              </select>
+            </div>
+          </div>
+          <div class="ligne-champs">
+            <div class="champ">
+              <label class="champ__label" for="reference">Référence ou n° de transaction</label>
+              <input id="reference" name="reference" maxlength="80" placeholder="Facultatif" />
+            </div>
+            <div class="champ">
+              <label class="champ__label" for="date">Date du paiement</label>
+              <input id="date" type="date" name="date" required value={aujourdhui} max={aujourdhui} />
+            </div>
+          </div>
+          <div class="champ">
+            <label class="champ__label" for="note_paiement">Note</label>
+            <input id="note_paiement" name="note_paiement" maxlength="300" placeholder="Facultatif" />
+          </div>
+          <div class="form-actions">
+            <button class="bouton bouton--primaire" type="submit">{d.statut === 'membre' ? 'Ajouter un paiement (renouvellement)' : 'Valider le paiement et passer en Membre'}</button>
+          </div>
+        </form>
+
+        {
+          paiements.length > 0 && (
+            <div class="lignes" style="margin-top:1.2rem">
+              {paiements.map((p) => (
+                <div class="ligne ligne--sans-vignette">
+                  <div>
+                    <h3>{francs(p.montant)} F · {MODES_PAIEMENT[p.mode] ?? p.mode}</h3>
+                    <div class="meta">
+                      <span>{fmtJour(p.date)}</span>
+                      {p.reference && <span>Réf. {p.reference}</span>}
+                      {p.note && <span>{p.note}</span>}
+                    </div>
+                  </div>
+                  <div class="ac">
+                    <form method="POST" onsubmit="return confirm('Annuler ce paiement ?')">
+                      <input type="hidden" name="_action" value="annuler_paiement" />
+                      <input type="hidden" name="paiement_id" value={p.id} />
+                      <button class="bouton bouton--danger bouton--sm" type="submit">Annuler</button>
+                    </form>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        }
+      </section>
+    )
+  }
 
   <form method="POST" onsubmit="return confirm('Supprimer définitivement cette demande ?')" style="margin-top:1.4rem">
     <input type="hidden" name="_action" value="supprimer" />
     <button class="bouton bouton--danger" type="submit">Supprimer cette demande</button>
   </form>
 </AdminLayout>
+
+<script>
+  // le bouton WhatsApp / e-mail envoie le texte tel qu'il est dans la zone (modifié ou non)
+  const zone = document.querySelector<HTMLTextAreaElement>('[data-msg]');
+  const wa = document.getElementById('envoyer-wa') as HTMLAnchorElement | null;
+  const mail = document.getElementById('envoyer-mail') as HTMLAnchorElement | null;
+  const maj = () => {
+    if (!zone) return;
+    if (wa) wa.href = `https://wa.me/${wa.dataset.wa}?text=${encodeURIComponent(zone.value)}`;
+    if (mail) mail.href = `mailto:${mail.dataset.mail}?subject=${encodeURIComponent(mail.dataset.sujet ?? '')}&body=${encodeURIComponent(zone.value)}`;
+  };
+  zone?.addEventListener('input', maj);
+  const copier = document.getElementById('copier') as HTMLButtonElement | null;
+  copier?.addEventListener('click', async () => {
+    if (!zone) return;
+    try {
+      await navigator.clipboard.writeText(zone.value);
+      copier.textContent = 'Message copié';
+    } catch {
+      zone.select();
+      copier.textContent = 'Sélectionné : copie avec Ctrl+C';
+    }
+  });
+</script>

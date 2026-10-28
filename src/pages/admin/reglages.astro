@@ -5,6 +5,7 @@ import BiField from '../../components/admin/BiField.astro';
 import * as repo from '../../server/db/repo';
 import { str } from '../../server/formutil';
 import { DEFAUTS, TYPES_RESEAUX, type CleReglage, type TypeReseau } from '../../lib/contact';
+import { MSG_BIENVENUE_DEFAUT } from '../../lib/adhesion';
 
 let erreur = '';
 const urlOk = (u: string) => !u || /^https?:\/\//i.test(u);
@@ -12,7 +13,12 @@ const urlOk = (u: string) => !u || /^https?:\/\//i.test(u);
 if (Astro.request.method === 'POST') {
   const fd = await Astro.request.formData();
   const v: Partial<Record<CleReglage, string>> = {};
-  for (const k of Object.keys(DEFAUTS) as CleReglage[]) if (k !== 'reseaux') v[k] = str(fd, k).slice(0, 600);
+  for (const k of Object.keys(DEFAUTS) as CleReglage[]) if (k !== 'reseaux') v[k] = str(fd, k).slice(0, k.startsWith('msg_') ? 3000 : 600);
+  // montants : chiffres seulement ; message identique au modèle par défaut = on enregistre « vide » (il suivra les mises à jour)
+  for (const k of ['droit_adhesion', 'cotisation_etudiant', 'cotisation_travailleur', 'validite_mois'] as const) v[k] = (v[k] ?? '').replace(/\s/g, '');
+  const sansCR = (t: string | undefined) => (t ?? '').split(String.fromCharCode(13)).join('').trim();
+  if (sansCR(v.msg_bienvenue_fr) === MSG_BIENVENUE_DEFAUT.fr.trim()) v.msg_bienvenue_fr = '';
+  if (sansCR(v.msg_bienvenue_en) === MSG_BIENVENUE_DEFAUT.en.trim()) v.msg_bienvenue_en = '';
   // réseaux : listes parallèles reseau_type[] / reseau_url[]
   const types = fd.getAll('reseau_type').map(String);
   const urls = fd.getAll('reseau_url').map((u) => String(u).trim());
@@ -23,7 +29,9 @@ if (Astro.request.method === 'POST') {
   v.whatsapp = (v.whatsapp ?? '').replace(/\D/g, '');
 
   const mauvaises = [v.facebook, v.facebook_reels, ...reseaux.map((n) => n.url)].filter((u) => !urlOk(u ?? ''));
-  if (mauvaises.length) erreur = 'Les liens doivent commencer par https:// (vérifie Facebook et les autres réseaux).';
+  const montantsKo = ['droit_adhesion', 'cotisation_etudiant', 'cotisation_travailleur', 'validite_mois'].some((k) => v[k as CleReglage] && !/^\d{1,9}$/.test(v[k as CleReglage]!));
+  if (montantsKo) erreur = 'Les montants et la durée sont des nombres entiers (par exemple 5000 ou 12).';
+  else if (mauvaises.length) erreur = 'Les liens doivent commencer par https:// (vérifie Facebook et les autres réseaux).';
   else if (v.annonce_lien && !urlOk(v.annonce_lien) && !v.annonce_lien.startsWith('/'))
     erreur = 'Le lien du bandeau doit commencer par https:// ou par / (page du site).';
   else {
@@ -85,6 +93,22 @@ if (!reseaux.length) reseaux = [{ type: 'instagram', url: '' }];
     <BiField label="Message" name="annonce" fr={r.annonce_fr} en={r.annonce_en} />
     <BiField label="Texte du bouton" name="annonce_bouton" fr={r.annonce_bouton_fr} en={r.annonce_bouton_en} help="Facultatif (par défaut « En savoir plus »)." />
     <AdminField label="Lien du bouton" name="annonce_lien" value={r.annonce_lien} placeholder="https://… ou /evenements/" />
+
+    <h2 class="section-form" id="adhesion">Adhésion et paiement<small>Utilisés pour le message envoyé quand une demande est retenue. Montants en francs CFA, sans espace.</small></h2>
+    <div class="ligne-champs">
+      <AdminField label="Droit d’adhésion (tous)" name="droit_adhesion" value={r.droit_adhesion} help="Payé une seule fois, par tous les profils." />
+      <AdminField label="Durée de l’adhésion (mois)" name="validite_mois" value={r.validite_mois} help="À compter de la date du paiement. 12 = un an." />
+    </div>
+    <div class="ligne-champs">
+      <AdminField label="Cotisation annuelle · élèves et étudiants" name="cotisation_etudiant" value={r.cotisation_etudiant} help="À renseigner avant de retenir une demande d’élève ou d’étudiant." />
+      <AdminField label="Cotisation annuelle · travailleurs et autres profils" name="cotisation_travailleur" value={r.cotisation_travailleur} />
+    </div>
+    <div class="champ">
+      <label class="champ__label" for="paiement_modes">Comment payer</label>
+      <textarea id="paiement_modes" name="paiement_modes" rows="4" placeholder="Ex. Orange Money / Wave au 07 00 00 00 00 (au nom de …), ou espèces au bureau.">{r.paiement_modes}</textarea>
+      <p class="champ__help">Ce texte remplace {'{'}paiement{'}'} dans le message. Indique les numéros et le nom du bénéficiaire.</p>
+    </div>
+    <BiField label="Message de bienvenue (demande retenue)" name="msg_bienvenue" type="textarea" rows={16} fr={r.msg_bienvenue_fr || MSG_BIENVENUE_DEFAUT.fr} en={r.msg_bienvenue_en || MSG_BIENVENUE_DEFAUT.en} help="Variables : {nom} {numero} {cle} {droit} {cotisation} {total} {paiement}. Elles sont remplies automatiquement pour chaque personne." />
 
     <div class="form-actions">
       <button class="bouton bouton--primaire" type="submit">Enregistrer les réglages</button>

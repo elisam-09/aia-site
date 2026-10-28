@@ -336,7 +336,8 @@ a {
 .pastille.non { color: var(--adm-muet); }
 .pastille.venir, .pastille.nouvelle { border-color: rgba(247, 127, 0, 0.6); color: var(--ci-orange-vif); }
 .pastille.contactee { border-color: rgba(180, 150, 220, 0.55); color: #cdb6ee; }
-.pastille.acceptee { border-color: rgba(95, 211, 156, 0.5); color: var(--adm-ok); }
+.pastille.retenue { border-color: rgba(120, 190, 255, 0.55); color: #a9d4ff; }
+.pastille.membre { border-color: rgba(95, 211, 156, 0.6); color: var(--adm-ok); background: rgba(95, 211, 156, 0.1); }
 .pastille.refusee { border-color: rgba(255, 155, 138, 0.5); color: var(--adm-mauvais); }
 
 /* Filtres (onglets) */

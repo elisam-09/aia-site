@@ -8,7 +8,7 @@ import type { APIRoute } from 'astro';
 import { createAdhesion } from '../../server/db/repo';
 import { str } from '../../server/formutil';
 import { routes } from '../../i18n/ui';
-import { PROFILS, INTERETS } from '../../lib/adhesion';
+import { PROFILS, INTERETS, estEtudes } from '../../lib/adhesion';
 
 const FENETRE_MS = 10 * 60_000;
 const MAX = 5;
@@ -55,12 +55,19 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const ville = str(fd, 'ville').slice(0, 80);
   const profil = str(fd, 'profil');
   const motivation = str(fd, 'motivation').slice(0, 2000);
+  const consentement = fd.get('consentement') === 'on';
+  const etudes = estEtudes(profil);
+  // niveau, filière et établissement ne concernent que les élèves et étudiants
+  const niveau = etudes ? str(fd, 'niveau').slice(0, 80) : '';
+  const specialite = etudes ? str(fd, 'specialite').slice(0, 120) : '';
+  const etablissement = etudes ? str(fd, 'etablissement').slice(0, 120) : '';
   // cases à cocher : on ne garde que les clés connues, sans doublon
   const interets = [...new Set(fd.getAll('interets').map(String))].filter((k) => k in INTERETS);
 
   const emailOk = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const telOk = !telephone || /^[+\d][\d\s().-]{5,}$/.test(telephone);
   if (nom.length < 2 || (!email && !telephone) || !emailOk || !telOk) return repondre(false, 'champs');
+  if (!consentement) return repondre(false, 'consentement');
 
   createAdhesion({
     nom,
@@ -70,6 +77,10 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     profil: profil in PROFILS ? profil : null,
     motivation: motivation || null,
     interets: interets.length ? interets.join(',') : null,
+    niveau: niveau || null,
+    specialite: specialite || null,
+    etablissement: etablissement || null,
+    consentement,
     langue,
   });
   return repondre(true);

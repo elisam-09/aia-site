@@ -19,6 +19,14 @@ export const DEFAUTS = {
   annonce_bouton_fr: '',
   annonce_bouton_en: '',
   annonce_lien: '',
+  // adhésion : montants en francs CFA (champ vide = pas encore renseigné), modes de paiement et message de bienvenue
+  droit_adhesion: '5000',
+  cotisation_etudiant: '',
+  cotisation_travailleur: '10000',
+  paiement_modes: '',
+  validite_mois: '12',
+  msg_bienvenue_fr: '',
+  msg_bienvenue_en: '',
 };
 export type CleReglage = keyof typeof DEFAUTS;
 

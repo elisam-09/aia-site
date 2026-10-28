@@ -49,6 +49,12 @@ portail) et `DEPLOIEMENT.md` (mise en ligne).
   connectés, limite 240 msg / 10 min / IP) → compteurs anonymes par jour dans `mesure_jour` (clés « préfixe:valeur »,
   jours spéciaux `total` et `meta`) → `/admin/audience` (calculs dans `lib/audience.ts`) + export `audience.csv`.
   Ne jamais y stocker d'IP ni d'identifiant ; les clés libres (page/section/action) sont plafonnées par jour.
+- **Parcours d'adhésion** : statuts `nouvelle → contactee → retenue → membre` (+ `refusee`). « Retenir » (`retenirAdhesion`
+  dans `db/repo.ts`) crée `numero_membre` et une clé d'accès dont seule l'empreinte SHA-256 est stockée
+  (`server/membre.ts`) : la clé en clair n'existe que dans la réponse de l'action, jamais en base. Un paiement validé
+  (`enregistrerPaiement`, table `paiements`) rend « membre » et fixe `expire_le` ; l'annuler recalcule le statut.
+  Montants, durée, modes de paiement et modèle de message sont dans `reglages` (`lib/adhesion.ts` pour le
+  modèle par défaut). Ne jamais journaliser ni stocker la clé en clair.
 - **Colonnes ajoutées** après coup : déclarer dans `COLONNES_AJOUTEES` (`db/index.ts`),
   elles sont créées au démarrage sur les bases existantes.
 - **Admin** : thème « nuit nuageuse » (`admin.css`), aucune émoticône, icônes SVG au

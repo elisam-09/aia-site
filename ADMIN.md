@@ -49,13 +49,33 @@ le menu **Adhésions** (le nombre de nouvelles demandes s'affiche en orange dans
 
 1. Ouvre une demande : nom, profil, e-mail, téléphone, ville, centres d'intérêt, motivation.
 2. Contacte la personne avec **Écrire un e-mail** ou **WhatsApp** (message pré-rempli).
-3. Change le **statut** : *Nouvelle → Contactée → Acceptée* (ou *Refusée*) et ajoute une
-   **note interne** (visible seulement par le bureau).
+3. Suis la demande : *Nouvelle → Contactée → **Retenue** → **Membre*** (ou *Refusée*), et ajoute une
+   **note interne** (visible seulement par le bureau). Voir « Du dépôt de la demande au statut de membre » plus bas.
 4. Les filtres en haut de la liste trient par statut et par centre d'intérêt (organisation
    d'événements, communication, nouvelles technologies, gestion) ; ils se combinent. Un administrateur peut **exporter**
    toutes les demandes en CSV (Excel).
 
 Ce sont des données personnelles : supprime les demandes dont tu n'as plus besoin.
+
+### Du dépôt de la demande au statut de membre
+
+1. **La demande** : élèves et étudiants indiquent aussi leur niveau d'études, leur filière et leur
+   établissement ; tout le monde coche l'accord d'être contacté·e (WhatsApp, appel ou e-mail).
+2. **Retenir** : sur la fiche, clique **Retenir cette demande et préparer le message**. Le site crée le
+   **numéro de membre** (AIA-2026-0001…) et une **clé d'accès personnelle**, puis prépare le message de
+   bienvenue (conditions, droit d'adhésion, cotisation selon le profil, comment payer, numéro et clé).
+   Envoie-le avec **Envoyer par WhatsApp** (ou e-mail, ou **Copier le message**). **La clé n'est affichée
+   qu'à ce moment-là** (le site n'en garde que l'empreinte) : si tu l'as perdue, **Régénérer la clé d'accès**.
+   La personne n'est **pas encore membre**.
+3. **Paiement** : quand elle a payé et que tu as vérifié (référence ou capture), enregistre le paiement dans
+   le bloc **Paiement** de la fiche (montant, mode, référence, date) : elle devient **Membre**, valable
+   pendant la durée réglée (12 mois par défaut) à partir de la date du paiement. Un paiement saisi par erreur
+   s'annule ; sans autre paiement, la demande redevient « Retenue ». Un renouvellement s'ajoute de la même façon.
+4. Le menu **Paiements** liste tout ce qui a été encaissé (total de l'année, par mode de paiement).
+
+Les montants, la durée, les modes de paiement et le texte du message se règlent dans
+**Réglages → Adhésion et paiement** (variables : `{nom}` `{numero}` `{cle}` `{droit}` `{cotisation}`
+`{total}` `{paiement}`). Renseigne la cotisation des élèves et étudiants avant de retenir leurs demandes.
 
 ## Audience (compteur de visites)
 

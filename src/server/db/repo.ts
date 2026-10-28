@@ -3,6 +3,7 @@
  * et par le portail admin (création / modification / suppression).
  */
 import { getDb } from './index';
+import { formaterNumero, genererCle, hashCle } from '../membre';
 import type {
   AdhesionRow,
   ActualiteRow,
@@ -11,6 +12,9 @@ import type {
   GalerieRow,
   MembreRow,
   PartenaireRow,
+  PaiementAvecMembre,
+  PaiementRow,
+  ModePaiement,
   Role,
   SessionRow,
   StatutAdhesion,
@@ -431,6 +435,10 @@ export interface AdhesionInput {
   profil: string | null;
   motivation: string | null;
   interets: string | null;
+  niveau: string | null;
+  specialite: string | null;
+  etablissement: string | null;
+  consentement: boolean;
   langue: string;
 }
 
@@ -438,10 +446,10 @@ export function createAdhesion(a: AdhesionInput): number {
   const t = now();
   const info = getDb()
     .prepare(
-      `INSERT INTO adhesions (nom, email, telephone, ville, profil, motivation, interets, langue, statut, cree_le, maj_le)
-       VALUES (@nom, @email, @telephone, @ville, @profil, @motivation, @interets, @langue, 'nouvelle', @t, @t)`,
+      `INSERT INTO adhesions (nom, email, telephone, ville, profil, motivation, interets, niveau, specialite, etablissement, consentement, langue, statut, cree_le, maj_le)
+       VALUES (@nom, @email, @telephone, @ville, @profil, @motivation, @interets, @niveau, @specialite, @etablissement, @consentement, @langue, 'nouvelle', @t, @t)`,
     )
-    .run({ ...a, t });
+    .run({ ...a, consentement: a.consentement ? 1 : 0, t });
   return Number(info.lastInsertRowid);
 }
 
@@ -477,7 +485,7 @@ export function getAdhesion(id: number): AdhesionRow | undefined {
 }
 
 export function countAdhesionsParStatut(): Record<StatutAdhesion, number> {
-  const c: Record<StatutAdhesion, number> = { nouvelle: 0, contactee: 0, acceptee: 0, refusee: 0 };
+  const c: Record<StatutAdhesion, number> = { nouvelle: 0, contactee: 0, retenue: 0, membre: 0, refusee: 0 };
   const rows = getDb().prepare('SELECT statut, COUNT(*) n FROM adhesions GROUP BY statut').all() as {
     statut: StatutAdhesion;
     n: number;
@@ -490,6 +498,107 @@ export function updateAdhesion(id: number, statut: StatutAdhesion, note: string 
   getDb()
     .prepare('UPDATE adhesions SET statut = ?, note = ?, maj_le = ? WHERE id = ?')
     .run(statut, note, now(), id);
+}
+
+/* ---- Parcours : retenue → paiement → membre ---- */
+
+/** Prochain numéro de membre de l'année : AIA-2026-0001, 0002… */
+function prochainNumero(annee: number): string {
+  const prefixe = `AIA-${annee}-`;
+  const rows = getDb()
+    .prepare('SELECT numero_membre n FROM adhesions WHERE numero_membre LIKE ?')
+    .all(`${prefixe}%`) as { n: string }[];
+  const max = rows.reduce((m, r) => Math.max(m, Number(r.n.slice(prefixe.length)) || 0), 0);
+  return formaterNumero(annee, max + 1);
+}
+
+/**
+ * Retient la demande : statut « retenue », numéro de membre (créé une seule fois) et clé d'accès neuve.
+ * La clé en clair n'est renvoyée qu'ici : la base n'en garde que l'empreinte.
+ */
+export function retenirAdhesion(id: number): { numero: string; cle: string } | null {
+  const db = getDb();
+  return db.transaction(() => {
+    const a = getAdhesion(id);
+    if (!a || a.statut === 'refusee') return null;
+    const numero = a.numero_membre ?? prochainNumero(new Date().getUTCFullYear());
+    const cle = genererCle();
+    const t = now();
+    db.prepare(
+      "UPDATE adhesions SET statut = CASE WHEN statut = 'membre' THEN 'membre' ELSE 'retenue' END, numero_membre = ?, cle_hash = ?, retenue_le = COALESCE(retenue_le, ?), maj_le = ? WHERE id = ?",
+    ).run(numero, hashCle(cle), t, t, id);
+    return { numero, cle };
+  })();
+}
+
+/** Ajoute `mois` mois à une date AAAA-MM-JJ. */
+export function ajouterMois(date: string, mois: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + mois);
+  return d.toISOString().slice(0, 10);
+}
+
+export interface PaiementInput {
+  montant: number;
+  mode: ModePaiement;
+  reference: string | null;
+  date: string;
+  note: string | null;
+  valide_par: number | null;
+}
+
+/** Enregistre un paiement validé : la personne devient membre ; la validité repart de la date du paiement. */
+export function enregistrerPaiement(adhesionId: number, p: PaiementInput, validiteMois: number): void {
+  const db = getDb();
+  db.transaction(() => {
+    const t = now();
+    db.prepare(
+      'INSERT INTO paiements (adhesion_id, montant, mode, reference, date, note, valide_par, cree_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    ).run(adhesionId, p.montant, p.mode, p.reference, p.date, p.note, p.valide_par, t);
+    recalculerMembre(adhesionId, validiteMois);
+  })();
+}
+
+/** Annule un paiement saisi par erreur ; sans autre paiement, la demande redevient « retenue ». */
+export function annulerPaiement(paiementId: number, validiteMois: number): void {
+  const db = getDb();
+  db.transaction(() => {
+    const p = db.prepare('SELECT adhesion_id FROM paiements WHERE id = ?').get(paiementId) as { adhesion_id: number } | undefined;
+    if (!p) return;
+    db.prepare('DELETE FROM paiements WHERE id = ?').run(paiementId);
+    recalculerMembre(p.adhesion_id, validiteMois);
+  })();
+}
+
+/** Statut, première date et fin de validité déduits des paiements restants. */
+function recalculerMembre(adhesionId: number, validiteMois: number): void {
+  const db = getDb();
+  const dates = db.prepare('SELECT MIN(date) premier, MAX(date) dernier FROM paiements WHERE adhesion_id = ?').get(adhesionId) as {
+    premier: string | null;
+    dernier: string | null;
+  };
+  if (dates.dernier) {
+    db.prepare("UPDATE adhesions SET statut = 'membre', membre_le = ?, expire_le = ?, maj_le = ? WHERE id = ?").run(
+      dates.premier,
+      ajouterMois(dates.dernier, validiteMois),
+      now(),
+      adhesionId,
+    );
+  } else {
+    db.prepare("UPDATE adhesions SET statut = 'retenue', membre_le = NULL, expire_le = NULL, maj_le = ? WHERE id = ? AND statut = 'membre'").run(now(), adhesionId);
+  }
+}
+
+export function listPaiementsDe(adhesionId: number): PaiementRow[] {
+  return getDb().prepare('SELECT * FROM paiements WHERE adhesion_id = ? ORDER BY date DESC, id DESC').all(adhesionId) as PaiementRow[];
+}
+
+export function listPaiements(): PaiementAvecMembre[] {
+  return getDb()
+    .prepare(
+      'SELECT p.*, a.nom, a.numero_membre FROM paiements p JOIN adhesions a ON a.id = p.adhesion_id ORDER BY p.date DESC, p.id DESC',
+    )
+    .all() as PaiementAvecMembre[];
 }
 
 export function deleteAdhesion(id: number): void {

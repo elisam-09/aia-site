@@ -113,6 +113,20 @@ CREATE TABLE IF NOT EXISTS adhesions (
 );
 CREATE INDEX IF NOT EXISTS adhesions_statut ON adhesions (statut, cree_le);
 
+-- Paiements d'adhésion / de cotisation validés par le bureau (un membre peut en avoir plusieurs : renouvellements)
+CREATE TABLE IF NOT EXISTS paiements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  adhesion_id INTEGER NOT NULL REFERENCES adhesions(id) ON DELETE CASCADE,
+  montant INTEGER NOT NULL,
+  mode TEXT NOT NULL,
+  reference TEXT,
+  date TEXT NOT NULL,
+  note TEXT,
+  valide_par INTEGER,
+  cree_le TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS paiements_adhesion ON paiements (adhesion_id, date);
+
 -- Audience : compteurs anonymes agrégés par jour (aucune IP, aucun identifiant personnel).
 -- jour = AAAA-MM-JJ (UTC), ou « total » (depuis le début) / « meta » (dernière visite).
 CREATE TABLE IF NOT EXISTS mesure_jour (
@@ -131,6 +145,15 @@ const COLONNES_AJOUTEES: [table: string, colonne: string, definition: string][] 
   ['actualites', 'liens', 'TEXT'],
   ['membres', 'badge', 'TEXT'],
   ['adhesions', 'interets', 'TEXT'],
+  ['adhesions', 'niveau', 'TEXT'],
+  ['adhesions', 'specialite', 'TEXT'],
+  ['adhesions', 'etablissement', 'TEXT'],
+  ['adhesions', 'consentement', 'INTEGER NOT NULL DEFAULT 0'],
+  ['adhesions', 'numero_membre', 'TEXT'],
+  ['adhesions', 'cle_hash', 'TEXT'],
+  ['adhesions', 'retenue_le', 'TEXT'],
+  ['adhesions', 'membre_le', 'TEXT'],
+  ['adhesions', 'expire_le', 'TEXT'],
 ];
 
 function migrer(db: Database.Database): void {
@@ -142,6 +165,9 @@ function migrer(db: Database.Database): void {
     );
     if (!existe) db.exec(`ALTER TABLE ${table} ADD COLUMN ${colonne} ${def}`);
   }
+  // « Acceptée » est devenu « Retenue » : la personne n'est membre qu'une fois le paiement validé
+  db.exec("UPDATE adhesions SET statut = 'retenue' WHERE statut = 'acceptee'");
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS adhesions_numero ON adhesions (numero_membre) WHERE numero_membre IS NOT NULL');
 }
 
 export const DB_PATH = resolve(process.env.DATABASE_PATH ?? 'data/aia.db');

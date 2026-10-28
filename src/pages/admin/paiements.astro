@@ -1,0 +1,59 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import * as repo from '../../server/db/repo';
+import { MODES_PAIEMENT, francs } from '../../lib/adhesion';
+
+const paiements = repo.listPaiements();
+const total = paiements.reduce((s, p) => s + p.montant, 0);
+const annee = String(new Date().getUTCFullYear());
+const totalAnnee = paiements.filter((p) => p.date.startsWith(annee)).reduce((s, p) => s + p.montant, 0);
+const fmt = (j: string) => new Date(`${j}T00:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const parMode = Object.entries(
+  paiements.reduce<Record<string, number>>((m, p) => ((m[p.mode] = (m[p.mode] ?? 0) + p.montant), m), {}),
+).sort((a, b) => b[1] - a[1]);
+---
+
+<AdminLayout title="Paiements" description="Les droits d’adhésion et cotisations validés par le bureau. Pour en enregistrer un, ouvre la demande d’adhésion concernée.">
+  <div class="grille-stats">
+    <div class="stat stat--statique"><span class="stat__n">{francs(totalAnnee)} F</span><span class="stat__l">encaissés en {annee}</span></div>
+    <div class="stat stat--statique"><span class="stat__n">{francs(total)} F</span><span class="stat__l">encaissés au total</span></div>
+    <div class="stat stat--statique"><span class="stat__n">{paiements.length}</span><span class="stat__l">paiement(s) validé(s)</span></div>
+  </div>
+
+  {
+    parMode.length > 0 && (
+      <p class="champ__help" style="margin:-.6rem 0 1.2rem">
+        Par mode : {parMode.map(([m, n]) => `${MODES_PAIEMENT[m as keyof typeof MODES_PAIEMENT] ?? m} ${francs(n)} F`).join(' · ')}
+      </p>
+    )
+  }
+
+  {
+    paiements.length === 0 ? (
+      <div class="vide">
+        <b>Aucun paiement enregistré</b>
+        Quand une demande est retenue et que la personne a payé, enregistre le paiement depuis sa fiche : elle devient membre.
+      </div>
+    ) : (
+      <div class="lignes">
+        {paiements.map((p) => (
+          <div class="ligne ligne--sans-vignette">
+            <div>
+              <h3><a href={`/admin/adhesions/${p.adhesion_id}#paiement`}>{p.nom}</a></h3>
+              <div class="meta">
+                <span class="pastille ok">{francs(p.montant)} F</span>
+                <span>{MODES_PAIEMENT[p.mode] ?? p.mode}</span>
+                <span>{fmt(p.date)}</span>
+                {p.numero_membre && <span>{p.numero_membre}</span>}
+                {p.reference && <span>Réf. {p.reference}</span>}
+              </div>
+            </div>
+            <div class="ac">
+              <a class="bouton bouton--contour bouton--sm" href={`/admin/adhesions/${p.adhesion_id}#paiement`}>Ouvrir</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+</AdminLayout>

@@ -5,7 +5,7 @@
  * Fonctionne sans JavaScript (redirection) ; avec JS, envoi sans recharger la page.
  */
 import { useT, type Lang } from '../i18n/ui';
-import { PROFILS, INTERETS } from '../lib/adhesion';
+import { PROFILS, INTERETS, PROFILS_ETUDES } from '../lib/adhesion';
 
 interface Props {
   lang: Lang;
@@ -19,12 +19,19 @@ const C = {
     profil: 'Je suis',
     interets: 'Ce qui m’intéresse',
     interetsAide: 'Facultatif, plusieurs choix possibles.',
+    niveau: 'Niveau d’études',
+    niveauPh: 'Ex. Terminale, Licence 2, Master 1',
+    specialite: 'Filière ou spécialité',
+    specialitePh: 'Ex. Série C, Physique, Informatique',
+    etablissement: 'Établissement',
+    consentement: 'J’accepte que l’AIA me contacte par WhatsApp, appel ou e-mail au sujet de ma demande.',
     contactNote: 'Indique au moins un e-mail ou un numéro de téléphone pour qu’on puisse te répondre.',
     confidentialite:
       "Tes informations servent uniquement au bureau de l'AIA pour te recontacter. Elles ne sont ni publiées ni transmises.",
     merci: 'Demande bien reçue ! Le bureau te recontacte très vite. Bienvenue à bord.',
     erreurs: {
       champs: 'Vérifie ton nom et indique un e-mail ou un téléphone valide.',
+      consentement: 'Coche la case pour que nous puissions te recontacter.',
       limite: 'Trop de demandes envoyées depuis cette connexion. Réessaie dans quelques minutes.',
       erreur: "L'envoi a échoué. Réessaie, ou écris-nous sur WhatsApp.",
     },
@@ -33,12 +40,19 @@ const C = {
     profil: 'I am',
     interets: 'What interests me',
     interetsAide: 'Optional, tick as many as you like.',
+    niveau: 'Level of study',
+    niveauPh: 'E.g. Year 12, Bachelor year 2, Master 1',
+    specialite: 'Field or specialty',
+    specialitePh: 'E.g. Sciences, Physics, Computer science',
+    etablissement: 'School or university',
+    consentement: 'I agree that the AIA may contact me by WhatsApp, phone or email about my request.',
     contactNote: 'Give at least an email or a phone number so we can get back to you.',
     confidentialite:
       'Your details are only used by the AIA board to get back to you. They are never published or shared.',
     merci: 'Request received! The board will get back to you very soon. Welcome aboard.',
     erreurs: {
       champs: 'Check your name and give a valid email or phone number.',
+      consentement: 'Tick the box so that we can get back to you.',
       limite: 'Too many requests from this connection. Please try again in a few minutes.',
       erreur: 'Sending failed. Try again, or message us on WhatsApp.',
     },
@@ -57,7 +71,7 @@ const erreurInitiale =
     </label>
     <label class="adhesion__champ">
       <span>{C.profil}</span>
-      <select name="profil">
+      <select name="profil" data-etudes={PROFILS_ETUDES.join(',')}>
         {Object.entries(PROFILS).map(([v, l]) => <option value={v}>{l[lang]}</option>)}
       </select>
     </label>
@@ -77,6 +91,22 @@ const erreurInitiale =
     <span>{t('form.ville')}</span>
     <input name="ville" autocomplete="address-level2" maxlength="80" />
   </label>
+  <div class="adhesion__etudes" data-etudes-bloc>
+    <div class="adhesion__ligne">
+      <label class="adhesion__champ">
+        <span>{C.niveau}</span>
+        <input name="niveau" maxlength="80" placeholder={C.niveauPh} />
+      </label>
+      <label class="adhesion__champ">
+        <span>{C.specialite}</span>
+        <input name="specialite" maxlength="120" placeholder={C.specialitePh} />
+      </label>
+    </div>
+    <label class="adhesion__champ">
+      <span>{C.etablissement}</span>
+      <input name="etablissement" maxlength="120" />
+    </label>
+  </div>
   <fieldset class="adhesion__interets">
     <legend>{C.interets} <small>{C.interetsAide}</small></legend>
     {
@@ -94,6 +124,10 @@ const erreurInitiale =
   </label>
   <input type="text" name="_gotcha" class="adhesion__piege" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
+  <label class="adhesion__case adhesion__consentement">
+    <input type="checkbox" name="consentement" required />
+    <span>{C.consentement} <em aria-hidden="true">*</em></span>
+  </label>
   <p class="adhesion__note">{C.confidentialite}</p>
   <button class="btn btn-primaire" type="submit">{t('form.envoyer')}</button>
 
@@ -107,6 +141,17 @@ const erreurInitiale =
     const err = f.querySelector<HTMLElement>('.adhesion__etat.err')!;
     const msgs = JSON.parse(f.dataset.erreurs ?? '{}') as Record<string, string>;
     const bouton = f.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    // niveau, filière et établissement : seulement pour les élèves et étudiants
+    const profil = f.querySelector<HTMLSelectElement>('select[name=profil]');
+    const bloc = f.querySelector<HTMLElement>('[data-etudes-bloc]');
+    const montrer = () => {
+      if (!profil || !bloc) return;
+      const oui = (profil.dataset.etudes ?? '').split(',').includes(profil.value);
+      bloc.hidden = !oui;
+    };
+    profil?.addEventListener('change', montrer);
+    montrer();
+    f.addEventListener('reset', () => setTimeout(montrer, 0));
     f.addEventListener('submit', async (e) => {
       const fd = new FormData(f);
       // au moins un moyen de contact
@@ -233,6 +278,19 @@ const erreurInitiale =
     padding: 0;
     flex: none;
     accent-color: var(--ci-vert);
+  }
+  .adhesion__etudes {
+    display: grid;
+    gap: 1.1rem;
+  }
+  .adhesion__etudes[hidden] {
+    display: none;
+  }
+  .adhesion__consentement {
+    align-items: flex-start;
+  }
+  .adhesion__consentement input {
+    margin-top: 2px;
   }
   .adhesion__piege {
     position: absolute;
