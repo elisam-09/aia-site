@@ -115,6 +115,7 @@ export interface AdhesionRow {
   retenue_le: string | null;
   membre_le: string | null; // date du premier paiement validé
   expire_le: string | null; // fin de validité de l'adhésion (AAAA-MM-JJ)
+  verif: string | null; // code aléatoire du QR de vérification
   cree_le: string;
   maj_le: string;
 }

@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "admin:creer": "node scripts/creer-admin.mjs"
+    "admin:creer": "node scripts/creer-admin.mjs",
+    "test": "node --experimental-strip-types --test src/lib/adhesion.test.ts src/server/membre.test.ts"
   },
   "dependencies": {
     "@astrojs/node": "^11.0.2",

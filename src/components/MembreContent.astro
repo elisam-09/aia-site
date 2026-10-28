@@ -7,6 +7,7 @@ import PageIntro from './PageIntro.astro';
 import { reglagesSite } from '../lib/contact';
 import { francs, tarifDe, tarifsDepuis, totalAPayer } from '../lib/adhesion';
 import { adhesionActive } from '../server/membre-session';
+import * as repo from '../server/db/repo';
 import type { AdhesionRow } from '../server/db/types';
 import type { ErreurMembre } from '../server/membre-page';
 import type { Lang } from '../i18n/ui';
@@ -148,7 +149,7 @@ const paiement = R.paiement_modes.trim();
             active && (
               <div class="carte__bloc">
                 <a class="btn btn-primaire" href="/membre/certificat.pdf" download>{C.certificat}</a>
-                <p><a href={`/verifier/${membre.numero_membre}`}>{C.verifier}</a></p>
+                <p><a href={`/verifier/${membre.numero_membre}-${repo.assurerVerif(membre.id)}`}>{C.verifier}</a></p>
                 {bientot && <p class="alerte-douce">{C.bientot}</p>}
               </div>
             )

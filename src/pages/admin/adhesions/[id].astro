@@ -255,9 +255,6 @@ const lienMail = d.email && nouvelleCle ? `mailto:${d.email}?subject=${encodeURI
         {!reglages.paiement_modes.trim() && (
           <div class="alerte alerte--erreur">Les modes de paiement ne sont pas renseignés : ouvre Réglages → Adhésion et paiement, sinon le message dira « à préciser ».</div>
         )}
-        {cotisation === null && (
-          <div class="alerte alerte--erreur">La cotisation de ce profil n’est pas renseignée : ouvre Réglages → Adhésion et paiement.</div>
-        )}
         <div class="champ">
           <label class="champ__label" for="msg">Message (modifiable avant l’envoi)</label>
           <textarea id="msg" rows="16" data-msg>{message}</textarea>

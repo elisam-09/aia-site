@@ -12,18 +12,21 @@ interface Etat {
 
 const registre = new Map<string, Etat>();
 
-export function tropDeTentatives(cle: string): boolean {
+/** `max` : nombre d'événements tolérés dans la fenêtre (6 par défaut, pour les mots de passe et clés). */
+export function tropDeTentatives(cle: string, max = MAX_ESSAIS): boolean {
   const e = registre.get(cle);
   if (!e) return false;
   if (Date.now() - e.premier > FENETRE_MS) {
     registre.delete(cle);
     return false;
   }
-  return e.echecs >= MAX_ESSAIS;
+  return e.echecs >= max;
 }
 
 export function noterEchec(cle: string): void {
   const now = Date.now();
+  // la table ne grossit pas sans fin (adresses usurpées) : on purge les entrées périmées au-delà de 5000
+  if (registre.size > 5000) for (const [k, v] of registre) if (now - v.premier > FENETRE_MS) registre.delete(k);
   const e = registre.get(cle);
   if (!e || now - e.premier > FENETRE_MS) {
     registre.set(cle, { echecs: 1, premier: now });

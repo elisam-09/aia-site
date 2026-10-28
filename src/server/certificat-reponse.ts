@@ -19,7 +19,7 @@ export async function reponseCertificat(a: AdhesionRow, site: string | URL): Pro
     du,
     au: a.expire_le,
     delivre: aujourdhui,
-    urlVerification: new URL(`/verifier/${a.numero_membre}`, site).toString(),
+    urlVerification: new URL(`/verifier/${a.numero_membre}-${repo.assurerVerif(a.id)}`, site).toString(),
     signataireNom: r.signataire_nom.trim(),
     signataireTitre: r.signataire_titre.trim() || 'Le Président',
   });

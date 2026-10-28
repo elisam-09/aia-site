@@ -161,6 +161,7 @@ const COLONNES_AJOUTEES: [table: string, colonne: string, definition: string][] 
   ['adhesions', 'retenue_le', 'TEXT'],
   ['adhesions', 'membre_le', 'TEXT'],
   ['adhesions', 'expire_le', 'TEXT'],
+  ['adhesions', 'verif', 'TEXT'], // code secret du QR de vérification (le numéro de membre seul est prévisible)
 ];
 
 function migrer(db: Database.Database): void {

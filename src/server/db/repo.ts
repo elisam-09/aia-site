@@ -3,7 +3,7 @@
  * et par le portail admin (création / modification / suppression).
  */
 import { getDb } from './index';
-import { formaterNumero, genererCle, hashCle } from '../membre';
+import { formaterNumero, genererCle, genererVerif, hashCle } from '../membre';
 import type {
   AdhesionRow,
   ActualiteRow,
@@ -525,8 +525,8 @@ export function retenirAdhesion(id: number): { numero: string; cle: string } | n
     const cle = genererCle();
     const t = now();
     db.prepare(
-      "UPDATE adhesions SET statut = CASE WHEN statut = 'membre' THEN 'membre' ELSE 'retenue' END, numero_membre = ?, cle_hash = ?, retenue_le = COALESCE(retenue_le, ?), maj_le = ? WHERE id = ?",
-    ).run(numero, hashCle(cle), t, t, id);
+      "UPDATE adhesions SET statut = CASE WHEN statut = 'membre' THEN 'membre' ELSE 'retenue' END, numero_membre = ?, cle_hash = ?, retenue_le = COALESCE(retenue_le, ?), verif = COALESCE(verif, ?), maj_le = ? WHERE id = ?",
+    ).run(numero, hashCle(cle), t, genererVerif(), t, id);
     db.prepare('DELETE FROM membre_sessions WHERE adhesion_id = ?').run(id);
     return { numero, cle };
   })();
@@ -607,6 +607,16 @@ export function getAdhesionParCle(cleHash: string): AdhesionRow | undefined {
   return getDb().prepare('SELECT * FROM adhesions WHERE cle_hash = ?').get(cleHash) as AdhesionRow | undefined;
 }
 
+/** Code de vérification du QR (créé à la demande pour les membres retenus avant son introduction). */
+export function assurerVerif(id: number): string {
+  const db = getDb();
+  const a = db.prepare('SELECT verif FROM adhesions WHERE id = ?').get(id) as { verif: string | null } | undefined;
+  if (a?.verif) return a.verif;
+  const v = genererVerif();
+  db.prepare('UPDATE adhesions SET verif = ? WHERE id = ? AND verif IS NULL').run(v, id);
+  return (db.prepare('SELECT verif FROM adhesions WHERE id = ?').get(id) as { verif: string }).verif;
+}
+
 export function getAdhesionParNumero(numero: string): AdhesionRow | undefined {
   return getDb().prepare('SELECT * FROM adhesions WHERE numero_membre = ?').get(numero) as AdhesionRow | undefined;
 }
@@ -658,7 +668,7 @@ export interface MesureRow {
   valeur: number;
 }
 
-/** Clés « libres » (pages, sections, actions) : plafonnées par jour pour éviter qu'un robot remplisse la base. */
+/** Clés « libres » (pages, sections, actions, origines, fuseaux) : plafonnées par jour pour éviter qu'un robot remplisse la base. */
 const MAX_CLES_LIBRES_PAR_JOUR = 80;
 
 /** Ajoute des compteurs pour un jour (une transaction). `cle` = « préfixe:valeur ». */
@@ -672,7 +682,7 @@ export function ajouterMesures(jour: string, increments: Record<string, number>)
   db.transaction(() => {
     for (const [cle, n] of Object.entries(increments)) {
       const prefixe = cle.split(':')[0];
-      const libre = prefixe === 'page' || prefixe === 'section' || prefixe === 'action';
+      const libre = prefixe === 'page' || prefixe === 'section' || prefixe === 'action' || prefixe === 'origine' || prefixe === 'fuseau';
       if (libre && !existe.get(jour, cle)) {
         const { n: deja } = nombre.get(jour, `${prefixe}:%`) as { n: number };
         if (deja >= MAX_CLES_LIBRES_PAR_JOUR) continue;

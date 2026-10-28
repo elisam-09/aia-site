@@ -1,15 +1,19 @@
 ---
 /**
- * Page publique de vérification d'un certificat (atteinte par le QR code) : dit si le numéro correspond à
- * une adhésion valide, sans révéler de donnée personnelle (nom abrégé, pas de contact).
+ * Page publique de vérification d'un certificat (atteinte par le QR code) : dit si le certificat correspond à
+ * une adhésion valide. L'adresse contient le numéro de membre ET un code secret aléatoire imprimé dans le QR :
+ * sans lui, impossible de lister les membres en essayant des numéros. Nom abrégé seulement, pas de contact.
  */
 import Base from '../../layouts/Base.astro';
 import PageIntro from '../../components/PageIntro.astro';
 import * as repo from '../../server/db/repo';
+import { timingSafeEqual } from 'node:crypto';
 import { noterEchec, tropDeTentatives } from '../../server/ratelimit';
 import { adhesionActive } from '../../server/membre-session';
 
-const numero = (Astro.params.numero ?? '').toUpperCase();
+const brut = (Astro.params.code ?? '').toUpperCase().match(/^(AIA-\d{4}-\d{4})-([0-9A-F]{8})$/);
+const numero = brut?.[1] ?? '';
+const code = (brut?.[2] ?? '').toLowerCase();
 let ip = Astro.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
 if (!ip) {
   try {
@@ -19,9 +23,14 @@ if (!ip) {
   }
 }
 const cle = `verifier|${ip}`;
-const limite = tropDeTentatives(cle);
-const a = !limite && /^AIA-\d{4}-\d{4}$/.test(numero) ? repo.getAdhesionParNumero(numero) : undefined;
-if (!limite && !a) noterEchec(cle);
+const limite = tropDeTentatives(cle, 30);
+const candidate = !limite && numero ? repo.getAdhesionParNumero(numero) : undefined;
+const attendu = Buffer.from(candidate?.verif ?? '');
+const recu = Buffer.from(code);
+// le code doit correspondre exactement : sinon le numéro est traité comme inconnu (même réponse)
+const a = candidate && attendu.length === recu.length && attendu.length > 0 && timingSafeEqual(attendu, recu) ? candidate : undefined;
+// chaque consultation compte (même réussie) : 30 par quart d'heure et par connexion, pour décourager l'énumération
+noterEchec(cle);
 const valide = !!a && adhesionActive(a);
 const mots = (a?.nom ?? '').trim().split(/\s+/);
 const nomAbrege = mots.length > 1 ? `${mots[0]} ${mots[mots.length - 1][0]?.toUpperCase()}.` : (mots[0] ?? '');
