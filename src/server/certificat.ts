@@ -95,7 +95,9 @@ export async function genererCertificat(d: DonneesCertificat): Promise<Buffer> {
 
   doc.image(qr, L - 36 - 84, 452, { width: 84 });
   const lien = d.urlVerification.replace(/^https?:[/][/]/, '');
-  doc.font('Helvetica').fontSize(7).fillColor(GRIS_FONCE).text(`Vérifier : ${lien}`, L - 36 - 130, 540, { width: 176, align: 'center' });
+  // aligné à droite sous le QR (bord droit = celui du QR) : ne déborde plus de la page
+  const texteVerif = `Vérifier : ${lien}`;
+  doc.font('Helvetica').fontSize(ajuster(doc, texteVerif, 7, 5, 220)).fillColor(GRIS_FONCE).text(texteVerif, L - 36 - 220, 542, { width: 220, align: 'right', lineBreak: false });
 
   doc.end();
   return fin;
