@@ -129,7 +129,7 @@ Numéro de membre : {numero}
 Clé d'accès personnelle : {cle}
 Garde-la précieusement : avec elle, tu retrouves ton adhésion et tu télécharges ton certificat sur {lien}
 
-À bientôt sous le ciel d'Abidjan !`,
+À bientôt sous le ciel ivoirien !`,
   en: `Hello {nom}, this is the Ivorian Astronomy Association (AIA) about your membership request.
 
 Good news: your request has been accepted! Here is everything you need to know to become a member.
@@ -152,7 +152,7 @@ Member number: {numero}
 Personal access key: {cle}
 Keep it safe: with it you can find your membership and download your certificate at {lien}
 
-See you soon under the Abidjan sky!`,
+See you soon under the Ivorian sky!`,
 } as const;
 
 export interface DonneesMessage {
